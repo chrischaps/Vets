@@ -44,9 +44,9 @@ function CollisionSystem.new(cell_size)
 
         -- Check if items should collide based on layer/mask
         -- Item collides with other if: (item_mask & other_layer) != 0
-        -- Using bit32 library for Lua 5.1 compatibility
-        local item_collides = bit32.band(item_mask, other_layer) ~= 0
-        local other_collides = bit32.band(other_mask, item_layer) ~= 0
+        -- Using bit library (LuaJIT/LÖVE compatibility)
+        local item_collides = bit.band(item_mask, other_layer) ~= 0
+        local other_collides = bit.band(other_mask, item_layer) ~= 0
 
         if not (item_collides or other_collides) then
             return nil  -- No collision
