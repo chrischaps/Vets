@@ -243,3 +243,10 @@ git push origin feature/VETS-2-project-setup
 - **Collision layers:** platforms, hazards, delivery zones, power-ups
 - **State management:** menu → gameplay → results → menu loop
 - **Save system:** high scores, unlocked ranks, discovered letter fragments
+
+## Lua/LÖVE Specific Notes
+
+- **Bitwise Operations:** LÖVE uses LuaJIT which provides the `bit` library (not `bit32`)
+  - Use `bit.band(a, b)` for bitwise AND operations
+  - Use `bit.bor(a, b)` for bitwise OR operations
+  - Avoid using `&`, `|` operators as they're not available in Lua 5.1/LuaJIT
