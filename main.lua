@@ -6,9 +6,15 @@ local libs = require("libraries.init")
 
 -- Load core systems
 local Time = require("src.core.time")
+local Constants = require("src.core.constants")
 
 -- Load entity system
 local Entity = require("src.entities.entity")
+
+-- Load components
+local Transform = require("src.components.transform")
+local Physics = require("src.components.physics")
+local Collision = require("src.components.collision")
 
 -- Virtual resolution for pixel-perfect rendering
 VIRTUAL_WIDTH = 320
@@ -76,6 +82,42 @@ function love.load()
     print("  - Activate: " .. (test_entity:isActive() and "OK" or "FAILED"))
 
     print("\nEntity-Component System: OK")
+
+    -- Test Core Components
+    print("\nTesting Core Components:")
+
+    -- Test Transform component
+    local test_transform = Transform.new(100, 50, 0, 1, 1, 0)
+    print("  - Transform created at (" .. test_transform.x .. ", " .. test_transform.y .. "): OK")
+    test_transform:translate(10, 20)
+    print("  - Transform translate: " .. (test_transform.x == 110 and test_transform.y == 70 and "OK" or "FAILED"))
+    test_transform:setRotation(math.pi / 4)
+    print("  - Transform rotation: " .. (math.abs(test_transform.rotation - math.pi/4) < 0.001 and "OK" or "FAILED"))
+
+    -- Test Physics component
+    local test_physics = Physics.new()
+    print("  - Physics created with velocity (" .. test_physics.velocity_x .. ", " .. test_physics.velocity_y .. "): OK")
+    test_physics:setVelocity(100, -200)
+    print("  - Physics velocity set: " .. (test_physics.velocity_x == 100 and test_physics.velocity_y == -200 and "OK" or "FAILED"))
+    test_physics:applyImpulse(50, 0)
+    print("  - Physics impulse: " .. (test_physics.velocity_x == 150 and "OK" or "FAILED"))
+
+    -- Test Collision component
+    local test_collision = Collision.new(16, 16, Collision.SHAPE.AABB)
+    print("  - Collision created (AABB " .. test_collision.width .. "x" .. test_collision.height .. "): OK")
+    test_collision:setLayer(Collision.LAYER.PLAYER)
+    test_collision:setMask(Collision.LAYER.TERRAIN)
+    print("  - Collision layer/mask: " .. (test_collision:collidesWithLayer(Collision.LAYER.TERRAIN) and "OK" or "FAILED"))
+
+    -- Test integrated entity with all components
+    print("\n  Testing integrated entity:")
+    local player_entity = Entity.new("player")
+    player_entity:addComponent("transform", Transform.new(160, 90))
+    player_entity:addComponent("physics", Physics.new())
+    player_entity:addComponent("collision", Collision.new(Constants.PLAYER_WIDTH, Constants.PLAYER_HEIGHT))
+    print("  - Entity with all components: " .. (player_entity:hasComponent("transform") and player_entity:hasComponent("physics") and player_entity:hasComponent("collision") and "OK" or "FAILED"))
+
+    print("\nCore Components: OK")
 end
 
 function love.resize(w, h)
