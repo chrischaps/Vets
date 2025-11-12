@@ -91,13 +91,20 @@ This project uses JIRA for task management and follows a structured git workflow
    ```
 
 4. **Test the Implementation**
-   - If the ticket includes testing steps in the acceptance criteria, test the feature thoroughly
-   - Verify that all acceptance criteria are met
-   - Test edge cases and ensure no regressions
-   - Run the game and manually verify the feature works as expected
+   - **CRITICAL:** Always test with `love .` before committing or creating PRs
+   - Run the game and verify:
+     - No syntax or runtime errors in the console output
+     - All acceptance criteria are met
+     - The changes work as expected in-game
+     - No regressions or unintended side effects
+   - Test edge cases and boundary conditions
+   - **Only proceed to PR if testing succeeds and output confirms changes work correctly**
    - **Phase 1 Note:** Document all manual testing in the PR description (automated tests not yet implemented)
    ```bash
-   love .  # Test the game
+   love .  # Test the game - must succeed before proceeding
+   # Watch console output for errors
+   # Verify feature works in-game
+   # Test for 2-3 minutes minimum
    ```
 
 5. **Open Pull Request**
@@ -166,8 +173,12 @@ git add .
 git commit -m "VETS-2: Add constants and utilities"
 
 # 5. Test the implementation
-love .  # Verify game launches correctly
+love .  # MUST run successfully with no errors before proceeding
+# Watch console output carefully for errors
+# Verify feature works as expected in-game
+# Test for 2-3 minutes minimum
 # Document all testing steps and results for PR description
+# DO NOT proceed to PR if testing fails or shows errors
 
 # 6. Open pull request
 git push origin feature/VETS-2-project-setup
