@@ -20,6 +20,28 @@ A cozy action-platformer game where you play as a cat delivering letters across 
 - **Language**: Lua
 - **Virtual Resolution**: 320×180 (scaled up with nearest-neighbor filtering)
 
+### External Libraries
+
+The project uses the following third-party libraries:
+
+- **[bump.lua](https://github.com/kikito/bump.lua)** (v3.1.7) - AABB collision detection
+  - License: MIT
+  - Author: Enrique García Cota (kikito)
+
+- **[anim8](https://github.com/kikito/anim8)** - Sprite animation management
+  - License: MIT
+  - Author: Enrique García Cota (kikito)
+
+- **[hump.camera](https://github.com/vrld/hump)** - Camera system for LÖVE
+  - License: MIT
+  - Author: Matthias Richter (vrld)
+
+- **[json.lua](https://github.com/rxi/json.lua)** - JSON encoding/decoding
+  - License: MIT
+  - Author: rxi
+
+All libraries are located in the `libraries/` directory and can be loaded via `require("libraries.init")`.
+
 ## Development Setup
 
 ### Prerequisites

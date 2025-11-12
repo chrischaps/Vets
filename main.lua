@@ -1,6 +1,9 @@
 -- main.lua
 -- Entry point for Courier Cat
 
+-- Load external libraries
+local libs = require("libraries.init")
+
 -- Virtual resolution for pixel-perfect rendering
 VIRTUAL_WIDTH = 320
 VIRTUAL_HEIGHT = 180
@@ -28,6 +31,13 @@ function love.load()
     print("Courier Cat initialized!")
     print("Virtual resolution: " .. VIRTUAL_WIDTH .. "x" .. VIRTUAL_HEIGHT)
     print("Window resolution: " .. love.graphics.getWidth() .. "x" .. love.graphics.getHeight())
+
+    -- Verify libraries loaded
+    print("\nLibraries loaded:")
+    print("  - bump.lua: " .. (libs.bump and "OK" or "FAILED"))
+    print("  - anim8: " .. (libs.anim8 and "OK" or "FAILED"))
+    print("  - camera: " .. (libs.camera and "OK" or "FAILED"))
+    print("  - json: " .. (libs.json and "OK" or "FAILED"))
 end
 
 function love.resize(w, h)
