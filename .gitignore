@@ -28,3 +28,10 @@ build/
 # Uncomment if you want to ignore save data
 # *.sav
 # save_data.json
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Windows command artifacts
+NUL
+test_output.txt
