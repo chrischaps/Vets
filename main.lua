@@ -4,9 +4,15 @@
 -- Load external libraries
 local libs = require("libraries.init")
 
+-- Load entity system
+local Entity = require("src.entities.entity")
+
 -- Virtual resolution for pixel-perfect rendering
 VIRTUAL_WIDTH = 320
 VIRTUAL_HEIGHT = 180
+
+-- Test entity for verification
+local test_entity = nil
 
 -- Game canvas for rendering
 local game_canvas = nil
@@ -38,6 +44,30 @@ function love.load()
     print("  - anim8: " .. (libs.anim8 and "OK" or "FAILED"))
     print("  - camera: " .. (libs.camera and "OK" or "FAILED"))
     print("  - json: " .. (libs.json and "OK" or "FAILED"))
+
+    -- Test Entity-Component System
+    print("\nTesting Entity-Component System:")
+    test_entity = Entity.new("test")
+    print("  - Entity created with ID: " .. test_entity.id .. ", type: " .. test_entity.type)
+
+    -- Test component management
+    local test_component = { name = "test_component", value = 42 }
+    test_entity:addComponent("test", test_component)
+    print("  - Component added: " .. (test_entity:hasComponent("test") and "OK" or "FAILED"))
+    print("  - Component retrieval: " .. (test_entity:getComponent("test").value == 42 and "OK" or "FAILED"))
+
+    -- Test tag system
+    test_entity:addTag("player")
+    test_entity:addTag("controllable")
+    print("  - Tags added: " .. (test_entity:hasTag("player") and test_entity:hasTag("controllable") and "OK" or "FAILED"))
+
+    -- Test active/inactive system
+    test_entity:deactivate()
+    print("  - Deactivate: " .. (not test_entity:isActive() and "OK" or "FAILED"))
+    test_entity:activate()
+    print("  - Activate: " .. (test_entity:isActive() and "OK" or "FAILED"))
+
+    print("\nEntity-Component System: OK")
 end
 
 function love.resize(w, h)
