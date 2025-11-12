@@ -1,0 +1,30 @@
+# LÖVE game files
+*.love
+
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE / Editor
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+*~
+
+# Build artifacts
+dist/
+build/
+
+# Save files (for local testing)
+# Uncomment if you want to ignore save data
+# *.sav
+# save_data.json
