@@ -24,7 +24,8 @@ Since this is a LÖVE project, use the following commands:
 
 **Running the game:**
 ```bash
-love .
+love .       # Run game with window
+lovec .      # Run game with console (better for testing/debugging)
 ```
 
 **Creating a distributable .love file:**
@@ -35,7 +36,7 @@ zip -r game.love .
 
 **Running tests (if implemented):**
 ```bash
-love . --test
+lovec . --test    # Use lovec to see test output
 # or use lua testing framework like busted
 busted tests/
 ```
@@ -91,7 +92,8 @@ This project uses JIRA for task management and follows a structured git workflow
    ```
 
 4. **Test the Implementation**
-   - **CRITICAL:** Always test with `love .` before committing or creating PRs
+   - **CRITICAL:** Always test with `lovec .` before committing or creating PRs
+   - Use `lovec .` (not `love .`) to see console output and print statements
    - Run the game and verify:
      - No syntax or runtime errors in the console output
      - All acceptance criteria are met
@@ -101,9 +103,9 @@ This project uses JIRA for task management and follows a structured git workflow
    - **Only proceed to PR if testing succeeds and output confirms changes work correctly**
    - **Phase 1 Note:** Document all manual testing in the PR description (automated tests not yet implemented)
    ```bash
-   love .  # Test the game - must succeed before proceeding
-   # Watch console output for errors
-   # Verify feature works in-game
+   lovec .  # Test with console output - must succeed before proceeding
+   # Watch console output carefully for errors and print statements
+   # Verify feature works as expected in-game
    # Test for 2-3 minutes minimum
    ```
 
@@ -173,8 +175,9 @@ git add .
 git commit -m "VETS-2: Add constants and utilities"
 
 # 5. Test the implementation
-love .  # MUST run successfully with no errors before proceeding
-# Watch console output carefully for errors
+lovec .  # Use lovec (not love) to see console output
+# MUST run successfully with no errors before proceeding
+# Watch console output carefully for errors and print statements
 # Verify feature works as expected in-game
 # Test for 2-3 minutes minimum
 # Document all testing steps and results for PR description
