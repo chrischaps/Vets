@@ -87,13 +87,22 @@ This project uses JIRA for task management and follows a structured git workflow
    ```
 
 4. **Test the Implementation**
-   - If the ticket includes testing steps in the acceptance criteria, test the feature thoroughly
-   - Verify that all acceptance criteria are met
-   - Test edge cases and ensure no regressions
-   - Run the game and manually verify the feature works as expected
-   - **Phase 1 Note:** Document all manual testing in the PR description (automated tests not yet implemented)
+   - **REQUIRED:** Always check for and run any built-in tests before submitting
+   - If tests exist (e.g., debug print statements, test entities, validation output):
+     - Run them using `lovec .` to see console output
+     - Verify all test output shows "OK" or expected results
+     - Document the test results in the JIRA ticket
+   - If tests cannot be run or verified:
+     - Document this limitation in the JIRA ticket with an explanation
+     - Note what prevented verification (e.g., "no console output available", "tests not yet implemented")
+   - Manual testing:
+     - Verify that all acceptance criteria are met
+     - Test edge cases and ensure no regressions
+     - Run the game and manually verify the feature works as expected
+     - Document all manual testing steps and results
    ```bash
-   love .  # Test the game
+   lovec .  # Run with console output to see test results
+   love .   # Test the game visually
    ```
 
 5. **Open Pull Request**
@@ -103,7 +112,8 @@ This project uses JIRA for task management and follows a structured git workflow
    - PR description should include:
      - Link to the JIRA ticket (e.g., `https://chrischappelear.atlassian.net/browse/VETS-2`)
      - Summary of changes
-     - **Manual testing performed** (Phase 1: document all test steps and results)
+     - **Test results:** Document built-in test output (if available) or note if tests could not be verified
+     - **Manual testing performed:** Document all manual test steps and results
      - Any notes or considerations
    - **IMPORTANT:** Do NOT merge the PR - wait for code review and approval
    ```bash
@@ -112,9 +122,11 @@ This project uses JIRA for task management and follows a structured git workflow
    ```
 
 6. **Update JIRA Ticket**
-   - Add a comment with the PR link
+   - Add a comment with:
+     - The PR link
+     - Test verification status (passed/not available/unable to verify with reason)
+     - Any issues encountered or deviations from the spec
    - Move ticket to "In Review" status
-   - Document any issues encountered or deviations from the spec
    - Ticket will move to "Done" after PR is reviewed and merged
 
 ### Git Branch Strategy
@@ -162,18 +174,19 @@ git add .
 git commit -m "VETS-2: Add constants and utilities"
 
 # 5. Test the implementation
-love .  # Verify game launches correctly
-# Document all testing steps and results for PR description
+lovec .  # Run with console to verify test output shows "OK"
+love .   # Verify game launches correctly
+# Document all test results and manual testing steps for PR description
 
 # 6. Open pull request
 git push origin feature/VETS-2-project-setup
 # Create PR on GitHub with:
 # - Title: "VETS-2: Set up LÖVE project structure and configuration"
-# - Description: JIRA link, changes summary, manual testing results
+# - Description: JIRA link, changes summary, test verification status, manual testing results
 # - Target branch: develop
 # - DO NOT MERGE - wait for review
 
-# 7. Update JIRA with PR link and move to "In Review"
+# 7. Update JIRA with PR link, test status, and move to "In Review"
 # Ticket moves to "Done" after PR is reviewed and merged
 ```
 
