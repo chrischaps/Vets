@@ -16,12 +16,18 @@ local Transform = require("src.components.transform")
 local Physics = require("src.components.physics")
 local Collision = require("src.components.collision")
 
+-- Load entities
+local Player = require("src.entities.player")
+
 -- Virtual resolution for pixel-perfect rendering
 VIRTUAL_WIDTH = 320
 VIRTUAL_HEIGHT = 180
 
 -- Test entity for verification
 local test_entity = nil
+
+-- Game entities
+local player = nil
 
 -- Game canvas for rendering
 local game_canvas = nil
@@ -118,6 +124,16 @@ function love.load()
     print("  - Entity with all components: " .. (player_entity:hasComponent("transform") and player_entity:hasComponent("physics") and player_entity:hasComponent("collision") and "OK" or "FAILED"))
 
     print("\nCore Components: OK")
+
+    -- Create player
+    print("\nCreating player:")
+    player = Player.new(160, 90)
+    print("  - Player created at (" .. player.transform.x .. ", " .. player.transform.y .. ")")
+    print("  - Player hitbox: " .. player.collision.width .. "x" .. player.collision.height .. " pixels")
+    print("  - Run speed: " .. Constants.RUN_SPEED .. " px/s")
+    print("  - Acceleration: " .. Constants.ACCELERATION .. " px/s²")
+    print("\nPlayer: OK")
+    print("\n=== Use arrow keys or WASD to move ===")
 end
 
 function love.resize(w, h)
@@ -148,7 +164,10 @@ function love.update(dt)
         -- Update game logic here using Time.FIXED_DT
         -- All game entities, physics, etc. should use Time.FIXED_DT for consistency
 
-        -- This will be expanded as we add more systems
+        -- Update player
+        if player then
+            player:update(Time.FIXED_DT)
+        end
     end
 end
 
@@ -161,18 +180,34 @@ function love.draw()
     love.graphics.setColor(0.2, 0.2, 0.3)  -- Dark blue-purple background
     love.graphics.rectangle("fill", 0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT)
 
-    -- Draw placeholder text
+    -- Draw ground (placeholder)
+    love.graphics.setColor(0.3, 0.3, 0.4)
+    love.graphics.rectangle("fill", 0, 140, VIRTUAL_WIDTH, VIRTUAL_HEIGHT - 140)
+
+    -- Draw player
+    if player then
+        player:draw()
+    end
+
+    -- Draw UI overlay
     love.graphics.setColor(1, 1, 1)
     love.graphics.print("Courier Cat", 10, 10)
     love.graphics.print("LOVE " .. love.getVersion(), 10, 30)
     love.graphics.print("Press ESC to quit", 10, 50)
 
-    -- Debug: Display time info
+    -- Debug: Display time and player info
     love.graphics.setColor(0.7, 0.7, 0.7)
     love.graphics.print("Fixed timestep: " .. Time.FIXED_DT .. "s (" .. Time:getFPS() .. " FPS)", 10, 80)
     love.graphics.print("Frame: " .. Time.frame, 10, 95)
     love.graphics.print("Total time: " .. string.format("%.2f", Time.total) .. "s", 10, 110)
     love.graphics.print("Actual FPS: " .. love.timer.getFPS(), 10, 125)
+
+    -- Player debug info
+    if player then
+        love.graphics.print(string.format("Player pos: (%.1f, %.1f)", player.transform.x, player.transform.y), 10, 145)
+        love.graphics.print(string.format("Player vel: (%.1f, %.1f)", player.physics.velocity_x, player.physics.velocity_y), 10, 160)
+        love.graphics.print("Grounded: " .. (player.grounded and "YES" or "NO"), 10, 175)
+    end
 
     -- Draw to screen
     love.graphics.setCanvas()
