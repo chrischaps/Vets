@@ -40,6 +40,10 @@ love . --test
 busted tests/
 ```
 
+**Note on Windows Artifacts:**
+- When running commands that redirect to `NUL` on Windows (e.g., `2>NUL`), a file named `NUL` may be created as an artifact
+- This file and `test_output.txt` are ignored in `.gitignore` and can be safely ignored or deleted
+
 ## Development Workflow
 
 This project uses JIRA for task management and follows a structured git workflow for feature development.
