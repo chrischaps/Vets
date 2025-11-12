@@ -75,7 +75,7 @@ end
 
 -- Check if this collision component collides with a specific layer
 function Collision:collidesWithLayer(layer)
-    return (bit.band(self.mask, layer)) ~= 0
+    return bit.band(self.mask, layer) ~= 0
 end
 
 -- Set as trigger (no solid collision, only overlap detection)

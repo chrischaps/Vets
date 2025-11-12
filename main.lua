@@ -18,6 +18,10 @@ local Collision = require("src.components.collision")
 
 -- Load entities
 local Player = require("src.entities.player")
+local Platform = require("src.entities.platform")
+
+-- Load systems
+local CollisionSystem = require("src.systems.collision_system")
 
 -- Virtual resolution for pixel-perfect rendering
 VIRTUAL_WIDTH = 320
@@ -28,6 +32,10 @@ local test_entity = nil
 
 -- Game entities
 local player = nil
+local platforms = {}
+
+-- Game systems
+local collision_system = nil
 
 -- Game canvas for rendering
 local game_canvas = nil
@@ -125,15 +133,87 @@ function love.load()
 
     print("\nCore Components: OK")
 
+    -- Initialize collision system
+    print("\nInitializing Collision System:")
+    collision_system = CollisionSystem.new(16)
+    print("  - Collision system created with 16px cell size: OK")
+
+    -- Create comprehensive test level with platforms (VETS-9 + VETS-10)
+    print("\nCreating test level:")
+
+    -- Ground level platform (160px wide as specified in VETS-10)
+    local ground = Platform.new(10, 150, 160, 30)
+    table.insert(platforms, ground)
+    collision_system:add(ground, 10, 150, 160, 30)
+    print("  - Ground platform: 160x30 at (10, 150)")
+
+    -- Elevated platforms with varying gaps (32px, 48px, 64px)
+    -- Platform 1: Starting platform
+    local p1 = Platform.new(40, 120, 50, 8)
+    table.insert(platforms, p1)
+    collision_system:add(p1, 40, 120, 50, 8)
+    print("  - Platform 1: 50x8 at (40, 120) - Start")
+
+    -- Platform 2: 32px gap from Platform 1
+    local p2 = Platform.new(122, 110, 45, 8)  -- 90 + 32 = 122
+    table.insert(platforms, p2)
+    collision_system:add(p2, 122, 110, 45, 8)
+    print("  - Platform 2: 45x8 at (122, 110) - 32px gap")
+
+    -- Platform 3: 48px gap from Platform 2
+    local p3 = Platform.new(215, 95, 40, 8)  -- 167 + 48 = 215
+    table.insert(platforms, p3)
+    collision_system:add(p3, 215, 95, 40, 8)
+    print("  - Platform 3: 40x8 at (215, 95) - 48px gap")
+
+    -- Platform 4: 64px gap from Platform 3 (challenging jump)
+    local p4 = Platform.new(40, 70, 50, 8)  -- Back to left side, 64px gap
+    table.insert(platforms, p4)
+    collision_system:add(p4, 40, 70, 50, 8)
+    print("  - Platform 4: 50x8 at (40, 70) - 64px gap")
+
+    -- Vertical section with walls for testing (VETS-10 spec)
+    -- Left wall
+    local wall_left = Platform.new(5, 30, 8, 90)
+    table.insert(platforms, wall_left)
+    collision_system:add(wall_left, 5, 30, 8, 90)
+    print("  - Left wall: 8x90 at (5, 30)")
+
+    -- Right wall (for wall mechanics testing in later phases)
+    local wall_right = Platform.new(307, 30, 8, 90)
+    table.insert(platforms, wall_right)
+    collision_system:add(wall_right, 307, 30, 8, 90)
+    print("  - Right wall: 8x90 at (307, 30)")
+
+    -- Small platforms in vertical section
+    local p5 = Platform.new(120, 50, 45, 8)
+    table.insert(platforms, p5)
+    collision_system:add(p5, 120, 50, 45, 8)
+    print("  - Platform 5: 45x8 at (120, 50)")
+
+    local p6 = Platform.new(180, 35, 40, 8)
+    table.insert(platforms, p6)
+    collision_system:add(p6, 180, 35, 40, 8)
+    print("  - Platform 6: 40x8 at (180, 35)")
+
+    print("  - Total platforms/walls: " .. #platforms)
+
     -- Create player
     print("\nCreating player:")
-    player = Player.new(160, 90)
+    player = Player.new(160, 100, collision_system)
+
+    -- Add player to collision system
+    local px = player.transform.x - player.collision.width / 2
+    local py = player.transform.y - player.collision.height / 2
+    collision_system:add(player, px, py, player.collision.width, player.collision.height)
+
     print("  - Player created at (" .. player.transform.x .. ", " .. player.transform.y .. ")")
     print("  - Player hitbox: " .. player.collision.width .. "x" .. player.collision.height .. " pixels")
     print("  - Run speed: " .. Constants.RUN_SPEED .. " px/s")
     print("  - Acceleration: " .. Constants.ACCELERATION .. " px/s²")
+    print("  - Jump force: " .. Constants.JUMP_FORCE .. " px/s")
     print("\nPlayer: OK")
-    print("\n=== Use arrow keys or WASD to move ===")
+    print("\n=== Use arrow keys/WASD to move, Space to jump ===")
 end
 
 function love.resize(w, h)
@@ -180,13 +260,19 @@ function love.draw()
     love.graphics.setColor(0.2, 0.2, 0.3)  -- Dark blue-purple background
     love.graphics.rectangle("fill", 0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT)
 
-    -- Draw ground (placeholder)
-    love.graphics.setColor(0.3, 0.3, 0.4)
-    love.graphics.rectangle("fill", 0, 140, VIRTUAL_WIDTH, VIRTUAL_HEIGHT - 140)
+    -- Draw platforms
+    for _, platform in ipairs(platforms) do
+        platform:draw()
+    end
 
     -- Draw player
     if player then
         player:draw()
+    end
+
+    -- Debug: Draw collision boundaries
+    if collision_system and love.keyboard.isDown("f1") then
+        collision_system:debugDraw()
     end
 
     -- Draw UI overlay
@@ -206,8 +292,12 @@ function love.draw()
     if player then
         love.graphics.print(string.format("Player pos: (%.1f, %.1f)", player.transform.x, player.transform.y), 10, 145)
         love.graphics.print(string.format("Player vel: (%.1f, %.1f)", player.physics.velocity_x, player.physics.velocity_y), 10, 160)
-        love.graphics.print("Grounded: " .. (player.grounded and "YES" or "NO"), 10, 175)
+        love.graphics.print("Grounded: " .. (player.grounded and "YES" or "NO") .. " | Jumping: " .. (player.jumping and "YES" or "NO"), 10, 175)
     end
+
+    -- Debug help
+    love.graphics.setColor(0.5, 0.5, 0.5)
+    love.graphics.print("F1: Toggle collision debug", 200, 10)
 
     -- Draw to screen
     love.graphics.setCanvas()

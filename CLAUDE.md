@@ -24,7 +24,8 @@ Since this is a LÖVE project, use the following commands:
 
 **Running the game:**
 ```bash
-love .
+love .       # Run game with window
+lovec .      # Run game with console (better for testing/debugging)
 ```
 
 **Creating a distributable .love file:**
@@ -35,7 +36,7 @@ zip -r game.love .
 
 **Running tests (if implemented):**
 ```bash
-love . --test
+lovec . --test    # Use lovec to see test output
 # or use lua testing framework like busted
 busted tests/
 ```
@@ -91,13 +92,21 @@ This project uses JIRA for task management and follows a structured git workflow
    ```
 
 4. **Test the Implementation**
-   - If the ticket includes testing steps in the acceptance criteria, test the feature thoroughly
-   - Verify that all acceptance criteria are met
-   - Test edge cases and ensure no regressions
-   - Run the game and manually verify the feature works as expected
+   - **CRITICAL:** Always test with `lovec .` before committing or creating PRs
+   - Use `lovec .` (not `love .`) to see console output and print statements
+   - Run the game and verify:
+     - No syntax or runtime errors in the console output
+     - All acceptance criteria are met
+     - The changes work as expected in-game
+     - No regressions or unintended side effects
+   - Test edge cases and boundary conditions
+   - **Only proceed to PR if testing succeeds and output confirms changes work correctly**
    - **Phase 1 Note:** Document all manual testing in the PR description (automated tests not yet implemented)
    ```bash
-   love .  # Test the game
+   lovec .  # Test with console output - must succeed before proceeding
+   # Watch console output carefully for errors and print statements
+   # Verify feature works as expected in-game
+   # Test for 2-3 minutes minimum
    ```
 
 5. **Open Pull Request**
@@ -166,8 +175,13 @@ git add .
 git commit -m "VETS-2: Add constants and utilities"
 
 # 5. Test the implementation
-love .  # Verify game launches correctly
+lovec .  # Use lovec (not love) to see console output
+# MUST run successfully with no errors before proceeding
+# Watch console output carefully for errors and print statements
+# Verify feature works as expected in-game
+# Test for 2-3 minutes minimum
 # Document all testing steps and results for PR description
+# DO NOT proceed to PR if testing fails or shows errors
 
 # 6. Open pull request
 git push origin feature/VETS-2-project-setup
@@ -243,3 +257,10 @@ git push origin feature/VETS-2-project-setup
 - **Collision layers:** platforms, hazards, delivery zones, power-ups
 - **State management:** menu → gameplay → results → menu loop
 - **Save system:** high scores, unlocked ranks, discovered letter fragments
+
+## Lua/LÖVE Specific Notes
+
+- **Bitwise Operations:** LÖVE uses LuaJIT which provides the `bit` library (not `bit32`)
+  - Use `bit.band(a, b)` for bitwise AND operations
+  - Use `bit.bor(a, b)` for bitwise OR operations
+  - Avoid using `&`, `|` operators as they're not available in Lua 5.1/LuaJIT

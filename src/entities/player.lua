@@ -12,8 +12,11 @@ local Player = {}
 Player.__index = Player
 
 -- Create a new player entity
-function Player.new(x, y)
+function Player.new(x, y, collision_system)
     local self = setmetatable({}, Player)
+
+    -- Store collision system reference
+    self.collision_system = collision_system
 
     -- Create base entity
     self.entity = Entity.new("player")
@@ -145,22 +148,45 @@ function Player:update(dt)
     -- Update physics (this applies gravity and velocity to position)
     self.physics:update(dt, gravity)
 
-    -- Apply physics velocity to transform position
-    self.transform:translate(
-        self.physics.velocity_x * dt,
-        self.physics.velocity_y * dt
-    )
+    -- Calculate desired position based on velocity
+    local desired_x = self.transform.x + self.physics.velocity_x * dt
+    local desired_y = self.transform.y + self.physics.velocity_y * dt
 
-    -- TODO: Collision detection and response will be implemented in VETS-9
-    -- For now, add simple ground clamping so player doesn't fall through floor
-    local ground_y = 140  -- Temporary ground level
-    if self.transform.y >= ground_y then
-        self.transform.y = ground_y
-        self.physics:setVelocity(self.physics.velocity_x, 0)
-        self.grounded = true
-        self.jumping = false  -- Reset jumping state when landing
-    else
+    -- Use collision system if available
+    if self.collision_system then
+        -- Convert from center position to top-left for bump
+        local box_x = desired_x - self.collision.width / 2
+        local box_y = desired_y - self.collision.height / 2
+
+        -- Move with collision detection
+        local actual_x, actual_y, cols, len = self.collision_system:update(
+            self,
+            box_x,
+            box_y,
+            self.collision.width,
+            self.collision.height
+        )
+
+        -- Convert back from top-left to center position
+        self.transform.x = actual_x + self.collision.width / 2
+        self.transform.y = actual_y + self.collision.height / 2
+
+        -- Check grounded state from collisions
         self.grounded = false
+        for i = 1, len do
+            local col = cols[i]
+            -- Check if collision is from below (player landing on something)
+            if col.normal.y < 0 then  -- Normal pointing up = ground
+                self.grounded = true
+                self.jumping = false
+                self.physics:setVelocity(self.physics.velocity_x, 0)
+                break
+            end
+        end
+    else
+        -- No collision system, just move freely
+        self.transform.x = desired_x
+        self.transform.y = desired_y
     end
 end
 

@@ -13,7 +13,13 @@
       "mcp__atlassian__transitionJiraIssue",
       "Bash(git checkout:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(if exist NUL del NUL)",
+      "Bash(if exist test_output.txt del test_output.txt)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(love .)",
+      "mcp__atlassian__addCommentToJiraIssue"
     ],
     "deny": [],
     "ask": []
