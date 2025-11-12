@@ -37,9 +37,13 @@ function Player.new(x, y)
     -- Player state
     self.grounded = false
     self.facing_right = true
+    self.jumping = false  -- Is player currently jumping?
+    self.jump_held = false  -- Is jump button currently held?
 
     -- Movement input
     self.input_x = 0  -- -1 for left, 1 for right, 0 for no input
+    self.input_jump = false  -- Jump button pressed this frame
+    self.input_jump_release = false  -- Jump button released this frame
 
     -- Visual representation (placeholder rectangle)
     self.color = {0.9, 0.6, 0.3}  -- Orange color for the cat
@@ -51,6 +55,8 @@ end
 function Player:handleInput()
     -- Reset input
     self.input_x = 0
+    self.input_jump = false
+    self.input_jump_release = false
 
     -- Check left/right arrow keys or WASD
     if love.keyboard.isDown("left") or love.keyboard.isDown("a") then
@@ -60,6 +66,24 @@ function Player:handleInput()
         self.input_x = 1
         self.facing_right = true
     end
+
+    -- Check jump input (Space, W, or Up Arrow)
+    local jump_down = love.keyboard.isDown("space") or
+                      love.keyboard.isDown("w") or
+                      love.keyboard.isDown("up")
+
+    -- Detect jump press (rising edge detection)
+    if jump_down and not self.jump_held then
+        self.input_jump = true
+    end
+
+    -- Detect jump release (falling edge detection)
+    if not jump_down and self.jump_held then
+        self.input_jump_release = true
+    end
+
+    -- Update jump held state
+    self.jump_held = jump_down
 end
 
 -- Update player
@@ -99,8 +123,27 @@ function Player:update(dt)
         end
     end
 
+    -- Handle jumping
+    -- Jump when on ground and jump pressed
+    if self.grounded and self.input_jump then
+        self:jump()
+    end
+
+    -- Variable jump height: reduce upward velocity when jump released early
+    if self.input_jump_release and self.jumping and self.physics.velocity_y < 0 then
+        -- Cut jump short by reducing upward velocity
+        self.physics:setVelocity(self.physics.velocity_x, self.physics.velocity_y * 0.5)
+    end
+
+    -- Apply reduced gravity while holding jump and moving upward
+    local gravity = Constants.GRAVITY
+    if self.jumping and self.jump_held and self.physics.velocity_y < 0 then
+        -- Use reduced gravity (50% of normal) for more floaty feel at apex
+        gravity = Constants.GRAVITY * Constants.JUMP_HOLD_GRAVITY
+    end
+
     -- Update physics (this applies gravity and velocity to position)
-    self.physics:update(dt, Constants.GRAVITY)
+    self.physics:update(dt, gravity)
 
     -- Apply physics velocity to transform position
     self.transform:translate(
@@ -111,13 +154,22 @@ function Player:update(dt)
     -- TODO: Collision detection and response will be implemented in VETS-9
     -- For now, add simple ground clamping so player doesn't fall through floor
     local ground_y = 140  -- Temporary ground level
-    if self.transform.y > ground_y then
+    if self.transform.y >= ground_y then
         self.transform.y = ground_y
         self.physics:setVelocity(self.physics.velocity_x, 0)
         self.grounded = true
+        self.jumping = false  -- Reset jumping state when landing
     else
         self.grounded = false
     end
+end
+
+-- Perform jump
+function Player:jump()
+    -- Apply jump force (negative velocity = upward)
+    self.physics:setVelocity(self.physics.velocity_x, Constants.JUMP_FORCE)
+    self.jumping = true
+    self.grounded = false
 end
 
 -- Draw player
