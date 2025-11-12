@@ -4,6 +4,9 @@
 -- Load external libraries
 local libs = require("libraries.init")
 
+-- Load core systems
+local Time = require("src.core.time")
+
 -- Load entity system
 local Entity = require("src.entities.entity")
 
@@ -44,6 +47,11 @@ function love.load()
     print("  - anim8: " .. (libs.anim8 and "OK" or "FAILED"))
     print("  - camera: " .. (libs.camera and "OK" or "FAILED"))
     print("  - json: " .. (libs.json and "OK" or "FAILED"))
+
+    -- Initialize time system
+    Time:init()
+    print("\nTime system initialized:")
+    print("  - Fixed timestep: " .. Time.FIXED_DT .. "s (" .. Time:getFPS() .. " FPS)")
 
     -- Test Entity-Component System
     print("\nTesting Entity-Component System:")
@@ -89,7 +97,17 @@ function calculate_scale()
 end
 
 function love.update(dt)
-    -- Game update logic will go here
+    -- Fixed timestep game loop
+    -- This ensures consistent physics and deterministic gameplay at 60 FPS
+    local updates = Time:update(dt)
+
+    -- Perform fixed updates
+    for i = 1, updates do
+        -- Update game logic here using Time.FIXED_DT
+        -- All game entities, physics, etc. should use Time.FIXED_DT for consistency
+
+        -- This will be expanded as we add more systems
+    end
 end
 
 function love.draw()
@@ -106,6 +124,13 @@ function love.draw()
     love.graphics.print("Courier Cat", 10, 10)
     love.graphics.print("LOVE " .. love.getVersion(), 10, 30)
     love.graphics.print("Press ESC to quit", 10, 50)
+
+    -- Debug: Display time info
+    love.graphics.setColor(0.7, 0.7, 0.7)
+    love.graphics.print("Fixed timestep: " .. Time.FIXED_DT .. "s (" .. Time:getFPS() .. " FPS)", 10, 80)
+    love.graphics.print("Frame: " .. Time.frame, 10, 95)
+    love.graphics.print("Total time: " .. string.format("%.2f", Time.total) .. "s", 10, 110)
+    love.graphics.print("Actual FPS: " .. love.timer.getFPS(), 10, 125)
 
     -- Draw to screen
     love.graphics.setCanvas()
