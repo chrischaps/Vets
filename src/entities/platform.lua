@@ -42,6 +42,11 @@ function Platform:draw()
     local w = self.width
     local h = self.height
 
+    -- Debug: Print first platform draw position when F2 is held
+    if love.keyboard.isDown("f2") and self.width == 160 then  -- Ground platform
+        print(string.format("[Platform] Ground at: (%.1f, %.1f) size: %dx%d", x, y, w, h))
+    end
+
     -- Draw platform as colored rectangle
     love.graphics.setColor(self.color)
     love.graphics.rectangle("fill", x, y, w, h)

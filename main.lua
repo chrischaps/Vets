@@ -280,9 +280,9 @@ function love.draw()
     love.graphics.setColor(0.2, 0.2, 0.3)  -- Dark blue-purple background
     love.graphics.rectangle("fill", 0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT)
 
-    -- Apply camera transform
+    -- Apply camera transform (pass virtual resolution for correct centering)
     if camera then
-        camera:attach()
+        camera:attach(0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT)
     end
 
     -- Draw platforms
@@ -338,7 +338,7 @@ function love.draw()
 
     -- Draw crosshair at camera center (world space)
     if camera and love.keyboard.isDown("f2") then
-        camera:attach()
+        camera:attach(0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT)
         love.graphics.setColor(1, 0, 0)
         local cam_x, cam_y = camera:getPosition()
         love.graphics.line(cam_x - 10, cam_y, cam_x + 10, cam_y)

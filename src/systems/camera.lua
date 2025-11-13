@@ -118,8 +118,9 @@ function CameraSystem:update(dt)
 end
 
 -- Begin camera transform (call before drawing world)
-function CameraSystem:attach()
-    self.camera:attach()
+-- Must pass canvas dimensions for correct centering
+function CameraSystem:attach(x, y, w, h)
+    self.camera:attach(x, y, w, h)
 end
 
 -- End camera transform (call after drawing world)
