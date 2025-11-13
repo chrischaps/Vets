@@ -43,6 +43,12 @@ function Player.new(x, y, collision_system)
     self.jumping = false  -- Is player currently jumping?
     self.jump_held = false  -- Is jump button currently held?
 
+    -- Wall-sliding state
+    self.wall_sliding = false  -- Is player currently wall-sliding?
+    self.on_wall = false  -- Is player touching a wall?
+    self.wall_direction = 0  -- Direction of wall: -1 left, 1 right, 0 none
+    self.wall_stick_timer = 0  -- Timer for wall stick buffer
+
     -- Movement input
     self.input_x = 0  -- -1 for left, 1 for right, 0 for no input
     self.input_jump = false  -- Jump button pressed this frame
@@ -138,11 +144,32 @@ function Player:update(dt)
         self.physics:setVelocity(self.physics.velocity_x, self.physics.velocity_y * 0.5)
     end
 
+    -- Wall-sliding mechanics
+    -- Check if player should be wall-sliding
+    if self.on_wall and not self.grounded and self.physics.velocity_y > 0 then
+        -- Player is touching wall, in air, and falling - start wall-slide
+        self.wall_sliding = true
+        self.wall_stick_timer = Constants.WALL_STICK_TIME
+    elseif self.wall_sliding then
+        -- Update wall stick timer
+        self.wall_stick_timer = self.wall_stick_timer - dt
+
+        -- Stop wall-sliding if no longer on wall and stick timer expired
+        if not self.on_wall and self.wall_stick_timer <= 0 then
+            self.wall_sliding = false
+        end
+    end
+
     -- Apply reduced gravity while holding jump and moving upward
     local gravity = Constants.GRAVITY
     if self.jumping and self.jump_held and self.physics.velocity_y < 0 then
         -- Use reduced gravity (50% of normal) for more floaty feel at apex
         gravity = Constants.GRAVITY * Constants.JUMP_HOLD_GRAVITY
+    elseif self.wall_sliding then
+        -- Override velocity for wall-slide (constant descent speed)
+        -- Don't use gravity - directly set vertical velocity to slide speed
+        self.physics:setVelocity(self.physics.velocity_x, Constants.WALL_SLIDE_SPEED)
+        gravity = 0  -- No gravity while wall-sliding
     end
 
     -- Update physics (this applies gravity and velocity to position)
@@ -171,16 +198,27 @@ function Player:update(dt)
         self.transform.x = actual_x + self.collision.width / 2
         self.transform.y = actual_y + self.collision.height / 2
 
-        -- Check grounded state from collisions
+        -- Check grounded and wall states from collisions
         self.grounded = false
+        self.on_wall = false
+        self.wall_direction = 0
+
         for i = 1, len do
             local col = cols[i]
+
             -- Check if collision is from below (player landing on something)
             if col.normal.y < 0 then  -- Normal pointing up = ground
                 self.grounded = true
                 self.jumping = false
+                self.wall_sliding = false
                 self.physics:setVelocity(self.physics.velocity_x, 0)
-                break
+            end
+
+            -- Check for wall collision (left or right)
+            if col.normal.x ~= 0 and not self.grounded then  -- Horizontal collision in air
+                self.on_wall = true
+                self.wall_direction = col.normal.x  -- -1 for left wall, 1 for right wall
+                self.physics:setVelocity(0, self.physics.velocity_y)
             end
         end
     else
@@ -213,8 +251,20 @@ function Player:draw()
     end
 
     -- Draw player as colored rectangle (placeholder)
-    love.graphics.setColor(self.color)
+    -- Change color if wall-sliding (brighter/glowing effect)
+    if self.wall_sliding then
+        love.graphics.setColor(1, 0.8, 0.5)  -- Brighter orange/yellow when wall-sliding
+    else
+        love.graphics.setColor(self.color)
+    end
     love.graphics.rectangle("fill", x - w/2, y - h/2, w, h)
+
+    -- Draw wall contact indicator (line on the wall side)
+    if self.wall_sliding then
+        love.graphics.setColor(1, 1, 0)  -- Yellow indicator
+        local wall_x = self.wall_direction < 0 and (x - w/2) or (x + w/2)
+        love.graphics.line(wall_x, y - h/2, wall_x, y + h/2)
+    end
 
     -- Draw facing direction indicator (small line)
     love.graphics.setColor(1, 1, 1)
