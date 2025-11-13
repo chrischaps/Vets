@@ -64,6 +64,7 @@ end
 -- Update camera position (smooth following)
 function CameraSystem:update(dt)
     if not self.target or not self.target.transform then
+        print("[Camera] WARNING: No target or target has no transform")
         return
     end
 
@@ -73,6 +74,12 @@ function CameraSystem:update(dt)
 
     -- Get current camera position
     local cam_x, cam_y = self.camera:position()
+
+    -- Debug logging (can be toggled)
+    if love.keyboard.isDown("f2") then
+        print(string.format("[Camera] Target: (%.1f, %.1f) | Camera: (%.1f, %.1f)",
+            target_x, target_y, cam_x, cam_y))
+    end
 
     -- Smooth lerp to target position
     -- Higher smoothing = faster following

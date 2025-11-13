@@ -332,7 +332,17 @@ function love.draw()
 
     -- Debug help
     love.graphics.setColor(0.5, 0.5, 0.5)
-    love.graphics.print("F1: Toggle collision debug", 200, 10)
+    love.graphics.print("F1: Collision debug | F2: Camera debug", 200, 10)
+
+    -- Draw crosshair at camera center (world space)
+    if camera and love.keyboard.isDown("f2") then
+        camera:attach()
+        love.graphics.setColor(1, 0, 0)
+        local cam_x, cam_y = camera:getPosition()
+        love.graphics.line(cam_x - 10, cam_y, cam_x + 10, cam_y)
+        love.graphics.line(cam_x, cam_y - 10, cam_x, cam_y + 10)
+        camera:detach()
+    end
 
     -- Draw to screen
     love.graphics.setCanvas()
