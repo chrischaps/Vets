@@ -22,6 +22,7 @@ local Platform = require("src.entities.platform")
 
 -- Load systems
 local CollisionSystem = require("src.systems.collision_system")
+local CameraSystem = require("src.systems.camera")
 
 -- Virtual resolution for pixel-perfect rendering
 VIRTUAL_WIDTH = 320
@@ -36,6 +37,7 @@ local platforms = {}
 
 -- Game systems
 local collision_system = nil
+local camera = nil
 
 -- Game canvas for rendering
 local game_canvas = nil
@@ -213,6 +215,19 @@ function love.load()
     print("  - Acceleration: " .. Constants.ACCELERATION .. " px/s²")
     print("  - Jump force: " .. Constants.JUMP_FORCE .. " px/s")
     print("\nPlayer: OK")
+
+    -- Initialize camera system
+    print("\nInitializing Camera System:")
+    -- Start camera at player position to avoid initial offset
+    camera = CameraSystem.new(player.transform.x, player.transform.y)
+    camera:setTarget(player)
+    camera:setSmoothing(0.1)
+    print("  - Camera created and targeting player")
+    print("  - Camera smoothing: 0.1 (smooth following)")
+    print("  - Camera initial position: (" .. player.transform.x .. ", " .. player.transform.y .. ")")
+    print("  - Player position: (" .. player.transform.x .. ", " .. player.transform.y .. ")")
+    print("\nCamera System: OK")
+
     print("\n=== Use arrow keys/WASD to move, Space to jump ===")
 end
 
@@ -248,6 +263,11 @@ function love.update(dt)
         if player then
             player:update(Time.FIXED_DT)
         end
+
+        -- Update camera (smooth following)
+        if camera then
+            camera:update(Time.FIXED_DT)
+        end
     end
 end
 
@@ -259,6 +279,11 @@ function love.draw()
     -- Draw game content here
     love.graphics.setColor(0.2, 0.2, 0.3)  -- Dark blue-purple background
     love.graphics.rectangle("fill", 0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT)
+
+    -- Apply camera transform (pass virtual resolution for correct centering)
+    if camera then
+        camera:attach(0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT)
+    end
 
     -- Draw platforms
     for _, platform in ipairs(platforms) do
@@ -273,6 +298,11 @@ function love.draw()
     -- Debug: Draw collision boundaries
     if collision_system and love.keyboard.isDown("f1") then
         collision_system:debugDraw()
+    end
+
+    -- Detach camera (UI elements drawn after this won't move with camera)
+    if camera then
+        camera:detach()
     end
 
     -- Draw UI overlay
@@ -295,9 +325,26 @@ function love.draw()
         love.graphics.print("Grounded: " .. (player.grounded and "YES" or "NO") .. " | Jumping: " .. (player.jumping and "YES" or "NO"), 10, 175)
     end
 
+    -- Camera debug info
+    if camera then
+        local cam_x, cam_y = camera:getPosition()
+        love.graphics.setColor(0.7, 0.7, 0.7)
+        love.graphics.print(string.format("Camera pos: (%.1f, %.1f)", cam_x, cam_y), 200, 145)
+    end
+
     -- Debug help
     love.graphics.setColor(0.5, 0.5, 0.5)
-    love.graphics.print("F1: Toggle collision debug", 200, 10)
+    love.graphics.print("F1: Collision debug | F2: Camera debug", 200, 10)
+
+    -- Draw crosshair at camera center (world space)
+    if camera and love.keyboard.isDown("f2") then
+        camera:attach(0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT)
+        love.graphics.setColor(1, 0, 0)
+        local cam_x, cam_y = camera:getPosition()
+        love.graphics.line(cam_x - 10, cam_y, cam_x + 10, cam_y)
+        love.graphics.line(cam_x, cam_y - 10, cam_x, cam_y + 10)
+        camera:detach()
+    end
 
     -- Draw to screen
     love.graphics.setCanvas()
