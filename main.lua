@@ -218,12 +218,14 @@ function love.load()
 
     -- Initialize camera system
     print("\nInitializing Camera System:")
-    camera = CameraSystem.new(VIRTUAL_WIDTH / 2, VIRTUAL_HEIGHT / 2)
+    -- Start camera at player position to avoid initial offset
+    camera = CameraSystem.new(player.transform.x, player.transform.y)
     camera:setTarget(player)
     camera:setSmoothing(0.1)
     print("  - Camera created and targeting player")
     print("  - Camera smoothing: 0.1 (smooth following)")
-    print("  - Camera position: (" .. VIRTUAL_WIDTH / 2 .. ", " .. VIRTUAL_HEIGHT / 2 .. ")")
+    print("  - Camera initial position: (" .. player.transform.x .. ", " .. player.transform.y .. ")")
+    print("  - Player position: (" .. player.transform.x .. ", " .. player.transform.y .. ")")
     print("\nCamera System: OK")
 
     print("\n=== Use arrow keys/WASD to move, Space to jump ===")

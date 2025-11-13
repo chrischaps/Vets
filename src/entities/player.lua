@@ -206,6 +206,12 @@ function Player:draw()
     local w = self.collision.width
     local h = self.collision.height
 
+    -- Debug: Print draw position when F2 is held
+    if love.keyboard.isDown("f2") then
+        print(string.format("[Player] Drawing at: (%.1f, %.1f) size: %dx%d",
+            x - w/2, y - h/2, w, h))
+    end
+
     -- Draw player as colored rectangle (placeholder)
     love.graphics.setColor(self.color)
     love.graphics.rectangle("fill", x - w/2, y - h/2, w, h)
