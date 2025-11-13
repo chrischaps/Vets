@@ -32,6 +32,7 @@ function Physics.new()
     self.on_wall = false       -- Is entity touching a wall?
     self.on_wall_left = false  -- Is entity touching left wall?
     self.on_wall_right = false -- Is entity touching right wall?
+    self.wall_direction = 0    -- Direction of wall contact: -1 left, 1 right, 0 none
 
     -- Mass (for future physics interactions)
     self.mass = 1
@@ -115,6 +116,7 @@ function Physics:resetState()
     self.on_wall = false
     self.on_wall_left = false
     self.on_wall_right = false
+    self.wall_direction = 0
 end
 
 return Physics
