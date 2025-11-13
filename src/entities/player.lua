@@ -42,6 +42,7 @@ function Player.new(x, y, collision_system)
     self.facing_right = true
     self.jumping = false  -- Is player currently jumping?
     self.jump_held = false  -- Is jump button currently held?
+    self.dash_held = false  -- Is dash button currently held?
 
     -- Wall-sliding state
     self.wall_sliding = false  -- Is player currently wall-sliding?
@@ -52,10 +53,20 @@ function Player.new(x, y, collision_system)
     -- Wall-jumping state
     self.control_lock_timer = 0  -- Timer for directional control lock after wall-jump
 
+    -- Dashing state
+    self.dashing = false  -- Is player currently dashing?
+    self.dash_timer = 0  -- Time remaining in current dash
+    self.dash_cooldown_timer = 0  -- Cooldown before next dash
+    self.dash_direction_x = 0  -- Dash direction X (-1, 0, or 1)
+    self.dash_direction_y = 0  -- Dash direction Y (-1, 0, or 1)
+    self.air_dash_charges = 1  -- Number of air dashes available (resets on landing/wall touch)
+    self.iframe_timer = 0  -- Invulnerability timer during dash
+
     -- Movement input
     self.input_x = 0  -- -1 for left, 1 for right, 0 for no input
     self.input_jump = false  -- Jump button pressed this frame
     self.input_jump_release = false  -- Jump button released this frame
+    self.input_dash = false  -- Dash button pressed this frame
 
     -- Visual representation (placeholder rectangle)
     self.color = {0.9, 0.6, 0.3}  -- Orange color for the cat
@@ -69,6 +80,7 @@ function Player:handleInput()
     self.input_x = 0
     self.input_jump = false
     self.input_jump_release = false
+    self.input_dash = false
 
     -- Check left/right arrow keys or WASD
     if love.keyboard.isDown("left") or love.keyboard.isDown("a") then
@@ -96,6 +108,19 @@ function Player:handleInput()
 
     -- Update jump held state
     self.jump_held = jump_down
+
+    -- Check dash input (Shift or X key)
+    local dash_down = love.keyboard.isDown("lshift") or
+                      love.keyboard.isDown("rshift") or
+                      love.keyboard.isDown("x")
+
+    -- Detect dash press (rising edge detection)
+    if dash_down and not self.dash_held then
+        self.input_dash = true
+    end
+
+    -- Update dash held state (for edge detection)
+    self.dash_held = dash_down
 end
 
 -- Update player
@@ -108,8 +133,56 @@ function Player:update(dt)
         self.control_lock_timer = self.control_lock_timer - dt
     end
 
-    -- Apply running movement (only if not control-locked)
-    if self.control_lock_timer <= 0 then
+    -- Update dash cooldown timer
+    if self.dash_cooldown_timer > 0 then
+        self.dash_cooldown_timer = self.dash_cooldown_timer - dt
+    end
+
+    -- Update iframe timer
+    if self.iframe_timer > 0 then
+        self.iframe_timer = self.iframe_timer - dt
+    end
+
+    -- Handle dash input
+    if self.input_dash and not self.dashing and self.dash_cooldown_timer <= 0 then
+        -- Check if can dash (always can on ground, or have air dash charge)
+        if self.grounded or self.air_dash_charges > 0 then
+            self:dash()
+        end
+    end
+
+    -- Update dash state
+    if self.dashing then
+        self.dash_timer = self.dash_timer - dt
+
+        -- Maintain dash velocity
+        self.physics:setVelocity(
+            self.dash_direction_x * Constants.DASH_SPEED,
+            self.dash_direction_y * Constants.DASH_SPEED
+        )
+
+        -- Check if dash ended
+        if self.dash_timer <= 0 then
+            self.dashing = false
+            self.dash_cooldown_timer = Constants.DASH_COOLDOWN
+        end
+
+        -- Allow dash canceling with jump
+        if self.input_jump then
+            if self.grounded then
+                self:jump()
+                self.dashing = false
+                self.dash_cooldown_timer = Constants.DASH_COOLDOWN
+            elseif self.wall_sliding and self.wall_direction ~= 0 then
+                self:wallJump()
+                self.dashing = false
+                self.dash_cooldown_timer = Constants.DASH_COOLDOWN
+            end
+        end
+    end
+
+    -- Apply running movement (only if not control-locked and not dashing)
+    if self.control_lock_timer <= 0 and not self.dashing then
         if self.input_x ~= 0 then
             -- Apply acceleration toward run speed
             local target_velocity = self.input_x * Constants.RUN_SPEED
@@ -175,7 +248,10 @@ function Player:update(dt)
 
     -- Apply reduced gravity while holding jump and moving upward
     local gravity = Constants.GRAVITY
-    if self.jumping and self.jump_held and self.physics.velocity_y < 0 then
+    if self.dashing then
+        -- No gravity while dashing
+        gravity = 0
+    elseif self.jumping and self.jump_held and self.physics.velocity_y < 0 then
         -- Use reduced gravity (50% of normal) for more floaty feel at apex
         gravity = Constants.GRAVITY * Constants.JUMP_HOLD_GRAVITY
     elseif self.wall_sliding then
@@ -229,6 +305,8 @@ function Player:update(dt)
                 self.jumping = false
                 self.wall_sliding = false
                 self.physics:setVelocity(self.physics.velocity_x, 0)
+                -- Restore air dash charges on landing
+                self.air_dash_charges = 1
             end
 
             -- Check if collision is from above (player hitting head on ceiling)
@@ -249,6 +327,8 @@ function Player:update(dt)
                 if self.control_lock_timer <= 0 then
                     self.physics:setVelocity(0, self.physics.velocity_y)
                 end
+                -- Restore air dash charges on wall touch
+                self.air_dash_charges = 1
             end
         end
 
@@ -307,6 +387,55 @@ function Player:wallJump()
     self.facing_right = jump_direction > 0
 end
 
+-- Perform dash
+function Player:dash()
+    -- Determine dash direction based on grounded state
+    if self.grounded then
+        -- Ground dash: horizontal only, in facing direction
+        self.dash_direction_x = self.facing_right and 1 or -1
+        self.dash_direction_y = 0
+    else
+        -- Air dash: 8-directional based on input
+        -- Default to facing direction if no horizontal input
+        self.dash_direction_x = self.input_x ~= 0 and self.input_x or (self.facing_right and 1 or -1)
+
+        -- Vertical direction based on input (up/down keys)
+        self.dash_direction_y = 0
+        if love.keyboard.isDown("down") or love.keyboard.isDown("s") then
+            self.dash_direction_y = 1  -- Down
+        elseif love.keyboard.isDown("up") or love.keyboard.isDown("w") then
+            self.dash_direction_y = -1  -- Up
+        end
+
+        -- Normalize diagonal dashes (8-directional movement)
+        if self.dash_direction_x ~= 0 and self.dash_direction_y ~= 0 then
+            -- Diagonal dash: normalize to maintain consistent speed
+            local length = math.sqrt(self.dash_direction_x * self.dash_direction_x +
+                                   self.dash_direction_y * self.dash_direction_y)
+            self.dash_direction_x = self.dash_direction_x / length
+            self.dash_direction_y = self.dash_direction_y / length
+        end
+
+        -- Consume air dash charge
+        self.air_dash_charges = self.air_dash_charges - 1
+    end
+
+    -- Set dash state
+    self.dashing = true
+    self.dash_timer = Constants.DASH_DURATION
+    self.iframe_timer = Constants.DASH_IFRAME_DURATION
+
+    -- Apply dash velocity
+    self.physics:setVelocity(
+        self.dash_direction_x * Constants.DASH_SPEED,
+        self.dash_direction_y * Constants.DASH_SPEED
+    )
+
+    -- Clear other movement states
+    self.wall_sliding = false
+    self.control_lock_timer = 0
+end
+
 -- Draw player
 function Player:draw()
     -- Get player position and size
@@ -323,7 +452,10 @@ function Player:draw()
 
     -- Draw player as colored rectangle (placeholder)
     -- Change color based on state
-    if self.control_lock_timer > 0 then
+    if self.dashing then
+        -- Dashing - bright white/magenta glow with trail effect
+        love.graphics.setColor(1, 0.3, 1)  -- Magenta glow when dashing
+    elseif self.control_lock_timer > 0 then
         -- Control-locked after wall-jump - bright cyan/white glow
         love.graphics.setColor(0.7, 1, 1)  -- Cyan glow when wall-jumping
     elseif self.wall_sliding then
@@ -334,6 +466,17 @@ function Player:draw()
         love.graphics.setColor(self.color)
     end
     love.graphics.rectangle("fill", x - w/2, y - h/2, w, h)
+
+    -- Draw dash direction indicator when dashing
+    if self.dashing then
+        love.graphics.setColor(1, 1, 1)  -- White line
+        local line_length = 8
+        love.graphics.line(
+            x, y,
+            x + self.dash_direction_x * line_length,
+            y + self.dash_direction_y * line_length
+        )
+    end
 
     -- Draw wall contact indicator (line on the wall side)
     if self.wall_sliding then

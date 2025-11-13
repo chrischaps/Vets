@@ -27,4 +27,11 @@ Constants.WALL_JUMP_CONTROL_LOCK = 0.15  -- Time before player regains direction
 Constants.PLAYER_WIDTH = 10          -- Player hitbox width (px)
 Constants.PLAYER_HEIGHT = 14         -- Player hitbox height (px)
 
+-- Dashing Constants
+Constants.DASH_SPEED = 300           -- Dash velocity (px/s)
+Constants.DASH_DURATION = 0.2        -- Dash duration (seconds)
+Constants.DASH_DISTANCE = 60         -- Dash distance (px) = DASH_SPEED * DASH_DURATION
+Constants.DASH_COOLDOWN = 0.5        -- Cooldown after dash ends (seconds)
+Constants.DASH_IFRAME_DURATION = 0.1 -- Invulnerability duration during dash (seconds)
+
 return Constants
