@@ -49,6 +49,9 @@ function Player.new(x, y, collision_system)
     self.wall_direction = 0  -- Direction of wall: -1 left, 1 right, 0 none
     self.wall_stick_timer = 0  -- Timer for wall stick buffer
 
+    -- Wall-jumping state
+    self.control_lock_timer = 0  -- Timer for directional control lock after wall-jump
+
     -- Movement input
     self.input_x = 0  -- -1 for left, 1 for right, 0 for no input
     self.input_jump = false  -- Jump button pressed this frame
@@ -100,35 +103,42 @@ function Player:update(dt)
     -- Handle input
     self:handleInput()
 
-    -- Apply running movement
-    if self.input_x ~= 0 then
-        -- Apply acceleration toward run speed
-        local target_velocity = self.input_x * Constants.RUN_SPEED
-        local acceleration = Constants.ACCELERATION * dt
+    -- Update control lock timer
+    if self.control_lock_timer > 0 then
+        self.control_lock_timer = self.control_lock_timer - dt
+    end
 
-        -- Smoothly accelerate toward target velocity
-        if math.abs(target_velocity - self.physics.velocity_x) < acceleration then
-            self.physics:setVelocity(target_velocity, self.physics.velocity_y)
+    -- Apply running movement (only if not control-locked)
+    if self.control_lock_timer <= 0 then
+        if self.input_x ~= 0 then
+            -- Apply acceleration toward run speed
+            local target_velocity = self.input_x * Constants.RUN_SPEED
+            local acceleration = Constants.ACCELERATION * dt
+
+            -- Smoothly accelerate toward target velocity
+            if math.abs(target_velocity - self.physics.velocity_x) < acceleration then
+                self.physics:setVelocity(target_velocity, self.physics.velocity_y)
+            else
+                local accel_direction = target_velocity > self.physics.velocity_x and 1 or -1
+                self.physics:setVelocity(
+                    self.physics.velocity_x + acceleration * accel_direction,
+                    self.physics.velocity_y
+                )
+            end
         else
-            local accel_direction = target_velocity > self.physics.velocity_x and 1 or -1
+            -- Apply deceleration when no input
+            -- Using Constants.DECELERATION as a friction factor (0.15 = 0.15 seconds to stop)
+            -- This creates smooth deceleration
+            local decel_factor = math.pow(1 - Constants.DECELERATION, dt * 60)  -- Scale by dt
             self.physics:setVelocity(
-                self.physics.velocity_x + acceleration * accel_direction,
+                self.physics.velocity_x * decel_factor,
                 self.physics.velocity_y
             )
-        end
-    else
-        -- Apply deceleration when no input
-        -- Using Constants.DECELERATION as a friction factor (0.15 = 0.15 seconds to stop)
-        -- This creates smooth deceleration
-        local decel_factor = math.pow(1 - Constants.DECELERATION, dt * 60)  -- Scale by dt
-        self.physics:setVelocity(
-            self.physics.velocity_x * decel_factor,
-            self.physics.velocity_y
-        )
 
-        -- Stop completely when velocity is very small
-        if math.abs(self.physics.velocity_x) < 0.5 then
-            self.physics:setVelocity(0, self.physics.velocity_y)
+            -- Stop completely when velocity is very small
+            if math.abs(self.physics.velocity_x) < 0.5 then
+                self.physics:setVelocity(0, self.physics.velocity_y)
+            end
         end
     end
 
@@ -136,6 +146,9 @@ function Player:update(dt)
     -- Jump when on ground and jump pressed
     if self.grounded and self.input_jump then
         self:jump()
+    -- Wall-jump when wall-sliding and jump pressed (and actually on a wall)
+    elseif self.wall_sliding and self.input_jump and self.wall_direction ~= 0 then
+        self:wallJump()
     end
 
     -- Variable jump height: reduce upward velocity when jump released early
@@ -167,8 +180,9 @@ function Player:update(dt)
         gravity = Constants.GRAVITY * Constants.JUMP_HOLD_GRAVITY
     elseif self.wall_sliding then
         -- Override velocity for wall-slide (constant descent speed)
-        -- Don't use gravity - directly set vertical velocity to slide speed
-        self.physics:setVelocity(self.physics.velocity_x, Constants.WALL_SLIDE_SPEED)
+        -- Maintain a tiny horizontal velocity toward wall so bump detects collision
+        local wall_push_velocity = -self.wall_direction * 1  -- 1 px/s toward wall
+        self.physics:setVelocity(wall_push_velocity, Constants.WALL_SLIDE_SPEED)
         gravity = 0  -- No gravity while wall-sliding
     end
 
@@ -200,8 +214,11 @@ function Player:update(dt)
 
         -- Check grounded and wall states from collisions
         self.grounded = false
-        self.on_wall = false
-        self.wall_direction = 0
+        local wall_collision_detected = false
+        -- Don't reset wall_direction during control lock (preserve for wall jump)
+        if self.control_lock_timer <= 0 then
+            self.wall_direction = 0
+        end
 
         for i = 1, len do
             local col = cols[i]
@@ -216,10 +233,22 @@ function Player:update(dt)
 
             -- Check for wall collision (left or right)
             if col.normal.x ~= 0 and not self.grounded then  -- Horizontal collision in air
+                wall_collision_detected = true
                 self.on_wall = true
                 self.wall_direction = col.normal.x  -- -1 for left wall, 1 for right wall
-                self.physics:setVelocity(0, self.physics.velocity_y)
+                -- Don't reset horizontal velocity during control lock (wall jump in progress)
+                if self.control_lock_timer <= 0 then
+                    self.physics:setVelocity(0, self.physics.velocity_y)
+                end
             end
+        end
+
+        -- Maintain on_wall state if still wall-sliding (even without collision)
+        -- This handles the case where horizontal velocity is 0 so bump doesn't report collision
+        if not wall_collision_detected and self.wall_sliding then
+            self.on_wall = true  -- Keep on_wall true while actively wall-sliding
+        elseif not wall_collision_detected then
+            self.on_wall = false  -- Clear on_wall if no collision and not wall-sliding
         end
     else
         -- No collision system, just move freely
@@ -234,6 +263,39 @@ function Player:jump()
     self.physics:setVelocity(self.physics.velocity_x, Constants.JUMP_FORCE)
     self.jumping = true
     self.grounded = false
+end
+
+-- Perform wall-jump
+function Player:wallJump()
+    -- Calculate horizontal direction (away from wall)
+    -- The collision normal (wall_direction) already points AWAY from the wall surface
+    -- So we jump in the same direction as the normal
+    local jump_direction = self.wall_direction
+
+    -- Apply wall-jump force (angled away from wall)
+    self.physics:setVelocity(
+        jump_direction * Constants.WALL_JUMP_FORCE_X,  -- Horizontal: away from wall
+        Constants.WALL_JUMP_FORCE_Y                     -- Vertical: upward
+    )
+
+    -- Move player away from wall to clear collision
+    -- Need to move at least half width (5px) to fully clear the wall
+    local displacement = jump_direction * 6  -- 6 pixels clears the wall collision
+    self.transform.x = self.transform.x + displacement
+
+    -- Set control lock to prevent immediate directional change
+    self.control_lock_timer = Constants.WALL_JUMP_CONTROL_LOCK
+
+    -- Clear wall-sliding state
+    self.wall_sliding = false
+    self.on_wall = false
+
+    -- Set jumping state
+    self.jumping = true
+    self.grounded = false
+
+    -- Update facing direction to match jump direction
+    self.facing_right = jump_direction > 0
 end
 
 -- Draw player
@@ -251,10 +313,15 @@ function Player:draw()
     end
 
     -- Draw player as colored rectangle (placeholder)
-    -- Change color if wall-sliding (brighter/glowing effect)
-    if self.wall_sliding then
-        love.graphics.setColor(1, 0.8, 0.5)  -- Brighter orange/yellow when wall-sliding
+    -- Change color based on state
+    if self.control_lock_timer > 0 then
+        -- Control-locked after wall-jump - bright cyan/white glow
+        love.graphics.setColor(0.7, 1, 1)  -- Cyan glow when wall-jumping
+    elseif self.wall_sliding then
+        -- Wall-sliding - brighter orange/yellow glow
+        love.graphics.setColor(1, 0.8, 0.5)
     else
+        -- Normal state
         love.graphics.setColor(self.color)
     end
     love.graphics.rectangle("fill", x - w/2, y - h/2, w, h)
