@@ -345,12 +345,9 @@ function Player:update(dt)
             end
         end
 
-        -- Maintain on_wall state if still wall-sliding (even without collision)
-        -- This handles the case where horizontal velocity is 0 so bump doesn't report collision
-        if not wall_collision_detected and self.wall_sliding then
-            self.on_wall = true  -- Keep on_wall true while actively wall-sliding
-        elseif not wall_collision_detected then
-            self.on_wall = false  -- Clear on_wall if no collision and not wall-sliding
+        -- Clear on_wall if no collision detected
+        if not wall_collision_detected then
+            self.on_wall = false
         end
     else
         -- No collision system, just move freely
