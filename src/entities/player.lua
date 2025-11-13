@@ -231,6 +231,15 @@ function Player:update(dt)
                 self.physics:setVelocity(self.physics.velocity_x, 0)
             end
 
+            -- Check if collision is from above (player hitting head on ceiling)
+            if col.normal.y > 0 then  -- Normal pointing down = ceiling
+                self.jumping = false
+                -- Cancel upward momentum when hitting ceiling
+                if self.physics.velocity_y < 0 then
+                    self.physics:setVelocity(self.physics.velocity_x, 0)
+                end
+            end
+
             -- Check for wall collision (left or right)
             if col.normal.x ~= 0 and not self.grounded then  -- Horizontal collision in air
                 wall_collision_detected = true
