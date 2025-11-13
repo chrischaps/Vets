@@ -61,6 +61,7 @@ function Player.new(x, y, collision_system)
     self.dash_direction_y = 0  -- Dash direction Y (-1, 0, or 1)
     self.air_dash_charges = 1  -- Number of air dashes available (resets on landing/wall touch)
     self.iframe_timer = 0  -- Invulnerability timer during dash
+    self.is_ground_dash = false  -- Was this dash started on ground? (for dash canceling)
 
     -- Movement input
     self.input_x = 0  -- -1 for left, 1 for right, 0 for no input
@@ -155,28 +156,40 @@ function Player:update(dt)
     if self.dashing then
         self.dash_timer = self.dash_timer - dt
 
-        -- Maintain dash velocity
-        self.physics:setVelocity(
-            self.dash_direction_x * Constants.DASH_SPEED,
-            self.dash_direction_y * Constants.DASH_SPEED
-        )
-
-        -- Check if dash ended
-        if self.dash_timer <= 0 then
-            self.dashing = false
-            self.dash_cooldown_timer = Constants.DASH_COOLDOWN
-        end
-
-        -- Allow dash canceling with jump
+        -- Check for dash canceling with jump FIRST (before setting velocity)
         if self.input_jump then
-            if self.grounded then
+            if self.is_ground_dash then
                 self:jump()
                 self.dashing = false
                 self.dash_cooldown_timer = Constants.DASH_COOLDOWN
+                -- Restore normal max velocity
+                self.physics:setMaxVelocity(Constants.RUN_SPEED, Constants.TERMINAL_VELOCITY)
             elseif self.wall_sliding and self.wall_direction ~= 0 then
                 self:wallJump()
                 self.dashing = false
                 self.dash_cooldown_timer = Constants.DASH_COOLDOWN
+                -- Restore normal max velocity
+                self.physics:setMaxVelocity(Constants.RUN_SPEED, Constants.TERMINAL_VELOCITY)
+            end
+        end
+
+        -- Only maintain dash velocity if still dashing (not canceled)
+        if self.dashing then
+            -- Temporarily increase max velocity for dash
+            self.physics:setMaxVelocity(Constants.DASH_SPEED, Constants.DASH_SPEED)
+
+            -- Maintain dash velocity
+            self.physics:setVelocity(
+                self.dash_direction_x * Constants.DASH_SPEED,
+                self.dash_direction_y * Constants.DASH_SPEED
+            )
+
+            -- Check if dash ended
+            if self.dash_timer <= 0 then
+                self.dashing = false
+                self.dash_cooldown_timer = Constants.DASH_COOLDOWN
+                -- Restore normal max velocity
+                self.physics:setMaxVelocity(Constants.RUN_SPEED, Constants.TERMINAL_VELOCITY)
             end
         end
     end
@@ -394,6 +407,7 @@ function Player:dash()
         -- Ground dash: horizontal only, in facing direction
         self.dash_direction_x = self.facing_right and 1 or -1
         self.dash_direction_y = 0
+        self.is_ground_dash = true  -- Track that this is a ground dash
     else
         -- Air dash: 8-directional based on input
         -- Default to facing direction if no horizontal input
@@ -418,6 +432,7 @@ function Player:dash()
 
         -- Consume air dash charge
         self.air_dash_charges = self.air_dash_charges - 1
+        self.is_ground_dash = false  -- Track that this is an air dash
     end
 
     -- Set dash state
