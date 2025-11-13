@@ -146,8 +146,8 @@ function Player:update(dt)
     -- Jump when on ground and jump pressed
     if self.grounded and self.input_jump then
         self:jump()
-    -- Wall-jump when wall-sliding and jump pressed
-    elseif self.wall_sliding and self.input_jump then
+    -- Wall-jump when wall-sliding and jump pressed (and actually on a wall)
+    elseif self.wall_sliding and self.input_jump and self.wall_direction ~= 0 then
         self:wallJump()
     end
 
@@ -180,8 +180,9 @@ function Player:update(dt)
         gravity = Constants.GRAVITY * Constants.JUMP_HOLD_GRAVITY
     elseif self.wall_sliding then
         -- Override velocity for wall-slide (constant descent speed)
-        -- Don't use gravity - directly set vertical velocity to slide speed
-        self.physics:setVelocity(self.physics.velocity_x, Constants.WALL_SLIDE_SPEED)
+        -- Maintain a tiny horizontal velocity toward wall so bump detects collision
+        local wall_push_velocity = -self.wall_direction * 1  -- 1 px/s toward wall
+        self.physics:setVelocity(wall_push_velocity, Constants.WALL_SLIDE_SPEED)
         gravity = 0  -- No gravity while wall-sliding
     end
 
@@ -213,8 +214,11 @@ function Player:update(dt)
 
         -- Check grounded and wall states from collisions
         self.grounded = false
-        self.on_wall = false
-        self.wall_direction = 0
+        local wall_collision_detected = false
+        -- Don't reset wall_direction during control lock (preserve for wall jump)
+        if self.control_lock_timer <= 0 then
+            self.wall_direction = 0
+        end
 
         for i = 1, len do
             local col = cols[i]
@@ -229,10 +233,22 @@ function Player:update(dt)
 
             -- Check for wall collision (left or right)
             if col.normal.x ~= 0 and not self.grounded then  -- Horizontal collision in air
+                wall_collision_detected = true
                 self.on_wall = true
                 self.wall_direction = col.normal.x  -- -1 for left wall, 1 for right wall
-                self.physics:setVelocity(0, self.physics.velocity_y)
+                -- Don't reset horizontal velocity during control lock (wall jump in progress)
+                if self.control_lock_timer <= 0 then
+                    self.physics:setVelocity(0, self.physics.velocity_y)
+                end
             end
+        end
+
+        -- Maintain on_wall state if still wall-sliding (even without collision)
+        -- This handles the case where horizontal velocity is 0 so bump doesn't report collision
+        if not wall_collision_detected and self.wall_sliding then
+            self.on_wall = true  -- Keep on_wall true while actively wall-sliding
+        elseif not wall_collision_detected then
+            self.on_wall = false  -- Clear on_wall if no collision and not wall-sliding
         end
     else
         -- No collision system, just move freely
@@ -252,15 +268,20 @@ end
 -- Perform wall-jump
 function Player:wallJump()
     -- Calculate horizontal direction (away from wall)
-    -- wall_direction: -1 = left wall, 1 = right wall
-    -- Jump direction should be opposite: left wall = jump right (+1), right wall = jump left (-1)
-    local jump_direction = -self.wall_direction
+    -- The collision normal (wall_direction) already points AWAY from the wall surface
+    -- So we jump in the same direction as the normal
+    local jump_direction = self.wall_direction
 
     -- Apply wall-jump force (angled away from wall)
     self.physics:setVelocity(
         jump_direction * Constants.WALL_JUMP_FORCE_X,  -- Horizontal: away from wall
         Constants.WALL_JUMP_FORCE_Y                     -- Vertical: upward
     )
+
+    -- Move player away from wall to clear collision
+    -- Need to move at least half width (5px) to fully clear the wall
+    local displacement = jump_direction * 6  -- 6 pixels clears the wall collision
+    self.transform.x = self.transform.x + displacement
 
     -- Set control lock to prevent immediate directional change
     self.control_lock_timer = Constants.WALL_JUMP_CONTROL_LOCK
