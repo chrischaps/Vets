@@ -354,7 +354,29 @@ function love.draw()
 
     -- Debug help
     love.graphics.setColor(0.5, 0.5, 0.5)
-    love.graphics.print("F1: Collision debug | F2: Camera debug", 200, 10)
+    love.graphics.print("F1: Collision debug | F2: Camera debug | F3: Input debug", 200, 10)
+
+    -- Input debug info (F3)
+    if input and love.keyboard.isDown("f3") then
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.print("=== INPUT DEBUG ===", 10, 200)
+        local y_offset = 215
+        local actions = input:get_actions()
+        for i, action in ipairs(actions) do
+            local state = input:is_down(action)
+            local pressed = input:is_pressed(action)
+            local released = input:is_released(action)
+            local color = state and {0, 1, 0} or {0.5, 0.5, 0.5}
+            love.graphics.setColor(color)
+            local status = state and "DOWN" or "UP"
+            if pressed then status = status .. " (PRESSED)" end
+            if released then status = status .. " (RELEASED)" end
+            love.graphics.print(action .. ": " .. status, 10, y_offset)
+            y_offset = y_offset + 12
+        end
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.print("Horizontal axis: " .. input:get_horizontal_axis(), 10, y_offset + 5)
+    end
 
     -- Draw crosshair at camera center (world space)
     if camera and love.keyboard.isDown("f2") then
