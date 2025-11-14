@@ -91,10 +91,18 @@ function Input:init()
         print("  - " .. #self.joysticks .. " gamepad(s) connected")
         for i, joystick in ipairs(self.joysticks) do
             print("    " .. i .. ": " .. joystick:getName())
+            if joystick:isGamepad() then
+                print("      Type: Gamepad (supports standard mapping)")
+            else
+                print("      Type: Joystick (no standard mapping)")
+            end
         end
+        print("  - Axis deadzone: " .. self.axis_deadzone)
     else
         print("Input system initialized:")
         print("  - No gamepads connected")
+        print("  - Axis deadzone: " .. self.axis_deadzone)
+        print("  - Gamepads will be detected on hot-plug")
     end
 end
 
