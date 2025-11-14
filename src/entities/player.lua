@@ -74,6 +74,7 @@ function Player.new(x, y, collision_system)
 
     -- Dash visual effects
     self.dash_trail = {}  -- Array of trail positions {x, y, alpha, time}
+    self.dash_trail_spawn_timer = 0  -- Timer for spawning trail images
     self.dash_crouch_timer = 0  -- Timer for dash startup crouch animation
     self.dash_screen_shake_timer = 0  -- Timer for screen shake effect
     self.dash_screen_shake_x = 0  -- Screen shake offset X
@@ -314,11 +315,13 @@ function Player:updateDash(dt)
         if self.grounded or self.air_dash_charges > 0 then
             -- Start crouch animation before dash
             self.dash_crouch_timer = Constants.DASH_CROUCH_DURATION
+            print("[Dash] Starting crouch animation")
         end
     end
 
     -- Execute dash after crouch animation completes
     if self.dash_crouch_timer > 0 and self.dash_crouch_timer <= dt then
+        print("[Dash] Crouch complete, executing dash")
         self:dash()
     end
 
@@ -416,15 +419,24 @@ function Player:updateDashTrail(dt)
         end
     end
 
-    -- Spawn new trail images while dashing
+    -- Spawn new trail images while dashing (at specified rate)
     if self.dashing then
-        -- Add trail position at current location
-        table.insert(self.dash_trail, {
-            x = self.transform.x,
-            y = self.transform.y,
-            alpha = 1.0,
-            time = Constants.DASH_TRAIL_FADE_TIME
-        })
+        self.dash_trail_spawn_timer = self.dash_trail_spawn_timer - dt
+
+        if self.dash_trail_spawn_timer <= 0 then
+            -- Add trail position at current location
+            table.insert(self.dash_trail, {
+                x = self.transform.x,
+                y = self.transform.y,
+                alpha = 1.0,
+                time = Constants.DASH_TRAIL_FADE_TIME
+            })
+            -- Reset spawn timer
+            self.dash_trail_spawn_timer = Constants.DASH_TRAIL_SPAWN_RATE
+        end
+    else
+        -- Reset spawn timer when not dashing
+        self.dash_trail_spawn_timer = 0
     end
 end
 
@@ -538,6 +550,10 @@ function Player:dash()
 
     -- Clear dash trail (start fresh trail for this dash)
     self.dash_trail = {}
+
+    -- Debug: Print dash info
+    print(string.format("[Dash] Started at (%.1f, %.1f) direction: (%.1f, %.1f)",
+        self.transform.x, self.transform.y, self.dash_direction_x, self.dash_direction_y))
 
     -- Apply dash velocity
     self.physics:setVelocity(
