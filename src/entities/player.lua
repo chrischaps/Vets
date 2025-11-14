@@ -124,160 +124,8 @@ function Player:handleInput()
     self.dash_held = dash_down
 end
 
--- Update player
-function Player:update(dt)
-    -- Handle input
-    self:handleInput()
-
-    -- Update control lock timer
-    if self.control_lock_timer > 0 then
-        self.control_lock_timer = self.control_lock_timer - dt
-    end
-
-    -- Update dash cooldown timer
-    if self.dash_cooldown_timer > 0 then
-        self.dash_cooldown_timer = self.dash_cooldown_timer - dt
-    end
-
-    -- Update iframe timer
-    if self.iframe_timer > 0 then
-        self.iframe_timer = self.iframe_timer - dt
-    end
-
-    -- Handle dash input
-    if self.input_dash and not self.dashing and self.dash_cooldown_timer <= 0 then
-        -- Check if can dash (always can on ground, or have air dash charge)
-        if self.grounded or self.air_dash_charges > 0 then
-            self:dash()
-        end
-    end
-
-    -- Update dash state
-    if self.dashing then
-        self.dash_timer = self.dash_timer - dt
-
-        -- Check for dash canceling with jump FIRST (before setting velocity)
-        if self.input_jump then
-            if self.is_ground_dash then
-                self:jump()
-                self.dashing = false
-                self.dash_cooldown_timer = Constants.DASH_COOLDOWN
-                -- Restore normal max velocity
-                self.physics:setMaxVelocity(Constants.RUN_SPEED, Constants.TERMINAL_VELOCITY)
-            elseif self.wall_sliding and self.wall_direction ~= 0 then
-                self:wallJump()
-                self.dashing = false
-                self.dash_cooldown_timer = Constants.DASH_COOLDOWN
-                -- Restore normal max velocity
-                self.physics:setMaxVelocity(Constants.RUN_SPEED, Constants.TERMINAL_VELOCITY)
-            end
-        end
-
-        -- Only maintain dash velocity if still dashing (not canceled)
-        if self.dashing then
-            -- Temporarily increase max velocity for dash
-            self.physics:setMaxVelocity(Constants.DASH_SPEED, Constants.DASH_SPEED)
-
-            -- Maintain dash velocity
-            self.physics:setVelocity(
-                self.dash_direction_x * Constants.DASH_SPEED,
-                self.dash_direction_y * Constants.DASH_SPEED
-            )
-
-            -- Check if dash ended
-            if self.dash_timer <= 0 then
-                self.dashing = false
-                self.dash_cooldown_timer = Constants.DASH_COOLDOWN
-                -- Restore normal max velocity
-                self.physics:setMaxVelocity(Constants.RUN_SPEED, Constants.TERMINAL_VELOCITY)
-            end
-        end
-    end
-
-    -- Apply running movement (only if not control-locked and not dashing)
-    if self.control_lock_timer <= 0 and not self.dashing then
-        if self.input_x ~= 0 then
-            -- Apply acceleration toward run speed
-            local target_velocity = self.input_x * Constants.RUN_SPEED
-            local acceleration = Constants.ACCELERATION * dt
-
-            -- Smoothly accelerate toward target velocity
-            if math.abs(target_velocity - self.physics.velocity_x) < acceleration then
-                self.physics:setVelocity(target_velocity, self.physics.velocity_y)
-            else
-                local accel_direction = target_velocity > self.physics.velocity_x and 1 or -1
-                self.physics:setVelocity(
-                    self.physics.velocity_x + acceleration * accel_direction,
-                    self.physics.velocity_y
-                )
-            end
-        else
-            -- Apply deceleration when no input
-            -- Using Constants.DECELERATION as a friction factor (0.15 = 0.15 seconds to stop)
-            -- This creates smooth deceleration
-            local decel_factor = math.pow(1 - Constants.DECELERATION, dt * 60)  -- Scale by dt
-            self.physics:setVelocity(
-                self.physics.velocity_x * decel_factor,
-                self.physics.velocity_y
-            )
-
-            -- Stop completely when velocity is very small
-            if math.abs(self.physics.velocity_x) < 0.5 then
-                self.physics:setVelocity(0, self.physics.velocity_y)
-            end
-        end
-    end
-
-    -- Handle jumping
-    -- Jump when on ground and jump pressed
-    if self.grounded and self.input_jump then
-        self:jump()
-    -- Wall-jump when wall-sliding and jump pressed (and actually on a wall)
-    elseif self.wall_sliding and self.input_jump and self.wall_direction ~= 0 then
-        self:wallJump()
-    end
-
-    -- Variable jump height: reduce upward velocity when jump released early
-    if self.input_jump_release and self.jumping and self.physics.velocity_y < 0 then
-        -- Cut jump short by reducing upward velocity
-        self.physics:setVelocity(self.physics.velocity_x, self.physics.velocity_y * 0.5)
-    end
-
-    -- Wall-sliding mechanics
-    -- Check if player should be wall-sliding
-    if self.on_wall and not self.grounded and self.physics.velocity_y > 0 then
-        -- Player is touching wall, in air, and falling - start wall-slide
-        self.wall_sliding = true
-        self.wall_stick_timer = Constants.WALL_STICK_TIME
-    elseif self.wall_sliding then
-        -- Update wall stick timer
-        self.wall_stick_timer = self.wall_stick_timer - dt
-
-        -- Stop wall-sliding if no longer on wall and stick timer expired
-        if not self.on_wall and self.wall_stick_timer <= 0 then
-            self.wall_sliding = false
-        end
-    end
-
-    -- Apply reduced gravity while holding jump and moving upward
-    local gravity = Constants.GRAVITY
-    if self.dashing then
-        -- No gravity while dashing
-        gravity = 0
-    elseif self.jumping and self.jump_held and self.physics.velocity_y < 0 then
-        -- Use reduced gravity (50% of normal) for more floaty feel at apex
-        gravity = Constants.GRAVITY * Constants.JUMP_HOLD_GRAVITY
-    elseif self.wall_sliding then
-        -- Override velocity for wall-slide (constant descent speed)
-        -- Maintain a tiny horizontal velocity toward wall so bump detects collision
-        local wall_push_velocity = -self.wall_direction * 1  -- 1 px/s toward wall
-        self.physics:setVelocity(wall_push_velocity, Constants.WALL_SLIDE_SPEED)
-        gravity = 0  -- No gravity while wall-sliding
-    end
-
-    -- Update physics (this applies gravity and velocity to position)
-    self.physics:update(dt, gravity)
-
+-- Update physics and handle collision detection/response
+function Player:updatePhysicsAndCollision(dt)
     -- Calculate desired position based on velocity
     local desired_x = self.transform.x + self.physics.velocity_x * dt
     local desired_y = self.transform.y + self.physics.velocity_y * dt
@@ -354,6 +202,184 @@ function Player:update(dt)
         self.transform.x = desired_x
         self.transform.y = desired_y
     end
+end
+
+-- Apply gravity based on current state
+function Player:applyGravity(dt)
+    -- Calculate gravity based on state
+    local gravity = Constants.GRAVITY
+    if self.dashing then
+        -- No gravity while dashing
+        gravity = 0
+    elseif self.jumping and self.jump_held and self.physics.velocity_y < 0 then
+        -- Use reduced gravity (50% of normal) for more floaty feel at apex
+        gravity = Constants.GRAVITY * Constants.JUMP_HOLD_GRAVITY
+    elseif self.wall_sliding then
+        -- Override velocity for wall-slide (constant descent speed)
+        -- Maintain a tiny horizontal velocity toward wall so bump detects collision
+        local wall_push_velocity = -self.wall_direction * 1  -- 1 px/s toward wall
+        self.physics:setVelocity(wall_push_velocity, Constants.WALL_SLIDE_SPEED)
+        gravity = 0  -- No gravity while wall-sliding
+    end
+
+    -- Update physics (this applies gravity and velocity to position)
+    self.physics:update(dt, gravity)
+end
+
+-- Update wall-sliding state
+function Player:updateWallSliding(dt)
+    -- Check if player should be wall-sliding
+    if self.on_wall and not self.grounded and self.physics.velocity_y > 0 then
+        -- Player is touching wall, in air, and falling - start wall-slide
+        self.wall_sliding = true
+        self.wall_stick_timer = Constants.WALL_STICK_TIME
+    elseif self.wall_sliding then
+        -- Update wall stick timer
+        self.wall_stick_timer = self.wall_stick_timer - dt
+
+        -- Stop wall-sliding if no longer on wall and stick timer expired
+        if not self.on_wall and self.wall_stick_timer <= 0 then
+            self.wall_sliding = false
+        end
+    end
+end
+
+-- Handle jumping (ground jump, wall jump, and variable jump height)
+function Player:handleJumping()
+    -- Handle jumping
+    -- Jump when on ground and jump pressed
+    if self.grounded and self.input_jump then
+        self:jump()
+    -- Wall-jump when wall-sliding and jump pressed (and actually on a wall)
+    elseif self.wall_sliding and self.input_jump and self.wall_direction ~= 0 then
+        self:wallJump()
+    end
+
+    -- Variable jump height: reduce upward velocity when jump released early
+    if self.input_jump_release and self.jumping and self.physics.velocity_y < 0 then
+        -- Cut jump short by reducing upward velocity
+        self.physics:setVelocity(self.physics.velocity_x, self.physics.velocity_y * 0.5)
+    end
+end
+
+-- Apply running movement (acceleration and deceleration)
+function Player:applyMovement(dt)
+    -- Only apply movement if not control-locked and not dashing
+    if self.control_lock_timer <= 0 and not self.dashing then
+        if self.input_x ~= 0 then
+            -- Apply acceleration toward run speed
+            local target_velocity = self.input_x * Constants.RUN_SPEED
+            local acceleration = Constants.ACCELERATION * dt
+
+            -- Smoothly accelerate toward target velocity
+            if math.abs(target_velocity - self.physics.velocity_x) < acceleration then
+                self.physics:setVelocity(target_velocity, self.physics.velocity_y)
+            else
+                local accel_direction = target_velocity > self.physics.velocity_x and 1 or -1
+                self.physics:setVelocity(
+                    self.physics.velocity_x + acceleration * accel_direction,
+                    self.physics.velocity_y
+                )
+            end
+        else
+            -- Apply deceleration when no input
+            -- Using Constants.DECELERATION as a friction factor (0.15 = 0.15 seconds to stop)
+            -- This creates smooth deceleration
+            local decel_factor = math.pow(1 - Constants.DECELERATION, dt * 60)  -- Scale by dt
+            self.physics:setVelocity(
+                self.physics.velocity_x * decel_factor,
+                self.physics.velocity_y
+            )
+
+            -- Stop completely when velocity is very small
+            if math.abs(self.physics.velocity_x) < 0.5 then
+                self.physics:setVelocity(0, self.physics.velocity_y)
+            end
+        end
+    end
+end
+
+-- Update dash state and handle dash input
+function Player:updateDash(dt)
+    -- Handle dash input
+    if self.input_dash and not self.dashing and self.dash_cooldown_timer <= 0 then
+        -- Check if can dash (always can on ground, or have air dash charge)
+        if self.grounded or self.air_dash_charges > 0 then
+            self:dash()
+        end
+    end
+
+    -- Update dash state
+    if self.dashing then
+        self.dash_timer = self.dash_timer - dt
+
+        -- Check for dash canceling with jump FIRST (before setting velocity)
+        if self.input_jump then
+            if self.is_ground_dash then
+                self:jump()
+                self.dashing = false
+                self.dash_cooldown_timer = Constants.DASH_COOLDOWN
+                -- Restore normal max velocity
+                self.physics:setMaxVelocity(Constants.RUN_SPEED, Constants.TERMINAL_VELOCITY)
+            elseif self.wall_sliding and self.wall_direction ~= 0 then
+                self:wallJump()
+                self.dashing = false
+                self.dash_cooldown_timer = Constants.DASH_COOLDOWN
+                -- Restore normal max velocity
+                self.physics:setMaxVelocity(Constants.RUN_SPEED, Constants.TERMINAL_VELOCITY)
+            end
+        end
+
+        -- Only maintain dash velocity if still dashing (not canceled)
+        if self.dashing then
+            -- Temporarily increase max velocity for dash
+            self.physics:setMaxVelocity(Constants.DASH_SPEED, Constants.DASH_SPEED)
+
+            -- Maintain dash velocity
+            self.physics:setVelocity(
+                self.dash_direction_x * Constants.DASH_SPEED,
+                self.dash_direction_y * Constants.DASH_SPEED
+            )
+
+            -- Check if dash ended
+            if self.dash_timer <= 0 then
+                self.dashing = false
+                self.dash_cooldown_timer = Constants.DASH_COOLDOWN
+                -- Restore normal max velocity
+                self.physics:setMaxVelocity(Constants.RUN_SPEED, Constants.TERMINAL_VELOCITY)
+            end
+        end
+    end
+end
+
+-- Update all timers
+function Player:updateTimers(dt)
+    -- Update control lock timer
+    if self.control_lock_timer > 0 then
+        self.control_lock_timer = self.control_lock_timer - dt
+    end
+
+    -- Update dash cooldown timer
+    if self.dash_cooldown_timer > 0 then
+        self.dash_cooldown_timer = self.dash_cooldown_timer - dt
+    end
+
+    -- Update iframe timer
+    if self.iframe_timer > 0 then
+        self.iframe_timer = self.iframe_timer - dt
+    end
+end
+
+-- Update player (main update loop)
+function Player:update(dt)
+    self:handleInput()
+    self:updateTimers(dt)
+    self:updateDash(dt)
+    self:applyMovement(dt)
+    self:handleJumping()
+    self:updateWallSliding(dt)
+    self:applyGravity(dt)
+    self:updatePhysicsAndCollision(dt)
 end
 
 -- Perform jump
