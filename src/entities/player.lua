@@ -12,11 +12,14 @@ local Player = {}
 Player.__index = Player
 
 -- Create a new player entity
-function Player.new(x, y, collision_system)
+function Player.new(x, y, collision_system, input_system)
     local self = setmetatable({}, Player)
 
     -- Store collision system reference
     self.collision_system = collision_system
+
+    -- Store input system reference
+    self.input_system = input_system
 
     -- Create base entity
     self.entity = Entity.new("player")
@@ -91,45 +94,86 @@ function Player:handleInput()
     self.input_jump_release = false
     self.input_dash = false
 
-    -- Check left/right arrow keys or WASD
-    if love.keyboard.isDown("left") or love.keyboard.isDown("a") then
-        self.input_x = -1
-        self.facing_right = false
-    elseif love.keyboard.isDown("right") or love.keyboard.isDown("d") then
-        self.input_x = 1
-        self.facing_right = true
+    -- Use input system if available, otherwise fallback to direct keyboard input
+    if self.input_system then
+        -- Get horizontal input from input system
+        self.input_x = self.input_system:get_horizontal_axis()
+
+        -- Update facing direction based on input
+        if self.input_x < 0 then
+            self.facing_right = false
+        elseif self.input_x > 0 then
+            self.facing_right = true
+        end
+
+        -- Check jump input using input system
+        local jump_down = self.input_system:is_down("jump")
+
+        -- Detect jump press (rising edge detection)
+        if jump_down and not self.jump_held then
+            self.input_jump = true
+        end
+
+        -- Detect jump release (falling edge detection)
+        if not jump_down and self.jump_held then
+            self.input_jump_release = true
+        end
+
+        -- Update jump held state
+        self.jump_held = jump_down
+
+        -- Check dash input using input system
+        local dash_down = self.input_system:is_down("dash")
+
+        -- Detect dash press (rising edge detection)
+        if dash_down and not self.dash_held then
+            self.input_dash = true
+        end
+
+        -- Update dash held state (for edge detection)
+        self.dash_held = dash_down
+    else
+        -- Fallback to direct keyboard input (for backwards compatibility)
+        -- Check left/right arrow keys or WASD
+        if love.keyboard.isDown("left") or love.keyboard.isDown("a") then
+            self.input_x = -1
+            self.facing_right = false
+        elseif love.keyboard.isDown("right") or love.keyboard.isDown("d") then
+            self.input_x = 1
+            self.facing_right = true
+        end
+
+        -- Check jump input (Space, W, or Up Arrow)
+        local jump_down = love.keyboard.isDown("space") or
+                          love.keyboard.isDown("w") or
+                          love.keyboard.isDown("up")
+
+        -- Detect jump press (rising edge detection)
+        if jump_down and not self.jump_held then
+            self.input_jump = true
+        end
+
+        -- Detect jump release (falling edge detection)
+        if not jump_down and self.jump_held then
+            self.input_jump_release = true
+        end
+
+        -- Update jump held state
+        self.jump_held = jump_down
+
+        -- Check dash input (Shift or X key)
+        local dash_down = love.keyboard.isDown("lshift") or
+                          love.keyboard.isDown("rshift") or
+                          love.keyboard.isDown("x")
+
+        -- Detect dash press (rising edge detection)
+        if dash_down and not self.dash_held then
+            self.input_dash = true
+        end
+
+        -- Update dash held state (for edge detection)
+        self.dash_held = dash_down
     end
-
-    -- Check jump input (Space, W, or Up Arrow)
-    local jump_down = love.keyboard.isDown("space") or
-                      love.keyboard.isDown("w") or
-                      love.keyboard.isDown("up")
-
-    -- Detect jump press (rising edge detection)
-    if jump_down and not self.jump_held then
-        self.input_jump = true
-    end
-
-    -- Detect jump release (falling edge detection)
-    if not jump_down and self.jump_held then
-        self.input_jump_release = true
-    end
-
-    -- Update jump held state
-    self.jump_held = jump_down
-
-    -- Check dash input (Shift or X key)
-    local dash_down = love.keyboard.isDown("lshift") or
-                      love.keyboard.isDown("rshift") or
-                      love.keyboard.isDown("x")
-
-    -- Detect dash press (rising edge detection)
-    if dash_down and not self.dash_held then
-        self.input_dash = true
-    end
-
-    -- Update dash held state (for edge detection)
-    self.dash_held = dash_down
 end
 
 -- Update physics and handle collision detection/response
@@ -518,10 +562,21 @@ function Player:dash()
 
         -- Vertical direction based on input (up/down keys)
         self.dash_direction_y = 0
-        if love.keyboard.isDown("down") or love.keyboard.isDown("s") then
-            self.dash_direction_y = 1  -- Down
-        elseif love.keyboard.isDown("up") or love.keyboard.isDown("w") then
-            self.dash_direction_y = -1  -- Up
+        if self.input_system then
+            -- Use input system if available
+            if self.input_system:is_down("deliver") then  -- "deliver" action includes down/s
+                self.dash_direction_y = 1  -- Down
+            -- Note: There's no dedicated "up" action in current bindings, so check raw keys
+            elseif love.keyboard.isDown("up") or love.keyboard.isDown("w") then
+                self.dash_direction_y = -1  -- Up
+            end
+        else
+            -- Fallback to direct keyboard input
+            if love.keyboard.isDown("down") or love.keyboard.isDown("s") then
+                self.dash_direction_y = 1  -- Down
+            elseif love.keyboard.isDown("up") or love.keyboard.isDown("w") then
+                self.dash_direction_y = -1  -- Up
+            end
         end
 
         -- Normalize diagonal dashes (8-directional movement)

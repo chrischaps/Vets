@@ -23,6 +23,7 @@ local Platform = require("src.entities.platform")
 -- Load systems
 local CollisionSystem = require("src.systems.collision_system")
 local CameraSystem = require("src.systems.camera")
+local Input = require("src.systems.input")
 
 -- Virtual resolution for pixel-perfect rendering
 VIRTUAL_WIDTH = 320
@@ -38,6 +39,7 @@ local platforms = {}
 -- Game systems
 local collision_system = nil
 local camera = nil
+local input = nil
 
 -- Game canvas for rendering
 local game_canvas = nil
@@ -135,6 +137,12 @@ function love.load()
 
     print("\nCore Components: OK")
 
+    -- Initialize input system
+    print("\nInitializing Input System:")
+    input = Input.new()
+    input:init()
+    print("  - Input system: OK")
+
     -- Initialize collision system
     print("\nInitializing Collision System:")
     collision_system = CollisionSystem.new(16)
@@ -202,7 +210,7 @@ function love.load()
 
     -- Create player
     print("\nCreating player:")
-    player = Player.new(160, 100, collision_system)
+    player = Player.new(160, 100, collision_system, input)
 
     -- Add player to collision system
     local px = player.transform.x - player.collision.width / 2
@@ -250,6 +258,11 @@ function calculate_scale()
 end
 
 function love.update(dt)
+    -- Update input state once per frame (before fixed timestep loop)
+    if input then
+        input:update()
+    end
+
     -- Fixed timestep game loop
     -- This ensures consistent physics and deterministic gameplay at 60 FPS
     local updates = Time:update(dt)
@@ -367,5 +380,17 @@ end
 function love.keypressed(key)
     if key == "escape" then
         love.event.quit()
+    end
+end
+
+function love.joystickadded(joystick)
+    if input then
+        input:joystick_added(joystick)
+    end
+end
+
+function love.joystickremoved(joystick)
+    if input then
+        input:joystick_removed(joystick)
     end
 end
