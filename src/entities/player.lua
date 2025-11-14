@@ -264,6 +264,16 @@ function Player:updatePhysicsAndCollision(dt)
 end
 
 -- Apply gravity based on current state
+-- This is the core physics function that determines how the player accelerates downward
+-- Different movement states modify gravity to create different "feels"
+--
+-- Gravity States:
+--   - Normal: 800 px/s² (standard falling)
+--   - Jump Hold: 400 px/s² (50% reduction for floaty apex, only while moving upward)
+--   - Dashing: 0 px/s² (gravity disabled entirely)
+--   - Wall Sliding: 0 px/s² (velocity overridden to constant 40 px/s descent)
+--
+-- See: MOVEMENT_REFERENCE.md Section "Physics Constants"
 function Player:applyGravity(dt)
     -- Calculate gravity based on state
     local gravity = Constants.GRAVITY
@@ -272,10 +282,12 @@ function Player:applyGravity(dt)
         gravity = 0
     elseif self.jumping and self.jump_held and self.physics.velocity_y < 0 then
         -- Use reduced gravity (50% of normal) for more floaty feel at apex
+        -- Only applies while holding jump AND moving upward (before apex)
         gravity = Constants.GRAVITY * Constants.JUMP_HOLD_GRAVITY
     elseif self.wall_sliding then
         -- Override velocity for wall-slide (constant descent speed)
-        -- Maintain a tiny horizontal velocity toward wall so bump detects collision
+        -- IMPORTANT: Maintain a tiny horizontal velocity toward wall so bump detects collision
+        -- Without this 1 px/s push, the player would "pop off" the wall
         local wall_push_velocity = -self.wall_direction * 1  -- 1 px/s toward wall
         self.physics:setVelocity(wall_push_velocity, Constants.WALL_SLIDE_SPEED)
         gravity = 0  -- No gravity while wall-sliding
@@ -286,6 +298,20 @@ function Player:applyGravity(dt)
 end
 
 -- Update wall-sliding state
+-- Wall-sliding provides a safe, controlled descent when touching walls in midair
+--
+-- Activation Requirements:
+--   1. Player is touching a wall (on_wall = true, from collision detection)
+--   2. Player is in the air (not grounded)
+--   3. Player is falling (velocity_y > 0, positive = downward)
+--
+-- Wall Stick Buffer:
+--   - When wall-sliding starts, a 0.1s timer begins
+--   - If player briefly leaves wall, they can "re-grab" it within this window
+--   - Prevents frustrating pop-off from small wall irregularities
+--   - Timer only decrements while wall-sliding (preserves state)
+--
+-- See: MOVEMENT_REFERENCE.md Section "Wall-Sliding"
 function Player:updateWallSliding(dt)
     -- Check if player should be wall-sliding
     if self.on_wall and not self.grounded and self.physics.velocity_y > 0 then
@@ -304,6 +330,26 @@ function Player:updateWallSliding(dt)
 end
 
 -- Handle jumping (ground jump, wall jump, and variable jump height)
+-- This is the core jump controller that handles all jump types and input buffering
+--
+-- Jump Types:
+--   1. Ground Jump: Standard jump from ground or platform (JUMP_FORCE = -300 px/s)
+--   2. Coyote Jump: Can jump for 5 frames after leaving platform edge
+--   3. Buffered Jump: Can press jump 8 frames before landing, executes on first grounded frame
+--   4. Wall Jump: Launches away from wall at ~58° angle (see wallJump())
+--   5. Variable Height: Releasing jump early cuts velocity by 50% (creates ~60% height short-hop)
+--
+-- Input Buffering:
+--   - Jump buffer: 8 frames (~0.13s at 60 FPS) - forgiving pre-landing input
+--   - Coyote time: 5 frames (~0.083s) - forgiving post-leaving-ground input
+--   - Both systems prevent frustration from slightly mistimed inputs
+--
+-- Priority Order:
+--   1. Coyote/Ground jump (if grounded or coyote frames available)
+--   2. Wall jump (if wall-sliding)
+--   3. Variable height (if releasing jump while jumping upward)
+--
+-- See: MOVEMENT_REFERENCE.md Section "Jumping"
 function Player:handleJumping()
     -- Check for buffered jump input (if input system is available)
     local has_buffered_jump = false
@@ -335,12 +381,31 @@ function Player:handleJumping()
 
     -- Variable jump height: reduce upward velocity when jump released early
     if self.input_jump_release and self.jumping and self.physics.velocity_y < 0 then
-        -- Cut jump short by reducing upward velocity
+        -- Cut jump short by reducing upward velocity by 50%
+        -- This creates a short-hop that's ~60% the height of a full jump
         self.physics:setVelocity(self.physics.velocity_x, self.physics.velocity_y * 0.5)
     end
 end
 
 -- Apply running movement (acceleration and deceleration)
+-- Handles horizontal ground movement with smooth acceleration/deceleration curves
+--
+-- Movement Control:
+--   - Target velocity: input_x (-1/0/1) × RUN_SPEED (120 px/s)
+--   - Acceleration: 1200 px/s² - reaches max speed in ~0.1s
+--   - Deceleration: Exponential decay with 0.15 factor - stops in ~0.15s
+--
+-- Control Lock:
+--   - Movement disabled during wall-jump control lock (0.15s)
+--   - Allows wall-jump arc to complete without player interference
+--   - Also disabled during dashing (dash maintains its own velocity)
+--
+-- Deceleration Formula:
+--   velocity *= pow(1 - DECELERATION, dt * 60)
+--   This creates a smooth, natural-feeling slowdown
+--   Velocity snapped to 0 when below 0.5 px/s threshold
+--
+-- See: MOVEMENT_REFERENCE.md Section "Running"
 function Player:applyMovement(dt)
     -- Only apply movement if not control-locked and not dashing
     if self.control_lock_timer <= 0 and not self.dashing then
@@ -547,6 +612,32 @@ function Player:jump()
 end
 
 -- Perform wall-jump
+-- Launches player away from wall at a steep angle with temporary control lock
+--
+-- Wall Jump Mechanics:
+--   - Direction: Away from wall (wall_direction already points outward)
+--   - Angle: atan2(-320, 200) ≈ -58° from horizontal (steeper than 45°)
+--   - Forces: 200 px/s horizontal, -320 px/s vertical
+--   - Height: ~55 pixels (slightly higher than ground jump's ~53 pixels)
+--
+-- Control Lock:
+--   - Player cannot change horizontal direction for 0.15s
+--   - Prevents immediately moving back into the wall
+--   - Allows wall-jump arc to complete naturally
+--   - Vertical input (dash) still works during lock
+--
+-- Displacement:
+--   - Player moved 6 pixels away from wall immediately
+--   - Required because hitbox is 10px wide (need >5px clearance)
+--   - Without displacement, bump would immediately re-collide
+--   - Ensures clean separation from wall surface
+--
+-- State Updates:
+--   - Facing direction set to match jump direction
+--   - Wall-slide state cleared (on_wall, wall_sliding)
+--   - Jumping flag set (enables variable height control)
+--
+-- See: MOVEMENT_REFERENCE.md Section "Wall-Jumping"
 function Player:wallJump()
     -- Calculate horizontal direction (away from wall)
     -- The collision normal (wall_direction) already points AWAY from the wall surface
@@ -560,11 +651,13 @@ function Player:wallJump()
     )
 
     -- Move player away from wall to clear collision
-    -- Need to move at least half width (5px) to fully clear the wall
+    -- IMPORTANT: Need to move at least half width (5px) to fully clear the wall
+    -- Using 6px to ensure clean separation and prevent immediate re-collision
     local displacement = jump_direction * 6  -- 6 pixels clears the wall collision
     self.transform.x = self.transform.x + displacement
 
     -- Set control lock to prevent immediate directional change
+    -- This ensures the wall-jump arc completes without player interference
     self.control_lock_timer = Constants.WALL_JUMP_CONTROL_LOCK
 
     -- Clear wall-sliding state
@@ -580,6 +673,48 @@ function Player:wallJump()
 end
 
 -- Perform dash
+-- Executes a high-speed directional dash with temporary invulnerability
+--
+-- Dash Types:
+--   1. Ground Dash:
+--      - Direction: Horizontal only (facing direction)
+--      - Doesn't consume air dash charge
+--      - Can be repeated with 0.5s cooldown
+--      - Direction vector: (±1, 0)
+--
+--   2. Air Dash:
+--      - Direction: 8-directional based on input (cardinal + diagonal)
+--      - Consumes 1 air dash charge (restored on landing/wall touch)
+--      - Limited to 1 per jump cycle
+--      - Direction vector: Normalized if diagonal
+--
+-- Direction Calculation:
+--   - Horizontal: Use input_x if pressed, else facing direction
+--   - Vertical (air only): Up (-1) if W/Up, Down (1) if S/Down, else 0
+--   - Diagonal Normalization: Divide by vector length to maintain 300 px/s speed
+--
+-- Dash Properties:
+--   - Speed: 300 px/s (2.5× run speed)
+--   - Duration: 0.2s (covers exactly 60 pixels)
+--   - Cooldown: 0.5s (applies after dash ends)
+--   - I-Frames: First 0.1s grants invulnerability
+--
+-- Visual Effects:
+--   - Motion blur trail (spawns every 0.02s, fades over 0.15s)
+--   - Screen shake (2px intensity for 0.1s)
+--   - Player color changes to cyan
+--   - Max velocity temporarily raised to 300 px/s
+--
+-- State Changes:
+--   - Gravity disabled for duration
+--   - Wall-slide cleared
+--   - Control lock cleared (dash overrides)
+--
+-- Known Issue:
+--   - Up-dash requires raw keyboard check (no dedicated "up" action)
+--   - Down-dash uses "deliver" action binding
+--
+-- See: MOVEMENT_REFERENCE.md Section "Dashing"
 function Player:dash()
     -- Determine dash direction based on grounded state
     if self.grounded then
