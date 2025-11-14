@@ -23,6 +23,7 @@ local Platform = require("src.entities.platform")
 -- Load systems
 local CollisionSystem = require("src.systems.collision_system")
 local CameraSystem = require("src.systems.camera")
+local Input = require("src.systems.input")
 
 -- Virtual resolution for pixel-perfect rendering
 VIRTUAL_WIDTH = 320
@@ -38,6 +39,7 @@ local platforms = {}
 -- Game systems
 local collision_system = nil
 local camera = nil
+local input = nil
 
 -- Game canvas for rendering
 local game_canvas = nil
@@ -135,6 +137,12 @@ function love.load()
 
     print("\nCore Components: OK")
 
+    -- Initialize input system
+    print("\nInitializing Input System:")
+    input = Input.new()
+    input:init()
+    print("  - Input system: OK")
+
     -- Initialize collision system
     print("\nInitializing Collision System:")
     collision_system = CollisionSystem.new(16)
@@ -202,7 +210,7 @@ function love.load()
 
     -- Create player
     print("\nCreating player:")
-    player = Player.new(160, 100, collision_system)
+    player = Player.new(160, 100, collision_system, input)
 
     -- Add player to collision system
     local px = player.transform.x - player.collision.width / 2
@@ -250,6 +258,11 @@ function calculate_scale()
 end
 
 function love.update(dt)
+    -- Update input state once per frame (before fixed timestep loop)
+    if input then
+        input:update()
+    end
+
     -- Fixed timestep game loop
     -- This ensures consistent physics and deterministic gameplay at 60 FPS
     local updates = Time:update(dt)
@@ -341,7 +354,29 @@ function love.draw()
 
     -- Debug help
     love.graphics.setColor(0.5, 0.5, 0.5)
-    love.graphics.print("F1: Collision debug | F2: Camera debug", 200, 10)
+    love.graphics.print("F1: Collision debug | F2: Camera debug | F3: Input debug", 200, 10)
+
+    -- Input debug info (F3)
+    if input and love.keyboard.isDown("f3") then
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.print("=== INPUT DEBUG ===", 10, 200)
+        local y_offset = 215
+        local actions = input:get_actions()
+        for i, action in ipairs(actions) do
+            local state = input:is_down(action)
+            local pressed = input:is_pressed(action)
+            local released = input:is_released(action)
+            local color = state and {0, 1, 0} or {0.5, 0.5, 0.5}
+            love.graphics.setColor(color)
+            local status = state and "DOWN" or "UP"
+            if pressed then status = status .. " (PRESSED)" end
+            if released then status = status .. " (RELEASED)" end
+            love.graphics.print(action .. ": " .. status, 10, y_offset)
+            y_offset = y_offset + 12
+        end
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.print("Horizontal axis: " .. input:get_horizontal_axis(), 10, y_offset + 5)
+    end
 
     -- Draw crosshair at camera center (world space)
     if camera and love.keyboard.isDown("f2") then
@@ -367,5 +402,17 @@ end
 function love.keypressed(key)
     if key == "escape" then
         love.event.quit()
+    end
+end
+
+function love.joystickadded(joystick)
+    if input then
+        input:joystick_added(joystick)
+    end
+end
+
+function love.joystickremoved(joystick)
+    if input then
+        input:joystick_removed(joystick)
     end
 end
