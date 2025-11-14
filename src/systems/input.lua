@@ -56,6 +56,10 @@ function Input.new()
     -- Gamepad axis dead zone (to prevent drift)
     self.axis_deadzone = 0.3
 
+    -- Input buffer system (stores action press with frame counter)
+    -- Each buffered action stores remaining frames before it expires
+    self.buffer = {}
+
     return self
 end
 
@@ -87,6 +91,9 @@ function Input:update()
     for action, bindings in pairs(ACTION_BINDINGS) do
         self.actions[action] = self:checkAction(action, bindings)
     end
+
+    -- Update input buffer (decay frame counters)
+    self:update_buffer()
 end
 
 -- Check if an action is currently active (keyboard OR gamepad)
@@ -245,6 +252,43 @@ function Input:debug_print()
     end
     print("  Horizontal axis: " .. self:get_horizontal_axis())
     print("==================\n")
+end
+
+-- Input Buffering System
+-- Allows storing an input press for a number of frames to make controls more forgiving
+
+-- Buffer an action press for a specified number of frames
+-- This stores the action input so it can be consumed later
+-- Used for jump buffering (pressing jump before landing)
+function Input:buffer_action(action, frames)
+    self.buffer[action] = frames or 8
+end
+
+-- Check if a buffered action is available and consume it
+-- Returns true if the action was buffered, false otherwise
+-- This clears the buffer for the action
+function Input:consume_buffer(action)
+    if self.buffer[action] and self.buffer[action] > 0 then
+        self.buffer[action] = 0
+        return true
+    end
+    return false
+end
+
+-- Update buffer state (decay frame counters each frame)
+-- This is called automatically in Input:update()
+function Input:update_buffer()
+    for action, frames in pairs(self.buffer) do
+        if frames > 0 then
+            self.buffer[action] = frames - 1
+        end
+    end
+end
+
+-- Check if an action is currently buffered
+-- Returns true if the action has remaining buffer frames
+function Input:is_buffered(action)
+    return self.buffer[action] and self.buffer[action] > 0
 end
 
 return Input
