@@ -267,6 +267,13 @@ function love.update(dt)
         -- Update camera (smooth following)
         if camera then
             camera:update(Time.FIXED_DT)
+
+            -- Apply player screen shake to camera
+            if player then
+                local shake_x, shake_y = player:getScreenShakeOffset()
+                camera.shake_x = shake_x
+                camera.shake_y = shake_y
+            end
         end
     end
 end

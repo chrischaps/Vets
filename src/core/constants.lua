@@ -34,4 +34,11 @@ Constants.DASH_DISTANCE = 60         -- Dash distance (px) = DASH_SPEED * DASH_D
 Constants.DASH_COOLDOWN = 0.5        -- Cooldown after dash ends (seconds)
 Constants.DASH_IFRAME_DURATION = 0.1 -- Invulnerability duration during dash (seconds)
 
+-- Dash Visual Effects Constants
+Constants.DASH_CROUCH_DURATION = 0.05  -- Crouch animation before dash (seconds)
+Constants.DASH_TRAIL_SPAWN_RATE = 0.02  -- Time between trail spawns (seconds)
+Constants.DASH_TRAIL_FADE_TIME = 0.15   -- How long trail images fade out (seconds)
+Constants.DASH_SCREEN_SHAKE_DURATION = 0.1  -- Screen shake duration (seconds)
+Constants.DASH_SCREEN_SHAKE_INTENSITY = 2   -- Screen shake intensity (pixels)
+
 return Constants

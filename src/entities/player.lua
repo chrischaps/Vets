@@ -72,6 +72,14 @@ function Player.new(x, y, collision_system)
     -- Visual representation (placeholder rectangle)
     self.color = {0.9, 0.6, 0.3}  -- Orange color for the cat
 
+    -- Dash visual effects
+    self.dash_trail = {}  -- Array of trail positions {x, y, alpha, time}
+    self.dash_trail_spawn_timer = 0  -- Timer for spawning trail images
+    self.dash_crouch_timer = 0  -- Timer for dash startup crouch animation
+    self.dash_screen_shake_timer = 0  -- Timer for screen shake effect
+    self.dash_screen_shake_x = 0  -- Screen shake offset X
+    self.dash_screen_shake_y = 0  -- Screen shake offset Y
+
     return self
 end
 
@@ -301,12 +309,18 @@ end
 
 -- Update dash state and handle dash input
 function Player:updateDash(dt)
-    -- Handle dash input
-    if self.input_dash and not self.dashing and self.dash_cooldown_timer <= 0 then
+    -- Handle dash input with crouch startup
+    if self.input_dash and not self.dashing and self.dash_cooldown_timer <= 0 and self.dash_crouch_timer <= 0 then
         -- Check if can dash (always can on ground, or have air dash charge)
         if self.grounded or self.air_dash_charges > 0 then
-            self:dash()
+            -- Start crouch animation before dash
+            self.dash_crouch_timer = Constants.DASH_CROUCH_DURATION
         end
+    end
+
+    -- Execute dash after crouch animation completes
+    if self.dash_crouch_timer > 0 and self.dash_crouch_timer <= dt then
+        self:dash()
     end
 
     -- Update dash state
@@ -368,6 +382,70 @@ function Player:updateTimers(dt)
     if self.iframe_timer > 0 then
         self.iframe_timer = self.iframe_timer - dt
     end
+
+    -- Update dash crouch timer
+    if self.dash_crouch_timer > 0 then
+        self.dash_crouch_timer = self.dash_crouch_timer - dt
+    end
+
+    -- Update screen shake timer
+    if self.dash_screen_shake_timer > 0 then
+        self.dash_screen_shake_timer = self.dash_screen_shake_timer - dt
+        if self.dash_screen_shake_timer <= 0 then
+            -- Reset shake offsets when timer expires
+            self.dash_screen_shake_x = 0
+            self.dash_screen_shake_y = 0
+        end
+    end
+end
+
+-- Update dash trail effect
+function Player:updateDashTrail(dt)
+    -- Update existing trail positions (fade them out)
+    local i = 1
+    while i <= #self.dash_trail do
+        local trail = self.dash_trail[i]
+        trail.time = trail.time - dt
+
+        -- Remove trail if faded out
+        if trail.time <= 0 then
+            table.remove(self.dash_trail, i)
+        else
+            -- Update alpha based on remaining time
+            trail.alpha = trail.time / Constants.DASH_TRAIL_FADE_TIME
+            i = i + 1
+        end
+    end
+
+    -- Spawn new trail images while dashing (at specified rate)
+    if self.dashing then
+        self.dash_trail_spawn_timer = self.dash_trail_spawn_timer - dt
+
+        if self.dash_trail_spawn_timer <= 0 then
+            -- Add trail position at current location
+            table.insert(self.dash_trail, {
+                x = self.transform.x,
+                y = self.transform.y,
+                alpha = 1.0,
+                time = Constants.DASH_TRAIL_FADE_TIME
+            })
+            -- Reset spawn timer
+            self.dash_trail_spawn_timer = Constants.DASH_TRAIL_SPAWN_RATE
+        end
+    else
+        -- Reset spawn timer when not dashing
+        self.dash_trail_spawn_timer = 0
+    end
+end
+
+-- Update screen shake effect
+function Player:updateScreenShake(dt)
+    if self.dash_screen_shake_timer > 0 then
+        -- Random shake within intensity bounds
+        local intensity = Constants.DASH_SCREEN_SHAKE_INTENSITY
+        self.dash_screen_shake_x = (math.random() * 2 - 1) * intensity
+        self.dash_screen_shake_y = (math.random() * 2 - 1) * intensity
+    end
 end
 
 -- Update player (main update loop)
@@ -380,6 +458,8 @@ function Player:update(dt)
     self:updateWallSliding(dt)
     self:applyGravity(dt)
     self:updatePhysicsAndCollision(dt)
+    self:updateDashTrail(dt)
+    self:updateScreenShake(dt)
 end
 
 -- Perform jump
@@ -463,6 +543,12 @@ function Player:dash()
     self.dash_timer = Constants.DASH_DURATION
     self.iframe_timer = Constants.DASH_IFRAME_DURATION
 
+    -- Trigger screen shake
+    self.dash_screen_shake_timer = Constants.DASH_SCREEN_SHAKE_DURATION
+
+    -- Clear dash trail (start fresh trail for this dash)
+    self.dash_trail = {}
+
     -- Apply dash velocity
     self.physics:setVelocity(
         self.dash_direction_x * Constants.DASH_SPEED,
@@ -488,11 +574,34 @@ function Player:draw()
             x - w/2, y - h/2, w, h))
     end
 
+    -- Draw dash trail (motion blur effect)
+    if #self.dash_trail > 0 then
+        for i = 1, #self.dash_trail do
+            local trail = self.dash_trail[i]
+            -- Fade from magenta to transparent
+            love.graphics.setColor(1, 0.3, 1, trail.alpha * 0.5)  -- 50% max opacity for trail
+            love.graphics.rectangle("fill", trail.x - w/2, trail.y - h/2, w, h)
+        end
+    end
+
+    -- Apply crouch deformation during dash startup
+    local draw_h = h
+    local draw_y = y
+    if self.dash_crouch_timer > 0 then
+        -- Squash player vertically (crouch)
+        local crouch_factor = 0.7  -- 70% of normal height
+        draw_h = h * crouch_factor
+        draw_y = y + (h - draw_h) / 2  -- Offset to keep bottom aligned
+    end
+
     -- Draw player as colored rectangle (placeholder)
     -- Change color based on state
     if self.dashing then
-        -- Dashing - bright white/magenta glow with trail effect
-        love.graphics.setColor(1, 0.3, 1)  -- Magenta glow when dashing
+        -- Dashing - bright white/cyan glow (distinct from magenta trail)
+        love.graphics.setColor(0.3, 1, 1)  -- Cyan glow when dashing
+    elseif self.dash_crouch_timer > 0 then
+        -- Crouching before dash - yellow anticipation glow
+        love.graphics.setColor(1, 1, 0.3)  -- Yellow glow when crouching
     elseif self.control_lock_timer > 0 then
         -- Control-locked after wall-jump - bright cyan/white glow
         love.graphics.setColor(0.7, 1, 1)  -- Cyan glow when wall-jumping
@@ -503,7 +612,7 @@ function Player:draw()
         -- Normal state
         love.graphics.setColor(self.color)
     end
-    love.graphics.rectangle("fill", x - w/2, y - h/2, w, h)
+    love.graphics.rectangle("fill", x - w/2, draw_y - draw_h/2, w, draw_h)
 
     -- Draw dash direction indicator when dashing
     if self.dashing then
@@ -540,6 +649,11 @@ end
 -- Get entity
 function Player:getEntity()
     return self.entity
+end
+
+-- Get screen shake offset (for camera)
+function Player:getScreenShakeOffset()
+    return self.dash_screen_shake_x, self.dash_screen_shake_y
 end
 
 return Player
