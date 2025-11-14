@@ -47,6 +47,9 @@ local game_scale = 1
 local offset_x = 0
 local offset_y = 0
 
+-- Debug display toggle (F4)
+local show_debug_text = true
+
 function love.load()
     -- Set up pixel-perfect rendering
     love.graphics.setDefaultFilter("nearest", "nearest")
@@ -325,36 +328,38 @@ function love.draw()
         camera:detach()
     end
 
-    -- Draw UI overlay
-    love.graphics.setColor(1, 1, 1)
-    love.graphics.print("Courier Cat", 10, 10)
-    love.graphics.print("LOVE " .. love.getVersion(), 10, 30)
-    love.graphics.print("Press ESC to quit", 10, 50)
+    -- Draw UI overlay (toggle with F4)
+    if show_debug_text then
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.print("Courier Cat", 10, 10)
+        love.graphics.print("LOVE " .. love.getVersion(), 10, 30)
+        love.graphics.print("Press ESC to quit", 10, 50)
 
-    -- Debug: Display time and player info
-    love.graphics.setColor(0.7, 0.7, 0.7)
-    love.graphics.print("Fixed timestep: " .. Time.FIXED_DT .. "s (" .. Time:getFPS() .. " FPS)", 10, 80)
-    love.graphics.print("Frame: " .. Time.frame, 10, 95)
-    love.graphics.print("Total time: " .. string.format("%.2f", Time.total) .. "s", 10, 110)
-    love.graphics.print("Actual FPS: " .. love.timer.getFPS(), 10, 125)
-
-    -- Player debug info
-    if player then
-        love.graphics.print(string.format("Player pos: (%.1f, %.1f)", player.transform.x, player.transform.y), 10, 145)
-        love.graphics.print(string.format("Player vel: (%.1f, %.1f)", player.physics.velocity_x, player.physics.velocity_y), 10, 160)
-        love.graphics.print("Grounded: " .. (player.grounded and "YES" or "NO") .. " | Jumping: " .. (player.jumping and "YES" or "NO"), 10, 175)
-    end
-
-    -- Camera debug info
-    if camera then
-        local cam_x, cam_y = camera:getPosition()
+        -- Debug: Display time and player info
         love.graphics.setColor(0.7, 0.7, 0.7)
-        love.graphics.print(string.format("Camera pos: (%.1f, %.1f)", cam_x, cam_y), 200, 145)
-    end
+        love.graphics.print("Fixed timestep: " .. Time.FIXED_DT .. "s (" .. Time:getFPS() .. " FPS)", 10, 80)
+        love.graphics.print("Frame: " .. Time.frame, 10, 95)
+        love.graphics.print("Total time: " .. string.format("%.2f", Time.total) .. "s", 10, 110)
+        love.graphics.print("Actual FPS: " .. love.timer.getFPS(), 10, 125)
 
-    -- Debug help
-    love.graphics.setColor(0.5, 0.5, 0.5)
-    love.graphics.print("F1: Collision debug | F2: Camera debug | F3: Input debug", 200, 10)
+        -- Player debug info
+        if player then
+            love.graphics.print(string.format("Player pos: (%.1f, %.1f)", player.transform.x, player.transform.y), 10, 145)
+            love.graphics.print(string.format("Player vel: (%.1f, %.1f)", player.physics.velocity_x, player.physics.velocity_y), 10, 160)
+            love.graphics.print("Grounded: " .. (player.grounded and "YES" or "NO") .. " | Jumping: " .. (player.jumping and "YES" or "NO"), 10, 175)
+        end
+
+        -- Camera debug info
+        if camera then
+            local cam_x, cam_y = camera:getPosition()
+            love.graphics.setColor(0.7, 0.7, 0.7)
+            love.graphics.print(string.format("Camera pos: (%.1f, %.1f)", cam_x, cam_y), 200, 145)
+        end
+
+        -- Debug help
+        love.graphics.setColor(0.5, 0.5, 0.5)
+        love.graphics.print("F1: Collision debug | F2: Camera debug | F3: Input debug | F4: Toggle text", 200, 10)
+    end
 
     -- Input debug info (F3)
     if input and love.keyboard.isDown("f3") then
@@ -402,6 +407,8 @@ end
 function love.keypressed(key)
     if key == "escape" then
         love.event.quit()
+    elseif key == "f4" then
+        show_debug_text = not show_debug_text
     end
 end
 
