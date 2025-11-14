@@ -315,13 +315,11 @@ function Player:updateDash(dt)
         if self.grounded or self.air_dash_charges > 0 then
             -- Start crouch animation before dash
             self.dash_crouch_timer = Constants.DASH_CROUCH_DURATION
-            print("[Dash] Starting crouch animation")
         end
     end
 
     -- Execute dash after crouch animation completes
     if self.dash_crouch_timer > 0 and self.dash_crouch_timer <= dt then
-        print("[Dash] Crouch complete, executing dash")
         self:dash()
     end
 
@@ -550,10 +548,6 @@ function Player:dash()
 
     -- Clear dash trail (start fresh trail for this dash)
     self.dash_trail = {}
-
-    -- Debug: Print dash info
-    print(string.format("[Dash] Started at (%.1f, %.1f) direction: (%.1f, %.1f)",
-        self.transform.x, self.transform.y, self.dash_direction_x, self.dash_direction_y))
 
     -- Apply dash velocity
     self.physics:setVelocity(
