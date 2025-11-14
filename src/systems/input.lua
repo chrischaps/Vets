@@ -10,27 +10,45 @@ Input.__index = Input
 local ACTION_BINDINGS = {
     left = {
         keyboard = {"a", "left"},
-        gamepad = {button = nil, axis = {name = "leftx", direction = -1}}
+        gamepad = {
+            buttons = {"dpleft"},  -- D-pad left
+            axis = {name = "leftx", direction = -1}  -- Left stick
+        }
     },
     right = {
         keyboard = {"d", "right"},
-        gamepad = {button = nil, axis = {name = "leftx", direction = 1}}
+        gamepad = {
+            buttons = {"dpright"},  -- D-pad right
+            axis = {name = "leftx", direction = 1}  -- Left stick
+        }
     },
     jump = {
         keyboard = {"space", "w", "up"},
-        gamepad = {button = "a", axis = nil}
+        gamepad = {
+            buttons = {"a"},  -- A button
+            axis = nil
+        }
     },
     dash = {
         keyboard = {"lshift", "rshift", "x", "z"},
-        gamepad = {button = "x", axis = nil}
+        gamepad = {
+            buttons = {"x", "rightshoulder"},  -- X button or RB
+            axis = nil
+        }
     },
     deliver = {
         keyboard = {"s", "down", "e"},
-        gamepad = {button = "b", axis = nil}
+        gamepad = {
+            buttons = {"b", "y"},  -- B button or Y button
+            axis = nil
+        }
     },
     pause = {
         keyboard = {"escape"},
-        gamepad = {button = "start", axis = nil}
+        gamepad = {
+            buttons = {"start"},
+            axis = nil
+        }
     }
 }
 
@@ -54,7 +72,7 @@ function Input.new()
     self.joysticks = {}
 
     -- Gamepad axis dead zone (to prevent drift)
-    self.axis_deadzone = 0.3
+    self.axis_deadzone = 0.15
 
     -- Input buffer system (stores action press with frame counter)
     -- Each buffered action stores remaining frames before it expires
@@ -109,14 +127,16 @@ function Input:checkAction(action, bindings)
     if #self.joysticks > 0 then
         local joystick = self.joysticks[1]  -- Use first connected gamepad
 
-        -- Check gamepad button
-        if bindings.gamepad.button then
-            if joystick:isGamepadDown(bindings.gamepad.button) then
-                return true
+        -- Check gamepad buttons (now supports multiple buttons per action)
+        if bindings.gamepad.buttons then
+            for _, button in ipairs(bindings.gamepad.buttons) do
+                if joystick:isGamepadDown(button) then
+                    return true
+                end
             end
         end
 
-        -- Check gamepad axis
+        -- Check gamepad axis (analog stick)
         if bindings.gamepad.axis then
             local axis_name = bindings.gamepad.axis.name
             local axis_direction = bindings.gamepad.axis.direction
@@ -185,12 +205,12 @@ function Input:get_gamepad_axis(axis_name)
 end
 
 -- Add a new action binding (for extensibility)
--- Example: Input:add_action("crouch", {"lctrl", "c"}, "y")
-function Input:add_action(action_name, keyboard_keys, gamepad_button, gamepad_axis)
+-- Example: Input:add_action("crouch", {"lctrl", "c"}, {"y"})
+function Input:add_action(action_name, keyboard_keys, gamepad_buttons, gamepad_axis)
     ACTION_BINDINGS[action_name] = {
         keyboard = keyboard_keys or {},
         gamepad = {
-            button = gamepad_button,
+            buttons = gamepad_buttons or {},
             axis = gamepad_axis
         }
     }
