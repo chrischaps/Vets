@@ -41,4 +41,8 @@ Constants.DASH_TRAIL_FADE_TIME = 0.15   -- How long trail images fade out (secon
 Constants.DASH_SCREEN_SHAKE_DURATION = 0.1  -- Screen shake duration (seconds)
 Constants.DASH_SCREEN_SHAKE_INTENSITY = 2   -- Screen shake intensity (pixels)
 
+-- Input Buffering Constants
+Constants.JUMP_BUFFER_FRAMES = 8  -- Jump buffer window (frames) - can press jump before landing
+Constants.COYOTE_FRAMES = 5       -- Coyote time window (frames) - can jump after leaving platform
+
 return Constants

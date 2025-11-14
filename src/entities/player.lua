@@ -47,6 +47,9 @@ function Player.new(x, y, collision_system, input_system)
     self.jump_held = false  -- Is jump button currently held?
     self.dash_held = false  -- Is dash button currently held?
 
+    -- Input buffering state
+    self.coyote_frames = 0  -- Remaining frames of coyote time (can jump after leaving ground)
+
     -- Wall-sliding state
     self.wall_sliding = false  -- Is player currently wall-sliding?
     self.on_wall = false  -- Is player touching a wall?
@@ -112,6 +115,8 @@ function Player:handleInput()
         -- Detect jump press (rising edge detection)
         if jump_down and not self.jump_held then
             self.input_jump = true
+            -- Buffer the jump input for jump buffering system
+            self.input_system:buffer_action("jump", Constants.JUMP_BUFFER_FRAMES)
         end
 
         -- Detect jump release (falling edge detection)
@@ -220,6 +225,8 @@ function Player:updatePhysicsAndCollision(dt)
                 self.physics:setVelocity(self.physics.velocity_x, 0)
                 -- Restore air dash charges on landing
                 self.air_dash_charges = 1
+                -- Reset coyote time when grounded
+                self.coyote_frames = Constants.COYOTE_FRAMES
             end
 
             -- Check if collision is from above (player hitting head on ceiling)
@@ -298,13 +305,32 @@ end
 
 -- Handle jumping (ground jump, wall jump, and variable jump height)
 function Player:handleJumping()
+    -- Check for buffered jump input (if input system is available)
+    local has_buffered_jump = false
+    if self.input_system then
+        has_buffered_jump = self.input_system:is_buffered("jump")
+    end
+
+    -- Check if player can jump with coyote time (grounded OR has coyote frames remaining)
+    local can_coyote_jump = self.grounded or self.coyote_frames > 0
+
     -- Handle jumping
-    -- Jump when on ground and jump pressed
-    if self.grounded and self.input_jump then
+    -- Jump when on ground (or coyote time) and jump pressed or buffered
+    if can_coyote_jump and (self.input_jump or (has_buffered_jump and self.grounded)) then
         self:jump()
+        -- Consume buffered jump if input system is available
+        if self.input_system then
+            self.input_system:consume_buffer("jump")
+        end
+        -- Clear coyote time after jump
+        self.coyote_frames = 0
     -- Wall-jump when wall-sliding and jump pressed (and actually on a wall)
     elseif self.wall_sliding and self.input_jump and self.wall_direction ~= 0 then
         self:wallJump()
+        -- Consume buffered jump if input system is available
+        if self.input_system then
+            self.input_system:consume_buffer("jump")
+        end
     end
 
     -- Variable jump height: reduce upward velocity when jump released early
@@ -430,6 +456,12 @@ function Player:updateTimers(dt)
     -- Update dash crouch timer
     if self.dash_crouch_timer > 0 then
         self.dash_crouch_timer = self.dash_crouch_timer - dt
+    end
+
+    -- Update coyote time (frame-based decay)
+    -- Decay coyote frames when not grounded
+    if not self.grounded and self.coyote_frames > 0 then
+        self.coyote_frames = self.coyote_frames - 1
     end
 
     -- Update screen shake timer
