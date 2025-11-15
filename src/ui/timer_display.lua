@@ -1,7 +1,7 @@
 -- Moon Timer Display for Courier Cat
 -- Diegetic timer showing time until dawn via a shrinking moon
 
-local HUD = require("ui.hud")
+local HUD = require("src.ui.hud")
 
 local TimerDisplay = setmetatable({}, {__index = HUD.UIElement})
 TimerDisplay.__index = TimerDisplay
