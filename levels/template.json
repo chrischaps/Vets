@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "night": 0,
+  "name": "Level Name",
+  "description": "Level description goes here.",
+  "spawn": {
+    "x": 80,
+    "y": 100
+  },
+  "platforms": [
+    {
+      "x": 0,
+      "y": 150,
+      "width": 160,
+      "height": 16,
+      "type": "rooftop",
+      "properties": {
+        "friction": 1.0,
+        "grippable": true
+      }
+    }
+  ],
+  "walls": [],
+  "delivery_zones": [
+    {
+      "x": 120,
+      "y": 135,
+      "width": 16,
+      "height": 24,
+      "id": "delivery_1",
+      "type": "standard",
+      "letter_fragment_id": null,
+      "properties": {
+        "glow_color": [255, 220, 100, 200],
+        "recipient_name": "Recipient Name"
+      }
+    }
+  ],
+  "hazards": [],
+  "powerups": [],
+  "background_layers": [
+    {
+      "type": "color",
+      "layer": 0,
+      "properties": {
+        "color": [30, 20, 40, 255]
+      }
+    }
+  ],
+  "camera": {
+    "bounds": {
+      "left": 0,
+      "right": 800,
+      "top": 0,
+      "bottom": 180
+    },
+    "follow_speed": 3.0,
+    "dead_zone": {
+      "x": 40,
+      "y": 30
+    }
+  },
+  "environment": {
+    "time_limit": 300,
+    "starting_time": 240,
+    "wind": {
+      "enabled": false,
+      "direction_x": 0,
+      "strength": 0
+    },
+    "weather": "clear"
+  },
+  "metadata": {
+    "author": "Author Name",
+    "created_date": "YYYY-MM-DD",
+    "difficulty": "beginner",
+    "required_deliveries": 3,
+    "par_time": 60,
+    "tags": ["tag1", "tag2"]
+  }
+}

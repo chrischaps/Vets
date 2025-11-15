@@ -1,0 +1,245 @@
+{
+  "version": 1,
+  "night": 1,
+  "name": "First Flight",
+  "description": "The first night of deliveries. Learn the basics of rooftop delivery.",
+  "spawn": {
+    "x": 80,
+    "y": 100
+  },
+  "platforms": [
+    {
+      "x": 0,
+      "y": 150,
+      "width": 160,
+      "height": 16,
+      "type": "rooftop",
+      "properties": {
+        "friction": 1.0,
+        "grippable": true
+      }
+    },
+    {
+      "x": 200,
+      "y": 150,
+      "width": 120,
+      "height": 16,
+      "type": "rooftop",
+      "properties": {
+        "friction": 1.0,
+        "grippable": true
+      }
+    },
+    {
+      "x": 360,
+      "y": 130,
+      "width": 100,
+      "height": 16,
+      "type": "rooftop",
+      "properties": {
+        "friction": 1.0,
+        "grippable": true
+      }
+    },
+    {
+      "x": 500,
+      "y": 120,
+      "width": 140,
+      "height": 16,
+      "type": "rooftop",
+      "properties": {
+        "friction": 1.0,
+        "grippable": true
+      }
+    },
+    {
+      "x": 680,
+      "y": 140,
+      "width": 120,
+      "height": 16,
+      "type": "rooftop",
+      "properties": {
+        "friction": 1.0,
+        "grippable": true
+      }
+    }
+  ],
+  "walls": [
+    {
+      "x": 200,
+      "y": 100,
+      "width": 16,
+      "height": 50,
+      "type": "building_wall",
+      "properties": {
+        "climbable": true,
+        "friction": 0.8
+      }
+    },
+    {
+      "x": 460,
+      "y": 80,
+      "width": 16,
+      "height": 40,
+      "type": "building_wall",
+      "properties": {
+        "climbable": true,
+        "friction": 0.8
+      }
+    }
+  ],
+  "delivery_zones": [
+    {
+      "x": 120,
+      "y": 135,
+      "width": 16,
+      "height": 24,
+      "id": "delivery_1",
+      "type": "standard",
+      "letter_fragment_id": null,
+      "properties": {
+        "glow_color": [255, 220, 100, 200],
+        "recipient_name": "Mrs. Henderson"
+      }
+    },
+    {
+      "x": 280,
+      "y": 135,
+      "width": 16,
+      "height": 24,
+      "id": "delivery_2",
+      "type": "standard",
+      "letter_fragment_id": null,
+      "properties": {
+        "glow_color": [255, 220, 100, 200],
+        "recipient_name": "Tom's Bakery"
+      }
+    },
+    {
+      "x": 420,
+      "y": 115,
+      "width": 16,
+      "height": 24,
+      "id": "delivery_3",
+      "type": "standard",
+      "letter_fragment_id": null,
+      "properties": {
+        "glow_color": [255, 220, 100, 200],
+        "recipient_name": "City Library"
+      }
+    },
+    {
+      "x": 580,
+      "y": 105,
+      "width": 16,
+      "height": 24,
+      "id": "delivery_4",
+      "type": "standard",
+      "letter_fragment_id": null,
+      "properties": {
+        "glow_color": [255, 220, 100, 200],
+        "recipient_name": "Jazz Club"
+      }
+    },
+    {
+      "x": 740,
+      "y": 125,
+      "width": 16,
+      "height": 24,
+      "id": "delivery_5",
+      "type": "standard",
+      "letter_fragment_id": "fragment_001",
+      "properties": {
+        "glow_color": [255, 100, 220, 200],
+        "recipient_name": "Old Friend",
+        "special": true
+      }
+    }
+  ],
+  "hazards": [
+    {
+      "x": 350,
+      "y": 140,
+      "width": 16,
+      "height": 16,
+      "type": "vent",
+      "properties": {
+        "pattern": "2s_on_1.5s_off",
+        "damage": 0,
+        "knockback": true,
+        "force_y": -200
+      }
+    }
+  ],
+  "powerups": [
+    {
+      "x": 240,
+      "y": 130,
+      "width": 12,
+      "height": 12,
+      "type": "coffee",
+      "properties": {
+        "duration": 5.0,
+        "speed_multiplier": 1.5
+      }
+    }
+  ],
+  "background_layers": [
+    {
+      "type": "color",
+      "layer": 0,
+      "properties": {
+        "color": [30, 20, 40, 255]
+      }
+    },
+    {
+      "type": "skyline",
+      "layer": 1,
+      "properties": {
+        "parallax_factor": 0.3,
+        "texture": "skyline_far",
+        "y_offset": 80
+      }
+    },
+    {
+      "type": "skyline",
+      "layer": 2,
+      "properties": {
+        "parallax_factor": 0.6,
+        "texture": "skyline_near",
+        "y_offset": 100
+      }
+    }
+  ],
+  "camera": {
+    "bounds": {
+      "left": 0,
+      "right": 880,
+      "top": 0,
+      "bottom": 180
+    },
+    "follow_speed": 3.0,
+    "dead_zone": {
+      "x": 40,
+      "y": 30
+    }
+  },
+  "environment": {
+    "time_limit": 300,
+    "starting_time": 240,
+    "wind": {
+      "enabled": false,
+      "direction_x": 0,
+      "strength": 0
+    },
+    "weather": "clear"
+  },
+  "metadata": {
+    "author": "Courier Cat Team",
+    "created_date": "2024-11-15",
+    "difficulty": "beginner",
+    "required_deliveries": 3,
+    "par_time": 60,
+    "tags": ["tutorial", "easy", "beginner"]
+  }
+}
