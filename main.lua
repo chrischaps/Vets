@@ -237,21 +237,35 @@ function love.load()
     print("  - Jump force: " .. Constants.JUMP_FORCE .. " px/s")
     print("\nPlayer: OK")
 
-    -- Create delivery zones for testing (VETS-23)
+    -- Create delivery zones for testing (VETS-23, VETS-28)
+    -- Zones positioned above platforms for combo testing
     print("\nCreating delivery zones:")
-    local zone1 = DeliveryZone.new(100, 145, collision_system)
+    local zone1 = DeliveryZone.new(65, 105, collision_system)  -- Above platform 1
     table.insert(delivery_zones, zone1)
-    print("  - Zone 1 created at (100, 145)")
+    print("  - Zone 1 created at (65, 105) - Above platform 1")
 
-    local zone2 = DeliveryZone.new(200, 90, collision_system)
+    local zone2 = DeliveryZone.new(145, 95, collision_system)  -- Above platform 2
     table.insert(delivery_zones, zone2)
-    print("  - Zone 2 created at (200, 90)")
+    print("  - Zone 2 created at (145, 95) - Above platform 2")
 
-    local zone3 = DeliveryZone.new(150, 45, collision_system)
+    local zone3 = DeliveryZone.new(235, 80, collision_system)  -- Above platform 3
     table.insert(delivery_zones, zone3)
-    print("  - Zone 3 created at (150, 45)")
+    print("  - Zone 3 created at (235, 80) - Above platform 3")
+
+    local zone4 = DeliveryZone.new(65, 55, collision_system)  -- Above platform 4
+    table.insert(delivery_zones, zone4)
+    print("  - Zone 4 created at (65, 55) - Above platform 4")
+
+    local zone5 = DeliveryZone.new(142, 35, collision_system)  -- Above platform 5
+    table.insert(delivery_zones, zone5)
+    print("  - Zone 5 created at (142, 35) - Above platform 5")
+
+    local zone6 = DeliveryZone.new(200, 20, collision_system)  -- Above platform 6
+    table.insert(delivery_zones, zone6)
+    print("  - Zone 6 created at (200, 20) - Above platform 6")
 
     print("  - Total delivery zones: " .. #delivery_zones)
+    print("  - Zones positioned for combo testing (deliver in air to maintain combo)")
     print("\nDelivery Zones: OK")
 
     -- Connect player to delivery zones (VETS-24)
@@ -415,11 +429,26 @@ function love.draw()
         moon_timer:draw()
     end
 
-    -- Draw score display (VETS-27) - always visible
+    -- Draw score display (VETS-27, VETS-28) - always visible
     if scoring then
         love.graphics.setColor(1, 1, 1)
         love.graphics.print(string.format("Score: %d", scoring:getTotal()), 10, 10)
         love.graphics.print(string.format("Deliveries: %d", scoring:getDeliveries()), 10, 22)
+
+        -- Draw combo display (VETS-28)
+        local combo_count = scoring:getComboCount()
+        local combo_multiplier = scoring:getComboMultiplier()
+        if combo_count > 0 then
+            -- Highlight combo text based on multiplier level
+            if combo_multiplier >= 5 then
+                love.graphics.setColor(1, 0.3, 1)  -- Magenta for max combo (5x)
+            elseif combo_multiplier >= 3 then
+                love.graphics.setColor(1, 1, 0.3)  -- Yellow for high combo (3-4x)
+            else
+                love.graphics.setColor(0.3, 1, 1)  -- Cyan for active combo (1-2x)
+            end
+            love.graphics.print(string.format("COMBO: %dx (%dx multiplier)", combo_count, combo_multiplier), 10, 34)
+        end
     end
 
     -- Draw UI overlay (toggle with F4)
