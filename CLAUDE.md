@@ -41,6 +41,22 @@ lovec . --test    # Use lovec to see test output
 busted tests/
 ```
 
+**Creating test apps:**
+```bash
+# Test apps MUST live in subdirectories (not root)
+# Structure: test_feature_name/main.lua
+mkdir test_steam_vent
+# Create main.lua in test_steam_vent/
+cd test_steam_vent && lovec .
+```
+
+**IMPORTANT: Package paths for test apps:**
+```lua
+-- At the top of test_feature_name/main.lua:
+-- Add parent directory's src to package path
+package.path = package.path .. ";../src/?.lua;../?.lua"
+```
+
 **Note on Windows Artifacts:**
 - When running commands that redirect to `NUL` on Windows (e.g., `2>NUL`), a file named `NUL` may be created as an artifact
 - This file and `test_output.txt` are ignored in `.gitignore` and can be safely ignored or deleted
