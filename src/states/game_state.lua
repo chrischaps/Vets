@@ -20,11 +20,14 @@ local GameState = {}
 local VIRTUAL_WIDTH = 320
 local VIRTUAL_HEIGHT = 180
 
-function GameState:enter(night_number)
+function GameState:enter(night_number, state_manager)
     print("[GameState] Entering game state for Night " .. (night_number or 1))
 
     -- Store night number (default to 1 if not provided)
     self.night_number = night_number or 1
+
+    -- Store state_manager reference for state transitions (VETS-31)
+    self.state_manager = state_manager
 
     -- Initialize game state flags
     self.paused = false
@@ -375,10 +378,8 @@ function GameState:onTimerExpired()
     print("[GameState] Timer expired - Game Over!")
     self.game_over = true
 
-    -- TODO: Transition to ResultsState with lose condition
-    -- For now, just display overlay
-    print("[GameState] Final Score: " .. self.scoring:getTotal())
-    print("[GameState] Deliveries: " .. self.completed_deliveries .. "/" .. self.total_deliveries)
+    -- Transition to ResultsState with lose condition (VETS-31)
+    self:transitionToResults(false)
 end
 
 -- Called when all deliveries are completed
@@ -401,8 +402,37 @@ function GameState:onWinCondition()
     print("[GameState] Completion Bonus: +" .. completion_bonus .. " points")
     print("[GameState] Final Score: " .. self.scoring:getTotal())
 
-    -- TODO: Transition to ResultsState with win condition
-    -- For now, just display overlay
+    -- Transition to ResultsState with win condition (VETS-31)
+    self:transitionToResults(true)
+end
+
+-- Transition to ResultsState with completion data (VETS-31)
+-- @param success: Boolean indicating win (true) or lose (false)
+function GameState:transitionToResults(success)
+    -- Prepare results data
+    local results_data = {
+        success = success,
+        night_number = self.night_number,
+        score = self.scoring:getTotal(),
+        time_remaining = self.timer:getTimeRemaining(),
+        deliveries_completed = self.completed_deliveries,
+        total_deliveries = self.total_deliveries,
+        combo_peak = self.scoring:getComboPeak(),
+        state_manager = self.state_manager  -- Pass state_manager reference
+    }
+
+    print("[GameState] Transitioning to ResultsState...")
+    print("[GameState] Results data:")
+    print("  - Success: " .. tostring(results_data.success))
+    print("  - Score: " .. results_data.score)
+    print("  - Combo Peak: x" .. results_data.combo_peak)
+
+    -- Switch to ResultsState if we have a state_manager reference
+    if self.state_manager then
+        self.state_manager:switch("results", results_data)
+    else
+        print("[GameState] Warning: No state_manager reference, cannot transition to results")
+    end
 end
 
 return GameState

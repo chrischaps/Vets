@@ -12,6 +12,7 @@ local Time = require("src.core.time")
 local StateManager = require("src.systems.state_manager")
 local MenuState = require("src.states.menu_state")
 local GameState = require("src.states.game_state")
+local ResultsState = require("src.states.results_state")
 
 -- Virtual resolution for pixel-perfect rendering
 VIRTUAL_WIDTH = 320
@@ -63,11 +64,12 @@ function love.load()
     -- Register states
     state_manager:register("menu", MenuState)
     state_manager:register("game", GameState)
+    state_manager:register("results", ResultsState)
 
     -- Start with GameState (Option 1: Direct to GameState)
     -- TODO: Switch to MenuState when it's fully functional (Option 2)
     print("\nStarting game...")
-    state_manager:switch("game", 1)  -- Night 1
+    state_manager:switch("game", 1, state_manager)  -- Night 1, pass state_manager
 
     print("\n=== Game started! Use arrow keys/WASD to move, Space to jump, P to pause ===")
 end
@@ -131,13 +133,14 @@ function love.keypressed(key)
         love.event.quit()
     end
 
-    -- Handle state-specific keypresses
-    -- Menu state: ENTER to start game
-    if state_manager and state_manager:current() == MenuState then
-        if key == "return" then
-            state_manager:switch("game", 1)  -- Start Night 1
-        end
-    end
+    -- State-specific input is now handled internally by each state using the Input system
+    -- Menu state: Confirmation handled by MenuState
+    -- Results state: Confirmation handled by ResultsState
+end
+
+function love.gamepadpressed(joystick, button)
+    -- Gamepad input for results state is now handled internally by ResultsState using Input system
+    -- This handler can be used for other states as needed
 end
 
 function love.joystickadded(joystick)

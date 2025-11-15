@@ -34,4 +34,12 @@ build/
 
 # Windows command artifacts
 NUL
+
+# Test output files
+*_test.txt
+*_test_output.txt
 test_output.txt
+game_output.txt
+
+# Test directories
+test_*/
