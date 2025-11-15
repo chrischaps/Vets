@@ -219,6 +219,28 @@ function love.load()
     collision_system:add(p6, 180, 35, 40, 8)
     print("  - Platform 6: 40x8 at (180, 35)")
 
+    -- Wall-jump combo test area (VETS-28) - vertical column with two walls
+    -- Perfect for practicing wall-jump combos
+    print("\n  Creating wall-jump combo test area:")
+
+    -- Left wall of test column (60 pixels apart = good wall-jump distance)
+    local combo_wall_left = Platform.new(250, 20, 8, 120)
+    table.insert(platforms, combo_wall_left)
+    collision_system:add(combo_wall_left, 250, 20, 8, 120)
+    print("  - Combo test left wall: 8x120 at (250, 20)")
+
+    -- Right wall of test column
+    local combo_wall_right = Platform.new(302, 20, 8, 120)
+    table.insert(platforms, combo_wall_right)
+    collision_system:add(combo_wall_right, 302, 20, 8, 120)
+    print("  - Combo test right wall: 8x120 at (302, 20)")
+
+    -- Floor for combo area (to catch player)
+    local combo_floor = Platform.new(250, 142, 60, 8)
+    table.insert(platforms, combo_floor)
+    collision_system:add(combo_floor, 250, 142, 60, 8)
+    print("  - Combo test floor: 60x8 at (250, 142)")
+
     print("  - Total platforms/walls: " .. #platforms)
 
     -- Create player
@@ -238,34 +260,33 @@ function love.load()
     print("\nPlayer: OK")
 
     -- Create delivery zones for testing (VETS-23, VETS-28)
-    -- Zones positioned above platforms for combo testing
     print("\nCreating delivery zones:")
-    local zone1 = DeliveryZone.new(65, 105, collision_system)  -- Above platform 1
+
+    -- Wall-jump combo test zones (between the two walls)
+    -- Positioned at different heights for wall-jump combo practice
+    local zone1 = DeliveryZone.new(280, 130, collision_system)  -- Bottom zone
     table.insert(delivery_zones, zone1)
-    print("  - Zone 1 created at (65, 105) - Above platform 1")
+    print("  - Zone 1 created at (280, 130) - Wall-jump combo area (bottom)")
 
-    local zone2 = DeliveryZone.new(145, 95, collision_system)  -- Above platform 2
+    local zone2 = DeliveryZone.new(280, 105, collision_system)  -- Lower-mid zone
     table.insert(delivery_zones, zone2)
-    print("  - Zone 2 created at (145, 95) - Above platform 2")
+    print("  - Zone 2 created at (280, 105) - Wall-jump combo area (lower-mid)")
 
-    local zone3 = DeliveryZone.new(235, 80, collision_system)  -- Above platform 3
+    local zone3 = DeliveryZone.new(280, 80, collision_system)  -- Mid zone
     table.insert(delivery_zones, zone3)
-    print("  - Zone 3 created at (235, 80) - Above platform 3")
+    print("  - Zone 3 created at (280, 80) - Wall-jump combo area (mid)")
 
-    local zone4 = DeliveryZone.new(65, 55, collision_system)  -- Above platform 4
+    local zone4 = DeliveryZone.new(280, 55, collision_system)  -- Upper-mid zone
     table.insert(delivery_zones, zone4)
-    print("  - Zone 4 created at (65, 55) - Above platform 4")
+    print("  - Zone 4 created at (280, 55) - Wall-jump combo area (upper-mid)")
 
-    local zone5 = DeliveryZone.new(142, 35, collision_system)  -- Above platform 5
+    local zone5 = DeliveryZone.new(280, 30, collision_system)  -- Top zone
     table.insert(delivery_zones, zone5)
-    print("  - Zone 5 created at (142, 35) - Above platform 5")
-
-    local zone6 = DeliveryZone.new(200, 20, collision_system)  -- Above platform 6
-    table.insert(delivery_zones, zone6)
-    print("  - Zone 6 created at (200, 20) - Above platform 6")
+    print("  - Zone 5 created at (280, 30) - Wall-jump combo area (top)")
 
     print("  - Total delivery zones: " .. #delivery_zones)
-    print("  - Zones positioned for combo testing (deliver in air to maintain combo)")
+    print("  - Zones positioned between walls at x=280 (walls at x=250 and x=302)")
+    print("  - Wall-jump between walls and deliver at each zone for combos!")
     print("\nDelivery Zones: OK")
 
     -- Connect player to delivery zones (VETS-24)
