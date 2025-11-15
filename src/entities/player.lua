@@ -81,6 +81,7 @@ function Player.new(x, y, collision_system, input_system)
     self.deliver_held = false  -- Is deliver button currently held?
     self.timer = nil  -- Reference to timer system (set externally)
     self.moon_timer = nil  -- Reference to moon timer UI (set externally)
+    self.scoring = nil  -- Reference to scoring system (set externally)
 
     -- Combo tracking (VETS-26)
     self.combo_count = 0  -- Current combo streak (consecutive deliveries without ground touch)
@@ -878,7 +879,12 @@ function Player:attemptDelivery()
                         combo_multiplier))
                 end
 
-                -- TODO (VETS-27): Add score calculation here
+                -- Add score for delivery (VETS-27)
+                if self.scoring then
+                    local points = self.scoring:addDelivery()
+                    print(string.format("[Scoring] Delivery scored! +%d points | Total: %d",
+                        points, self.scoring:getTotal()))
+                end
 
                 return true
             end

@@ -26,6 +26,7 @@ local CollisionSystem = require("src.systems.collision_system")
 local CameraSystem = require("src.systems.camera")
 local Input = require("src.systems.input")
 local Timer = require("src.systems.timer")
+local Scoring = require("src.systems.scoring")
 
 -- Load UI
 local MoonTimer = require("src.ui.moon_timer")
@@ -48,6 +49,7 @@ local camera = nil
 local input = nil
 local timer = nil
 local moon_timer = nil
+local scoring = nil
 
 -- Game canvas for rendering
 local game_canvas = nil
@@ -283,6 +285,20 @@ function love.load()
 
     print("\nDawn Timer System: OK")
 
+    -- Initialize scoring system (VETS-27)
+    print("\nInitializing Scoring System:")
+    scoring = Scoring.new()
+    print("  - Scoring system created")
+    print("  - Base delivery score: " .. Scoring.BASE_DELIVERY_SCORE .. " points")
+    print("  - Time bonus multiplier: " .. Scoring.TIME_BONUS_MULTIPLIER .. "x per second")
+    print("  - Completion bonus: " .. Scoring.COMPLETION_BONUS .. " points")
+
+    -- Connect player to scoring system
+    player.scoring = scoring
+    print("  - Player connected to scoring system")
+
+    print("\nScoring System: OK")
+
     print("\n=== Use arrow keys/WASD to move, Space to jump, P to pause ===")
 end
 
@@ -397,6 +413,13 @@ function love.draw()
     -- Draw moon timer (VETS-25) - always visible
     if moon_timer then
         moon_timer:draw()
+    end
+
+    -- Draw score display (VETS-27) - always visible
+    if scoring then
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.print(string.format("Score: %d", scoring:getTotal()), 10, 10)
+        love.graphics.print(string.format("Deliveries: %d", scoring:getDeliveries()), 10, 22)
     end
 
     -- Draw UI overlay (toggle with F4)
