@@ -417,7 +417,8 @@ function GameState:transitionToResults(success)
         time_remaining = self.timer:getTimeRemaining(),
         deliveries_completed = self.completed_deliveries,
         total_deliveries = self.total_deliveries,
-        combo_peak = self.scoring:getComboPeak()
+        combo_peak = self.scoring:getComboPeak(),
+        state_manager = self.state_manager  -- Pass state_manager reference
     }
 
     print("[GameState] Transitioning to ResultsState...")

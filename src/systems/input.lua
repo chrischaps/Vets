@@ -43,6 +43,13 @@ local ACTION_BINDINGS = {
             axis = nil
         }
     },
+    confirm = {
+        keyboard = {"return", "space"},  -- ENTER or SPACE
+        gamepad = {
+            buttons = {"a"},  -- A button
+            axis = nil
+        }
+    },
     dash = {
         keyboard = {"lshift", "rshift", "x", "z"},
         gamepad = {

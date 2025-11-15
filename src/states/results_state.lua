@@ -42,6 +42,9 @@ function ResultsState:enter(data)
     self.total_deliveries = data.total_deliveries or 0
     self.combo_peak = data.combo_peak or 0
 
+    -- Store state_manager reference for state transitions
+    self.state_manager = data.state_manager
+
     -- Initialize input system
     self.input = Input.new()
     self.input:init()
@@ -126,6 +129,9 @@ function ResultsState:update(dt)
                 self.blink_timer = 0
                 self.input_cooldown = self.INPUT_COOLDOWN_TIME
             end
+        -- Confirm selection (ENTER, SPACE, or A button)
+        elseif self.input:is_pressed("confirm") then
+            self:confirmSelection()
         end
     end
 end
@@ -228,6 +234,27 @@ function ResultsState:draw()
     y_offset = y_offset + 20
     love.graphics.setColor(0.5, 0.5, 0.6)
     love.graphics.print("Arrow keys/D-pad to select, ENTER/A to confirm", VIRTUAL_WIDTH / 2 - 110, y_offset)
+end
+
+-- Handle confirmation of selected option
+-- Switches to appropriate state based on selection
+function ResultsState:confirmSelection()
+    if not self.state_manager then
+        print("[ResultsState] Warning: No state_manager reference, cannot confirm selection")
+        return
+    end
+
+    if self.selected_option == 1 then
+        -- Continue (if won) or Retry (if lost)
+        -- For now, both return to menu
+        -- TODO: In future, Continue might advance to next night
+        print("[ResultsState] Option 1 selected: " .. (self.success and "Continue" or "Retry"))
+        self.state_manager:switch("menu", "Returning to menu...", self.state_manager)
+    elseif self.selected_option == 2 then
+        -- Restart same night
+        print("[ResultsState] Option 2 selected: Restart Night " .. self.night_number)
+        self.state_manager:switch("game", self.night_number, self.state_manager)
+    end
 end
 
 return ResultsState

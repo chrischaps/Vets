@@ -133,48 +133,14 @@ function love.keypressed(key)
         love.event.quit()
     end
 
-    -- Handle state-specific keypresses
-    local current_state = state_manager and state_manager:current()
-
-    -- Menu state: ENTER to start game
-    if current_state == MenuState then
-        if key == "return" then
-            state_manager:switch("game", 1, state_manager)  -- Start Night 1, pass state_manager
-        end
-    end
-
-    -- Results state: ENTER/SPACE/Gamepad A to confirm selection (VETS-31)
-    if current_state == ResultsState then
-        if key == "return" or key == "space" then
-            -- Handle Continue/Retry (option 1) or Restart (option 2)
-            if current_state.selected_option == 1 then
-                -- Continue (if won) or Retry (if lost)
-                -- For now, both return to menu
-                -- TODO: In future, Continue might advance to next night
-                state_manager:switch("menu", "Returning to menu...")
-            elseif current_state.selected_option == 2 then
-                -- Restart same night
-                state_manager:switch("game", current_state.night_number, state_manager)
-            end
-        end
-    end
+    -- State-specific input is now handled internally by each state using the Input system
+    -- Menu state: Confirmation handled by MenuState
+    -- Results state: Confirmation handled by ResultsState
 end
 
 function love.gamepadpressed(joystick, button)
-    -- Handle gamepad input for results state
-    local current_state = state_manager and state_manager:current()
-
-    if current_state == ResultsState then
-        -- A button (Xbox) / Cross (PlayStation) confirms selection
-        if button == "a" then
-            -- Handle Continue/Retry (option 1) or Restart (option 2)
-            if current_state.selected_option == 1 then
-                state_manager:switch("menu", "Returning to menu...")
-            elseif current_state.selected_option == 2 then
-                state_manager:switch("game", current_state.night_number, state_manager)
-            end
-        end
-    end
+    -- Gamepad input for results state is now handled internally by ResultsState using Input system
+    -- This handler can be used for other states as needed
 end
 
 function love.joystickadded(joystick)
