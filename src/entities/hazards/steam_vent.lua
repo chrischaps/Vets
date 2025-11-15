@@ -191,6 +191,7 @@ function SteamVent:checkPlayerContact(player_x, player_y, player_physics)
         -- This overrides gravity temporarily, creating the "push" effect
         if player_physics then
             player_physics.velocity_y = -self.upward_force
+            print(string.format("[SteamVent] Pushing player up with force %.1f", self.upward_force))
             return true
         end
     end

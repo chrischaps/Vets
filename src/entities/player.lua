@@ -70,6 +70,10 @@ function Player.new(x, y, collision_system, input_system)
     self.iframe_timer = 0  -- Invulnerability timer during dash
     self.is_ground_dash = false  -- Was this dash started on ground? (for dash canceling)
 
+    -- Stun state (from hazards like laundry lines)
+    self.stunned = false  -- Is player currently stunned?
+    self.stun_timer = 0  -- Time remaining in stun
+
     -- Movement input
     self.input_x = 0  -- -1 for left, 1 for right, 0 for no input
     self.input_jump = false  -- Jump button pressed this frame
@@ -125,6 +129,11 @@ function Player:handleInput()
     self.input_jump_release = false
     self.input_dash = false
     self.input_deliver = false
+
+    -- Don't process input if stunned
+    if self.stunned then
+        return
+    end
 
     -- Use input system if available, otherwise fallback to direct keyboard input
     if self.input_system then
@@ -602,6 +611,15 @@ function Player:updateTimers(dt)
             self.dash_screen_shake_y = 0
         end
     end
+
+    -- Update stun timer
+    if self.stun_timer > 0 then
+        self.stun_timer = self.stun_timer - dt
+        if self.stun_timer <= 0 then
+            self.stunned = false
+            print("[Player] Stun ended")
+        end
+    end
 end
 
 -- Update dash trail effect
@@ -846,6 +864,29 @@ function Player:dash()
     -- Clear other movement states
     self.wall_sliding = false
     self.control_lock_timer = 0
+end
+
+-- Apply stun effect to player (from hazards)
+-- @param duration: Stun duration in seconds
+function Player:applyStun(duration)
+    -- Don't apply stun if already stunned or if player has iframes
+    if self.stunned or self.iframe_timer > 0 then
+        return
+    end
+
+    self.stunned = true
+    self.stun_timer = duration
+
+    -- Stop player movement
+    self.physics:setVelocity(0, self.physics.velocity_y * 0.5)
+
+    -- Cancel dash if active
+    if self.dashing then
+        self.dashing = false
+        self.dash_timer = 0
+    end
+
+    print(string.format("[Player] Stunned for %.1fs", duration))
 end
 
 -- Handle delivery input

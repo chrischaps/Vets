@@ -6,6 +6,13 @@ local LevelLoader = require("src.systems.level_loader")
 local Platform = require("src.entities.platform")
 local DeliveryZone = require("src.entities.delivery_zone")
 
+-- Hazard classes
+local SteamVent = require("src.entities.hazards.steam_vent")
+local LaundryLine = require("src.entities.hazards.laundry_line")
+
+-- Powerup classes
+local Coffee = require("src.entities.powerups.coffee")
+
 local Level = {}
 
 -- Load a level by night number and instantiate all entities
@@ -108,24 +115,46 @@ function Level.load(night_number, collision_system)
         table.insert(level_instance.delivery_zones, zone)
     end
 
-    -- Instantiate hazards (if Hazard class exists in future)
+    -- Instantiate hazards
     if #level_data.hazards > 0 then
-        print(string.format("Skipping %d hazard(s) - Hazard entity class not yet implemented", #level_data.hazards))
-        -- TODO: Implement when Hazard entity class is created
-        -- for i, hazard_data in ipairs(level_data.hazards) do
-        --     local hazard = Hazard.new(hazard_data.x, hazard_data.y, hazard_data.type)
-        --     table.insert(level_instance.hazards, hazard)
-        -- end
+        print(string.format("Loading %d hazard(s)...", #level_data.hazards))
+        for i, hazard_data in ipairs(level_data.hazards) do
+            local hazard = nil
+
+            if hazard_data.type == "steam_vent" then
+                hazard = SteamVent.new(hazard_data.x, hazard_data.y)
+                hazard.type = "steam_vent"
+            elseif hazard_data.type == "laundry_line" then
+                hazard = LaundryLine.new(hazard_data.x, hazard_data.y, hazard_data.width)
+                hazard.type = "laundry_line"
+            else
+                print(string.format("Warning: Unknown hazard type '%s' at (%d, %d)",
+                    hazard_data.type, hazard_data.x, hazard_data.y))
+            end
+
+            if hazard then
+                table.insert(level_instance.hazards, hazard)
+            end
+        end
     end
 
-    -- Instantiate powerups (if PowerUp class exists in future)
+    -- Instantiate powerups
     if #level_data.powerups > 0 then
-        print(string.format("Skipping %d powerup(s) - PowerUp entity class not yet implemented", #level_data.powerups))
-        -- TODO: Implement when PowerUp entity class is created
-        -- for i, powerup_data in ipairs(level_data.powerups) do
-        --     local powerup = PowerUp.new(powerup_data.x, powerup_data.y, powerup_data.type)
-        --     table.insert(level_instance.powerups, powerup)
-        -- end
+        print(string.format("Loading %d powerup(s)...", #level_data.powerups))
+        for i, powerup_data in ipairs(level_data.powerups) do
+            local powerup = nil
+
+            if powerup_data.type == "coffee" then
+                powerup = Coffee.new(powerup_data.x, powerup_data.y, powerup_data.respawn)
+            else
+                print(string.format("Warning: Unknown powerup type '%s' at (%d, %d)",
+                    powerup_data.type, powerup_data.x, powerup_data.y))
+            end
+
+            if powerup then
+                table.insert(level_instance.powerups, powerup)
+            end
+        end
     end
 
     print(string.format("Level '%s' (Night %d) loaded successfully!", level_instance.name, level_instance.night))

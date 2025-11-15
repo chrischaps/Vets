@@ -64,6 +64,8 @@ function GameState:exit()
     self.player = nil
     self.platforms = nil
     self.delivery_zones = nil
+    self.hazards = nil
+    self.powerups = nil
     self.collision_system = nil
     self.camera = nil
     self.input = nil
@@ -115,6 +117,8 @@ function GameState:loadLevel(night_number)
     self.level = level
     self.platforms = level.platforms  -- Already in collision system
     self.delivery_zones = level.delivery_zones
+    self.hazards = level.hazards
+    self.powerups = level.powerups
 
     -- Get spawn point from level data
     local spawn = Level.get_spawn_point(level)
@@ -134,6 +138,12 @@ function GameState:loadLevel(night_number)
     self.player.moon_timer = self.moon_timer
     self.player.scoring = self.scoring
 
+    -- Update timer with level's time limit (if specified in environment)
+    if level.environment and level.environment.time_limit then
+        self.timer:reset(level.environment.time_limit)
+        print("[GameState] Timer set to " .. level.environment.time_limit .. " seconds from level data")
+    end
+
     -- Initialize camera and set target to player
     self.camera = CameraSystem.new(self.player.transform.x, self.player.transform.y)
     self.camera:setTarget(self.player)
@@ -143,6 +153,8 @@ function GameState:loadLevel(night_number)
     print("  - Level: " .. level.name)
     print("  - Platforms: " .. #self.platforms)
     print("  - Delivery zones: " .. #self.delivery_zones)
+    print("  - Hazards: " .. #self.hazards)
+    print("  - Powerups: " .. #self.powerups)
     print("  - Player spawn: (" .. spawn_x .. ", " .. spawn_y .. ")")
 end
 
@@ -183,6 +195,61 @@ function GameState:update(dt)
                     end
                 end
                 self.completed_deliveries = count
+            end
+        end
+    end
+
+    -- Update hazards
+    if self.player then
+        for _, hazard in ipairs(self.hazards) do
+            hazard:update(dt)
+
+            -- Check for player contact/interaction
+            if hazard.checkPlayerContact then
+                -- Steam vents need player position and physics
+                if hazard.type == "steam_vent" then
+                    hazard:checkPlayerContact(
+                        self.player.transform.x,
+                        self.player.transform.y,
+                        self.player.physics
+                    )
+                -- Laundry lines need player bounds and dash state
+                elseif hazard.type == "laundry_line" then
+                    local is_stunned = hazard:checkPlayerContact(
+                        self.player.transform.x,
+                        self.player.transform.y,
+                        self.player.collision.width,
+                        self.player.collision.height,
+                        self.player.dashing
+                    )
+
+                    -- Apply stun to player if hit
+                    if is_stunned and self.player.applyStun then
+                        self.player:applyStun(hazard.stun_duration)
+                    end
+                end
+            end
+        end
+    end
+
+    -- Update powerups
+    if self.player then
+        for _, powerup in ipairs(self.powerups) do
+            powerup:update(dt)
+
+            -- Check for player contact/collection
+            if powerup.checkPlayerContact then
+                local is_touching = powerup:checkPlayerContact(
+                    self.player.transform.x,
+                    self.player.transform.y,
+                    self.player.collision.width,
+                    self.player.collision.height
+                )
+
+                -- Collect the powerup if touching
+                if is_touching and powerup.collect then
+                    powerup:collect(self.player)
+                end
             end
         end
     end
@@ -234,6 +301,16 @@ function GameState:draw()
     -- Draw delivery zones
     for _, zone in ipairs(self.delivery_zones) do
         zone:draw()
+    end
+
+    -- Draw hazards
+    for _, hazard in ipairs(self.hazards) do
+        hazard:draw()
+    end
+
+    -- Draw powerups
+    for _, powerup in ipairs(self.powerups) do
+        powerup:draw()
     end
 
     -- Draw player

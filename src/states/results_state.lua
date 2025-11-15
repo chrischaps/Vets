@@ -245,11 +245,29 @@ function ResultsState:confirmSelection()
     end
 
     if self.selected_option == 1 then
-        -- Continue (if won) or Retry (if lost)
-        -- For now, both return to menu
-        -- TODO: In future, Continue might advance to next night
-        print("[ResultsState] Option 1 selected: " .. (self.success and "Continue" or "Retry"))
-        self.state_manager:switch("menu", "Returning to menu...", self.state_manager)
+        if self.success then
+            -- Continue - advance to next night
+            local next_night = self.night_number + 1
+            print("[ResultsState] Option 1 selected: Continue to Night " .. next_night)
+
+            -- Check if next night level exists
+            local level_path = "levels/night" .. next_night .. ".json"
+            local level_info = love.filesystem.getInfo(level_path)
+
+            if level_info then
+                -- Next level exists, load it
+                print("[ResultsState] Loading Night " .. next_night)
+                self.state_manager:switch("game", next_night, self.state_manager)
+            else
+                -- No more levels, return to menu
+                print("[ResultsState] No more levels available, returning to menu")
+                self.state_manager:switch("menu", "All nights completed!", self.state_manager)
+            end
+        else
+            -- Retry - restart same night
+            print("[ResultsState] Option 1 selected: Retry Night " .. self.night_number)
+            self.state_manager:switch("game", self.night_number, self.state_manager)
+        end
     elseif self.selected_option == 2 then
         -- Restart same night
         print("[ResultsState] Option 2 selected: Restart Night " .. self.night_number)
