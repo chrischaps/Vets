@@ -50,7 +50,7 @@ local offset_x = 0
 local offset_y = 0
 
 -- Debug display toggle (F4)
-local show_debug_text = true
+local show_debug_text = false
 
 function love.load()
     -- Set up pixel-perfect rendering
