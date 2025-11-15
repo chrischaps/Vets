@@ -11,7 +11,8 @@ local CameraSystem = require("src.systems.camera")
 local Input = require("src.systems.input")
 local Timer = require("src.systems.timer")
 local Scoring = require("src.systems.scoring")
-local MoonTimer = require("src.ui.moon_timer")
+local HUD = require("src.ui.hud")
+local TimerDisplay = require("src.ui.timer_display")
 local Constants = require("src.core.constants")
 local Level = require("src.systems.level")
 
@@ -94,8 +95,25 @@ function GameState:initializeSystems()
         self:onTimerExpired()
     end
 
-    -- Initialize moon timer UI
-    self.moon_timer = MoonTimer.new(self.timer, 280, 20)
+    -- Initialize HUD framework (VETS-43)
+    self.hud = HUD.new()
+
+    -- Initialize moon timer display (VETS-44)
+    -- Scaled for native resolution (50% smaller than 4x scaling)
+    self.moon_timer = TimerDisplay:new({
+        initial_time = 180,
+        max_time = 180,
+        x = 0,
+        y = 0,
+        anchor = HUD.ANCHOR.TOP_CENTER,
+        max_radius = 60,       -- Smaller moon (2x original)
+        min_radius = 8,        -- 4 * 2
+        horizon_offset = 120,  -- 60 * 2
+        top_offset = 70,       -- Ensure moon isn't cut off (>= max_radius)
+        show_digital = false,
+        show_horizon = true
+    })
+    self.hud:addElement(self.moon_timer)
 
     -- Initialize scoring system
     self.scoring = Scoring.new()
@@ -269,11 +287,16 @@ function GameState:update(dt)
     -- Update timer
     if self.timer then
         self.timer:update(dt)
+
+        -- Sync moon timer display with timer state
+        if self.moon_timer then
+            self.moon_timer:setTime(self.timer:getTimeRemaining())
+        end
     end
 
-    -- Update moon timer visual
-    if self.moon_timer then
-        self.moon_timer:update(dt)
+    -- Update HUD (includes moon timer visual)
+    if self.hud then
+        self.hud:update(dt)
     end
 
     -- Check win condition (all deliveries completed)
@@ -326,11 +349,6 @@ function GameState:draw()
     -- Detach camera (UI elements drawn after this won't move with camera)
     if self.camera then
         self.camera:detach()
-    end
-
-    -- Draw moon timer UI
-    if self.moon_timer then
-        self.moon_timer:draw()
     end
 
     -- Draw score display
@@ -464,6 +482,15 @@ function GameState:transitionToResults(success)
         self.state_manager:switch("results", results_data)
     else
         print("[GameState] Warning: No state_manager reference, cannot transition to results")
+    end
+end
+
+-- Draw UI at native window resolution (high resolution, sharp)
+-- Called separately from draw() to render UI outside the low-res canvas
+function GameState:drawUI()
+    -- Draw HUD (includes moon timer) at native resolution
+    if self.hud then
+        self.hud:draw()
     end
 end
 

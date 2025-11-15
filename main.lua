@@ -107,11 +107,11 @@ function love.update(dt)
 end
 
 function love.draw()
-    -- Draw to game canvas
+    -- Draw to game canvas (low resolution game world)
     love.graphics.setCanvas(game_canvas)
     love.graphics.clear()
 
-    -- Delegate to StateManager
+    -- Delegate to StateManager for game world rendering
     if state_manager then
         state_manager:draw()
     end
@@ -125,6 +125,14 @@ function love.draw()
         0,
         game_scale, game_scale
     )
+
+    -- Draw UI at native window resolution (high resolution, sharp text)
+    if state_manager then
+        local current_state = state_manager:current()
+        if current_state and current_state.drawUI then
+            current_state:drawUI()
+        end
+    end
 end
 
 function love.keypressed(key)
