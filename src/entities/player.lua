@@ -79,6 +79,12 @@ function Player.new(x, y, collision_system, input_system)
     -- Delivery state
     self.delivery_zones = {}  -- Reference to delivery zones (set externally)
     self.deliver_held = false  -- Is deliver button currently held?
+    self.timer = nil  -- Reference to timer system (set externally)
+    self.moon_timer = nil  -- Reference to moon timer UI (set externally)
+
+    -- Combo tracking (VETS-26)
+    self.combo_count = 0  -- Current combo streak (consecutive deliveries without ground touch)
+    self.combo_was_grounded = false  -- Track grounded state for combo reset detection
 
     -- Visual representation (placeholder rectangle)
     self.color = {0.9, 0.6, 0.3}  -- Orange color for the cat
@@ -257,6 +263,13 @@ function Player:updatePhysicsAndCollision(dt)
                 self.air_dash_charges = 1
                 -- Reset coyote time when grounded
                 self.coyote_frames = Constants.COYOTE_FRAMES
+
+                -- Reset combo when landing (VETS-26)
+                if self.combo_count > 0 and not self.combo_was_grounded then
+                    print("[Player] Combo reset on landing (was " .. self.combo_count .. "x)")
+                    self.combo_count = 0
+                end
+                self.combo_was_grounded = true
             end
 
             -- Check if collision is from above (player hitting head on ceiling)
@@ -832,8 +845,41 @@ function Player:attemptDelivery()
         if zone:canDeliver() then
             -- Perform delivery
             if zone:deliver() then
-                print("[Player] Delivery successful!")
-                -- TODO: Add score, combo, time extension here
+                -- Increment combo if in air (VETS-26)
+                if not self.grounded then
+                    self.combo_count = self.combo_count + 1
+                    self.combo_was_grounded = false  -- Mark that combo is active
+                else
+                    -- Reset combo if delivering on ground
+                    self.combo_count = 0
+                    self.combo_was_grounded = true
+                end
+
+                -- Calculate combo multiplier (1x to 5x max)
+                local combo_level = math.min(self.combo_count, 5)
+                local combo_multiplier = combo_level > 0 and combo_level or 1
+
+                -- Calculate time bonus based on combo level (VETS-26)
+                -- Standard: +8s, 2x: +10s, 3x: +12s, 4x: +14s, 5x: +16s
+                local time_bonus = 8 + (combo_multiplier - 1) * 2
+
+                -- Extend timer if available
+                if self.timer then
+                    local actual_added = self.timer:extend(time_bonus)
+                    print(string.format("[Player] Delivery successful! Combo: %dx | Time bonus: +%ds",
+                        combo_multiplier, actual_added))
+
+                    -- Trigger moon pulse visual feedback (VETS-26)
+                    if self.moon_timer then
+                        self.moon_timer:triggerDeliveryPulse()
+                    end
+                else
+                    print(string.format("[Player] Delivery successful! Combo: %dx (timer not connected)",
+                        combo_multiplier))
+                end
+
+                -- TODO (VETS-27): Add score calculation here
+
                 return true
             end
         end

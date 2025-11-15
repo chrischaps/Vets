@@ -1,3 +1,4 @@
+AL lib: (EE) alc_cleanup: 1 device not closed
 Courier Cat initialized!
 Virtual resolution: 320x180
 Window resolution: 1280x720
@@ -84,10 +85,17 @@ Initializing Camera System:
 
 Camera System: OK
 
-=== Use arrow keys/WASD to move, Space to jump ===
-[DeliveryZone] Delivery completed at (100, 145)
-[Player] Delivery successful!
+Initializing Dawn Timer System:
+[Timer] Initialized with 180s (3:00)
+[MoonTimer] Moon visual created at (280, 20)
+  - Timer set to 180 seconds (3:00)
+  - Moon visual created
+  - Press P to pause/resume timer
+
+Dawn Timer System: OK
+
+=== Use arrow keys/WASD to move, Space to jump, P to pause ===
 [DeliveryZone] Delivery completed at (150, 45)
 [Player] Delivery successful!
-[DeliveryZone] Delivery completed at (200, 90)
+[DeliveryZone] Delivery completed at (100, 145)
 [Player] Delivery successful!
