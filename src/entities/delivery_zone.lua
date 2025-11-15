@@ -22,13 +22,13 @@ function DeliveryZone.new(x, y, collision_system)
     self.transform = Transform.new(x or 160, y or 90)
     self.entity:addComponent("transform", self.transform)
 
-    -- Add Collision component as a trigger (32px radius)
-    -- Using AABB for now as bump.lua works better with rectangles
-    -- We'll use 32px width/height to represent the 32px radius
+    -- Add Collision component (for visual/structural purposes only)
+    -- Delivery zones use distance-based detection, not bump.lua collision
+    -- This component exists for consistency but doesn't interact with physics
     self.collision = Collision.new(32, 32, Collision.SHAPE.AABB)
     self.collision:setLayer(Collision.LAYER.DELIVERY_ZONE)
-    self.collision:setMask(Collision.LAYER.PLAYER)  -- Only detect player
-    self.collision:setTrigger(true)  -- Don't block movement, just detect overlap
+    self.collision:setMask(Collision.LAYER.NONE)  -- No collision mask - zones are non-physical
+    self.collision:setTrigger(true)  -- Non-solid
     self.entity:addComponent("collision", self.collision)
 
     -- Animation state
@@ -46,20 +46,9 @@ function DeliveryZone.new(x, y, collision_system)
     self.base_color = {1, 0.9, 0.4}  -- Warm yellow/gold color for window glow
     self.glow_color = {1, 1, 0.8}  -- Brighter glow color
 
-    -- Register with collision system if available
-    if self.collision_system then
-        -- Convert from center position to top-left for bump
-        local box_x = self.transform.x - self.collision.width / 2
-        local box_y = self.transform.y - self.collision.height / 2
-
-        self.collision_system:add(
-            self,
-            box_x,
-            box_y,
-            self.collision.width,
-            self.collision.height
-        )
-    end
+    -- Note: Delivery zones are NOT registered with the collision system
+    -- They use distance-based detection for proximity and delivery prompts
+    -- This prevents them from interfering with player physics
 
     return self
 end
@@ -182,12 +171,7 @@ end
 
 -- Cleanup delivery zone
 function DeliveryZone:destroy()
-    -- Remove from collision system
-    if self.collision_system then
-        self.collision_system:remove(self)
-    end
-
-    -- Destroy entity
+    -- Destroy entity (zones are not registered with collision system)
     self.entity:destroy()
 end
 
