@@ -33,6 +33,8 @@ function LaundryLine.new(x, y, width)
 
     -- Stun configuration
     self.stun_duration = 0.5  -- 0.5 seconds stun when hit
+    self.hit_cooldown = 1.0   -- 1.0 second cooldown after hitting player (prevents stun loop)
+    self.hit_cooldown_timer = 0  -- Time remaining until can hit player again
 
     -- Visual configuration
     self.rope_color = {0.4, 0.35, 0.3}  -- Brown rope
@@ -76,6 +78,11 @@ end
 function LaundryLine:update(dt)
     -- Update sway animation
     self.sway_time = self.sway_time + dt
+
+    -- Update hit cooldown timer
+    if self.hit_cooldown_timer > 0 then
+        self.hit_cooldown_timer = self.hit_cooldown_timer - dt
+    end
 end
 
 -- Check if player collides with laundry line and apply stun
@@ -104,6 +111,11 @@ function LaundryLine:checkPlayerContact(player_x, player_y, player_width, player
         return false
     end
 
+    -- Check if cooldown is still active (prevents stun loop)
+    if self.hit_cooldown_timer > 0 then
+        return false  -- Still in cooldown, no hit
+    end
+
     -- Player is overlapping the line
     -- Check if they're jumping over (player center is above line)
     if player_y < self.transform.y then
@@ -115,7 +127,8 @@ function LaundryLine:checkPlayerContact(player_x, player_y, player_width, player
         return false  -- Successfully dashing under
     end
 
-    -- Player hit the line!
+    -- Player hit the line! Start cooldown to prevent immediate re-hit
+    self.hit_cooldown_timer = self.hit_cooldown
     return true
 end
 
