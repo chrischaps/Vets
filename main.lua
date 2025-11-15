@@ -275,6 +275,12 @@ function love.load()
     print("  - Timer set to 180 seconds (3:00)")
     print("  - Moon visual created")
     print("  - Press P to pause/resume timer")
+
+    -- Connect player to timer for time extensions (VETS-26)
+    player.timer = timer
+    player.moon_timer = moon_timer
+    print("  - Player connected to timer for delivery bonuses")
+
     print("\nDawn Timer System: OK")
 
     print("\n=== Use arrow keys/WASD to move, Space to jump, P to pause ===")
