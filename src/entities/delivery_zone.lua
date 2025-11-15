@@ -56,6 +56,10 @@ function DeliveryZone.new(x, y, collision_system)
     self.letter_rise_speed = -30  -- Pixels per second upward
     self.letter_drift_amplitude = 8  -- Max horizontal drift in pixels
 
+    -- Window flicker effect (during delivery animation)
+    self.flicker_intensity = 0  -- Current flicker brightness (0-1)
+    self.flicker_frequency = 12  -- Flickers per second
+
     -- Visual representation
     self.base_color = {1, 0.9, 0.4}  -- Warm yellow/gold color for window glow
     self.glow_color = {1, 1, 0.8}  -- Brighter glow color
@@ -79,6 +83,13 @@ function DeliveryZone:update(dt, player_x, player_y)
     -- Update delivery animation timer if active
     if self.delivery_animation_timer > 0 then
         self.delivery_animation_timer = self.delivery_animation_timer - dt
+
+        -- Calculate flicker intensity during delivery animation
+        -- Use fast sine wave for rapid flickering effect
+        local flicker_phase = (self.delivery_animation_timer * self.flicker_frequency) * math.pi * 2
+        self.flicker_intensity = (math.sin(flicker_phase) + 1) / 2  -- Range: 0-1
+    else
+        self.flicker_intensity = 0
     end
 
     -- Update letter particle effect
@@ -197,10 +208,12 @@ function DeliveryZone:draw()
         )
         love.graphics.circle("fill", x, y, radius * 0.8)
 
-        -- Brief flash during delivery animation
+        -- Brief flash during delivery animation with flicker effect
         if self.delivery_animation_timer > 0 then
             local flash_alpha = self.delivery_animation_timer / self.delivery_animation_duration
-            love.graphics.setColor(1, 1, 1, flash_alpha * 0.8)
+            -- Add flicker to the flash
+            local flicker_boost = 1 + (self.flicker_intensity * 0.5)
+            love.graphics.setColor(1, 1, 1, flash_alpha * 0.8 * flicker_boost)
             love.graphics.circle("fill", x, y, radius * (1 + flash_alpha * 0.5))
         end
     else
