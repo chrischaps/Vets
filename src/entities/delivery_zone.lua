@@ -60,6 +60,11 @@ function DeliveryZone.new(x, y, collision_system)
     self.flicker_intensity = 0  -- Current flicker brightness (0-1)
     self.flicker_frequency = 12  -- Flickers per second
 
+    -- Sparkle particle system (spawned on delivery)
+    self.sparkles = {}  -- Array of active sparkle particles
+    self.sparkle_count = 8  -- Number of sparkles to spawn
+    self.sparkle_lifetime = 0.8  -- How long each sparkle lasts
+
     -- Visual representation
     self.base_color = {1, 0.9, 0.4}  -- Warm yellow/gold color for window glow
     self.glow_color = {1, 1, 0.8}  -- Brighter glow color
@@ -106,6 +111,21 @@ function DeliveryZone:update(dt, player_x, player_y)
         -- Deactivate letter when duration expires
         if self.letter_timer >= self.letter_duration then
             self.letter_active = false
+        end
+    end
+
+    -- Update sparkle particles
+    for i = #self.sparkles, 1, -1 do
+        local sparkle = self.sparkles[i]
+        sparkle.timer = sparkle.timer + dt
+
+        -- Move sparkle outward
+        sparkle.x = sparkle.x + (sparkle.vx * dt)
+        sparkle.y = sparkle.y + (sparkle.vy * dt)
+
+        -- Remove expired sparkles
+        if sparkle.timer >= sparkle.lifetime then
+            table.remove(self.sparkles, i)
         end
     end
 
@@ -156,6 +176,24 @@ function DeliveryZone:deliver()
     self.letter_timer = 0
     self.letter_y_offset = 0
     self.letter_x_drift = 0
+
+    -- Spawn sparkle particles in a circular pattern
+    self.sparkles = {}
+    for i = 1, self.sparkle_count do
+        local angle = (i / self.sparkle_count) * math.pi * 2
+        local spawn_radius = 12  -- Pixels from zone center
+
+        local sparkle = {
+            x = math.cos(angle) * spawn_radius,  -- X offset from zone center
+            y = math.sin(angle) * spawn_radius,  -- Y offset from zone center
+            vx = math.cos(angle) * 20,  -- Velocity X (moves outward)
+            vy = math.sin(angle) * 20,  -- Velocity Y (moves outward)
+            timer = 0,
+            lifetime = self.sparkle_lifetime,
+            twinkle_speed = 8 + math.random() * 4  -- Random twinkle frequency
+        }
+        table.insert(self.sparkles, sparkle)
+    end
 
     print("[DeliveryZone] Delivery completed at (" .. self.transform.x .. ", " .. self.transform.y .. ")")
     return true  -- Delivery successful
@@ -277,6 +315,28 @@ function DeliveryZone:draw()
             letter_x, letter_y - 4,      -- top center
             letter_x + 3, letter_y - 2   -- bottom right
         )
+    end
+
+    -- Draw sparkle particles
+    for _, sparkle in ipairs(self.sparkles) do
+        local sparkle_x = x + sparkle.x
+        local sparkle_y = y + sparkle.y
+
+        -- Calculate fade-out alpha
+        local lifetime_progress = sparkle.timer / sparkle.lifetime
+        local alpha = 1 - lifetime_progress
+
+        -- Calculate twinkle effect (rapid pulsing)
+        local twinkle_phase = sparkle.timer * sparkle.twinkle_speed * math.pi * 2
+        local twinkle = (math.sin(twinkle_phase) + 1) / 2  -- Range: 0-1
+
+        -- Combine alpha and twinkle
+        local final_alpha = alpha * (0.5 + twinkle * 0.5)
+
+        -- Draw sparkle as a small plus sign
+        love.graphics.setColor(1, 1, 0.8, final_alpha)
+        love.graphics.rectangle("fill", sparkle_x - 1, sparkle_y - 2, 2, 4)  -- Vertical line
+        love.graphics.rectangle("fill", sparkle_x - 2, sparkle_y - 1, 4, 2)  -- Horizontal line
     end
 
     -- Debug: Draw collision box (if F2 is held)
