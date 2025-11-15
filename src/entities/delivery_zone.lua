@@ -94,10 +94,16 @@ function DeliveryZone:getGlowAlpha()
     local pulse_value = (math.sin(pulse_phase) + 1) / 2  -- Range: 0-1
     local glow_alpha = self.base_glow_alpha + (1 - self.base_glow_alpha) * pulse_value
 
-    -- Add proximity brightness
-    glow_alpha = math.min(1, glow_alpha + self.proximity_brightness * 0.4)
+    -- Add proximity brightness (more noticeable)
+    glow_alpha = math.min(1, glow_alpha + self.proximity_brightness * 0.5)
 
     return glow_alpha
+end
+
+-- Get glow radius multiplier based on proximity
+function DeliveryZone:getGlowSize()
+    -- Glow expands when player is nearby
+    return 1 + (self.proximity_brightness * 0.5)  -- Up to 150% size at max proximity
 end
 
 -- Check if player should see delivery prompt
@@ -111,26 +117,27 @@ function DeliveryZone:draw()
     local y = self.transform.y
     local radius = self.collision.width / 2  -- Half of collision box width
 
-    -- Get current glow alpha
+    -- Get current glow alpha and size
     local glow_alpha = self:getGlowAlpha()
+    local glow_size = self:getGlowSize()
 
-    -- Draw outer glow (larger, more transparent)
+    -- Draw outer glow (larger, more transparent) - grows with proximity
     love.graphics.setColor(
         self.glow_color[1],
         self.glow_color[2],
         self.glow_color[3],
         glow_alpha * 0.3
     )
-    love.graphics.circle("fill", x, y, radius * 1.5)
+    love.graphics.circle("fill", x, y, radius * 1.5 * glow_size)
 
-    -- Draw inner glow (smaller, more opaque)
+    -- Draw inner glow (smaller, more opaque) - grows with proximity
     love.graphics.setColor(
         self.glow_color[1],
         self.glow_color[2],
         self.glow_color[3],
         glow_alpha * 0.6
     )
-    love.graphics.circle("fill", x, y, radius)
+    love.graphics.circle("fill", x, y, radius * glow_size)
 
     -- Draw core (always visible)
     love.graphics.setColor(
@@ -144,7 +151,8 @@ function DeliveryZone:draw()
     -- Draw delivery prompt if player is in zone
     if self:shouldShowPrompt() then
         love.graphics.setColor(1, 1, 1, 1)
-        love.graphics.print("↓", x - 4, y - 20)
+        -- Draw simple text prompt instead of Unicode character
+        love.graphics.print("E", x - 3, y - 24)
     end
 
     -- Debug: Draw collision box (if F2 is held)
