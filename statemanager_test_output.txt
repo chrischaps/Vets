@@ -1,0 +1,34 @@
+=== StateManager Test (VETS-29) ===
+
+1. Creating StateManager...
+[StateManager] Initialized
+   StateManager created: OK
+
+2. Registering states...
+[StateManager] Registered state: menu
+   MenuState registered: OK
+[StateManager] Registered state: game
+   GameState registered: OK
+
+3. Switching to initial state (menu)...
+[MenuState] Entered menu state: Welcome to StateManager test!
+[StateManager] Switched to state: menu
+   Current state: MenuState
+
+=== StateManager initialized successfully! ===
+
+Controls:
+  ENTER - Switch from Menu to Game
+  BACKSPACE - Switch from Game to Menu
+  F5 - Test rapid state switching (10 switches)
+  F6 - Test state stack (push/pop)
+  ESC - Quit
+
+Watch console for enter/exit callbacks!
+=====================================
+
+
+[User] Switching to GameState...
+[MenuState] Exiting menu state
+[GameState] Entered game state with params: test_param1, 42
+[StateManager] Switched to state: game

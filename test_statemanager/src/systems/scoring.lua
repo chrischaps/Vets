@@ -23,7 +23,6 @@ function Scoring.new()
     -- Combo tracking (VETS-28)
     self.combo_count = 0  -- Current consecutive deliveries without ground touch
     self.current_multiplier = 1  -- Current combo multiplier
-    self.combo_peak = 0  -- Highest combo achieved (VETS-31)
 
     return self
 end
@@ -37,7 +36,6 @@ function Scoring:reset()
     self.completion_bonus = 0
     self.combo_count = 0
     self.current_multiplier = 1
-    self.combo_peak = 0
 end
 
 -- Award points for a delivery with combo multiplier (VETS-28)
@@ -48,11 +46,6 @@ function Scoring:addDelivery(combo_count)
 
     -- Update combo count
     self.combo_count = combo_count or 0
-
-    -- Track peak combo (VETS-31)
-    if self.combo_count > self.combo_peak then
-        self.combo_peak = self.combo_count
-    end
 
     -- Calculate combo multiplier: floor(consecutive_deliveries / 2) + 1
     -- Examples: 1→1x, 2-3→2x, 4-5→3x, 6-7→4x, 8+→5x
@@ -112,11 +105,6 @@ function Scoring:getComboMultiplier()
     return self.current_multiplier
 end
 
--- Get combo peak (VETS-31)
-function Scoring:getComboPeak()
-    return self.combo_peak
-end
-
 -- Reset combo (called when player touches ground) (VETS-28)
 function Scoring:resetCombo()
     self.combo_count = 0
@@ -132,8 +120,7 @@ function Scoring:getBreakdown()
         completion_bonus = self.completion_bonus,
         total = self.total_score,
         combo_count = self.combo_count,
-        combo_multiplier = self.current_multiplier,
-        combo_peak = self.combo_peak
+        combo_multiplier = self.current_multiplier
     }
 end
 

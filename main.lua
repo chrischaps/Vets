@@ -12,6 +12,7 @@ local Time = require("src.core.time")
 local StateManager = require("src.systems.state_manager")
 local MenuState = require("src.states.menu_state")
 local GameState = require("src.states.game_state")
+local ResultsState = require("src.states.results_state")
 
 -- Virtual resolution for pixel-perfect rendering
 VIRTUAL_WIDTH = 320
@@ -63,11 +64,12 @@ function love.load()
     -- Register states
     state_manager:register("menu", MenuState)
     state_manager:register("game", GameState)
+    state_manager:register("results", ResultsState)
 
     -- Start with GameState (Option 1: Direct to GameState)
     -- TODO: Switch to MenuState when it's fully functional (Option 2)
     print("\nStarting game...")
-    state_manager:switch("game", 1)  -- Night 1
+    state_manager:switch("game", 1, state_manager)  -- Night 1, pass state_manager
 
     print("\n=== Game started! Use arrow keys/WASD to move, Space to jump, P to pause ===")
 end
@@ -132,10 +134,28 @@ function love.keypressed(key)
     end
 
     -- Handle state-specific keypresses
+    local current_state = state_manager and state_manager:current()
+
     -- Menu state: ENTER to start game
-    if state_manager and state_manager:current() == MenuState then
+    if current_state == MenuState then
         if key == "return" then
-            state_manager:switch("game", 1)  -- Start Night 1
+            state_manager:switch("game", 1, state_manager)  -- Start Night 1, pass state_manager
+        end
+    end
+
+    -- Results state: ENTER to confirm selection (VETS-31)
+    if current_state == ResultsState then
+        if key == "return" then
+            -- Handle Continue/Retry (option 1) or Restart (option 2)
+            if current_state.selected_option == 1 then
+                -- Continue (if won) or Retry (if lost)
+                -- For now, both return to menu
+                -- TODO: In future, Continue might advance to next night
+                state_manager:switch("menu", "Returning to menu...")
+            elseif current_state.selected_option == 2 then
+                -- Restart same night
+                state_manager:switch("game", current_state.night_number, state_manager)
+            end
         end
     end
 end

@@ -1,0 +1,41 @@
+AL lib: (EE) alc_cleanup: 1 device not closed
+=== Courier Cat ===
+Virtual resolution: 320x180
+Window resolution: 1280x720
+
+Libraries loaded:
+  - bump.lua: OK
+  - anim8: OK
+  - camera: OK
+  - json: OK
+
+Time system initialized:
+  - Fixed timestep: 0.016666666666667s (60 FPS)
+
+Initializing StateManager...
+[StateManager] Initialized
+[StateManager] Registered state: menu
+[StateManager] Registered state: game
+
+Starting game...
+[GameState] Entering game state for Night 1
+[GameState] Initializing systems...
+Input system initialized:
+  - No gamepads connected
+  - Axis deadzone: 0.15
+  - Gamepads will be detected on hot-plug
+[Timer] Initialized with 180s (3:00)
+[MoonTimer] Moon visual created at (280, 20)
+[GameState] Systems initialized
+[GameState] Loading level for Night 1
+[GameState] Level loaded:
+  - Platforms: 12
+  - Delivery zones: 5
+  - Player spawn: (160, 100)
+[GameState] Game initialized:
+  - Night: 1
+  - Total deliveries: 5
+  - Timer: 3:00
+[StateManager] Switched to state: game
+
+=== Game started! Use arrow keys/WASD to move, Space to jump, P to pause ===
