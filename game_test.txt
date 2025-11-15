@@ -85,9 +85,9 @@ Initializing Camera System:
 Camera System: OK
 
 === Use arrow keys/WASD to move, Space to jump ===
-[DeliveryZone] Delivery completed at (100, 145)
-[Player] Delivery successful!
 [DeliveryZone] Delivery completed at (150, 45)
+[Player] Delivery successful!
+[DeliveryZone] Delivery completed at (100, 145)
 [Player] Delivery successful!
 [DeliveryZone] Delivery completed at (200, 90)
 [Player] Delivery successful!

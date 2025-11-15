@@ -25,6 +25,10 @@ local DeliveryZone = require("src.entities.delivery_zone")
 local CollisionSystem = require("src.systems.collision_system")
 local CameraSystem = require("src.systems.camera")
 local Input = require("src.systems.input")
+local Timer = require("src.systems.timer")
+
+-- Load UI
+local MoonTimer = require("src.ui.moon_timer")
 
 -- Virtual resolution for pixel-perfect rendering
 VIRTUAL_WIDTH = 320
@@ -42,6 +46,8 @@ local delivery_zones = {}
 local collision_system = nil
 local camera = nil
 local input = nil
+local timer = nil
+local moon_timer = nil
 
 -- Game canvas for rendering
 local game_canvas = nil
@@ -262,7 +268,16 @@ function love.load()
     print("  - Player position: (" .. player.transform.x .. ", " .. player.transform.y .. ")")
     print("\nCamera System: OK")
 
-    print("\n=== Use arrow keys/WASD to move, Space to jump ===")
+    -- Initialize dawn timer system (VETS-25)
+    print("\nInitializing Dawn Timer System:")
+    timer = Timer.new(180)  -- 180 seconds (3 minutes) for Night 1
+    moon_timer = MoonTimer.new(timer, 280, 20)  -- Position at top-right
+    print("  - Timer set to 180 seconds (3:00)")
+    print("  - Moon visual created")
+    print("  - Press P to pause/resume timer")
+    print("\nDawn Timer System: OK")
+
+    print("\n=== Use arrow keys/WASD to move, Space to jump, P to pause ===")
 end
 
 function love.resize(w, h)
@@ -321,6 +336,16 @@ function love.update(dt)
                 camera.shake_y = shake_y
             end
         end
+
+        -- Update dawn timer (VETS-25)
+        if timer then
+            timer:update(Time.FIXED_DT)
+        end
+
+        -- Update moon timer visual
+        if moon_timer then
+            moon_timer:update(Time.FIXED_DT)
+        end
     end
 end
 
@@ -361,6 +386,11 @@ function love.draw()
     -- Detach camera (UI elements drawn after this won't move with camera)
     if camera then
         camera:detach()
+    end
+
+    -- Draw moon timer (VETS-25) - always visible
+    if moon_timer then
+        moon_timer:draw()
     end
 
     -- Draw UI overlay (toggle with F4)
@@ -444,6 +474,11 @@ function love.keypressed(key)
         love.event.quit()
     elseif key == "f4" then
         show_debug_text = not show_debug_text
+    elseif key == "p" then
+        -- Toggle timer pause (VETS-25)
+        if timer then
+            timer:togglePause()
+        end
     end
 end
 
