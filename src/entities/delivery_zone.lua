@@ -47,6 +47,15 @@ function DeliveryZone.new(x, y, collision_system)
     self.delivery_animation_timer = 0  -- Animation timer after delivery
     self.delivery_animation_duration = 0.5  -- How long the delivery animation lasts
 
+    -- Letter particle effect (spawned on delivery)
+    self.letter_active = false  -- Is letter particle visible?
+    self.letter_timer = 0  -- How long letter has been floating
+    self.letter_duration = 1.2  -- How long letter floats before disappearing
+    self.letter_y_offset = 0  -- Y offset from zone center
+    self.letter_x_drift = 0  -- X drift for flutter effect
+    self.letter_rise_speed = -30  -- Pixels per second upward
+    self.letter_drift_amplitude = 8  -- Max horizontal drift in pixels
+
     -- Visual representation
     self.base_color = {1, 0.9, 0.4}  -- Warm yellow/gold color for window glow
     self.glow_color = {1, 1, 0.8}  -- Brighter glow color
@@ -70,6 +79,23 @@ function DeliveryZone:update(dt, player_x, player_y)
     -- Update delivery animation timer if active
     if self.delivery_animation_timer > 0 then
         self.delivery_animation_timer = self.delivery_animation_timer - dt
+    end
+
+    -- Update letter particle effect
+    if self.letter_active then
+        self.letter_timer = self.letter_timer + dt
+
+        -- Letter floats upward
+        self.letter_y_offset = self.letter_y_offset + (self.letter_rise_speed * dt)
+
+        -- Letter drifts side to side (sine wave flutter)
+        local flutter_phase = (self.letter_timer / self.letter_duration) * math.pi * 2
+        self.letter_x_drift = math.sin(flutter_phase * 3) * self.letter_drift_amplitude
+
+        -- Deactivate letter when duration expires
+        if self.letter_timer >= self.letter_duration then
+            self.letter_active = false
+        end
     end
 
     -- Skip proximity detection if completed
@@ -113,6 +139,13 @@ function DeliveryZone:deliver()
 
     self.completed = true
     self.delivery_animation_timer = self.delivery_animation_duration
+
+    -- Spawn letter float effect
+    self.letter_active = true
+    self.letter_timer = 0
+    self.letter_y_offset = 0
+    self.letter_x_drift = 0
+
     print("[DeliveryZone] Delivery completed at (" .. self.transform.x .. ", " .. self.transform.y .. ")")
     return true  -- Delivery successful
 end
@@ -209,6 +242,28 @@ function DeliveryZone:draw()
             -- Draw simple text prompt instead of Unicode character
             love.graphics.print("E", x - 3, y - 24)
         end
+    end
+
+    -- Draw letter particle effect (if active)
+    if self.letter_active then
+        local letter_x = x + self.letter_x_drift
+        local letter_y = y + self.letter_y_offset
+
+        -- Calculate fade-out alpha based on lifetime progress
+        local lifetime_progress = self.letter_timer / self.letter_duration
+        local alpha = 1 - lifetime_progress  -- Fade from 1 to 0
+
+        -- Draw envelope (white rectangle)
+        love.graphics.setColor(1, 1, 1, alpha)
+        love.graphics.rectangle("fill", letter_x - 3, letter_y - 2, 6, 4)
+
+        -- Draw envelope flap (small triangle on top)
+        love.graphics.setColor(0.9, 0.9, 0.9, alpha)
+        love.graphics.polygon("fill",
+            letter_x - 3, letter_y - 2,  -- bottom left
+            letter_x, letter_y - 4,      -- top center
+            letter_x + 3, letter_y - 2   -- bottom right
+        )
     end
 
     -- Debug: Draw collision box (if F2 is held)
