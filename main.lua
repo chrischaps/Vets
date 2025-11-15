@@ -246,6 +246,10 @@ function love.load()
     print("  - Total delivery zones: " .. #delivery_zones)
     print("\nDelivery Zones: OK")
 
+    -- Connect player to delivery zones (VETS-24)
+    player.delivery_zones = delivery_zones
+    print("  - Player connected to delivery zones")
+
     -- Initialize camera system
     print("\nInitializing Camera System:")
     -- Start camera at player position to avoid initial offset

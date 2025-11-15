@@ -42,9 +42,15 @@ function DeliveryZone.new(x, y, collision_system)
     self.player_in_zone = false  -- Is player inside delivery zone?
     self.proximity_brightness = 0  -- Additional brightness from proximity (0-1)
 
+    -- Delivery state
+    self.completed = false  -- Has this zone been delivered to?
+    self.delivery_animation_timer = 0  -- Animation timer after delivery
+    self.delivery_animation_duration = 0.5  -- How long the delivery animation lasts
+
     -- Visual representation
     self.base_color = {1, 0.9, 0.4}  -- Warm yellow/gold color for window glow
     self.glow_color = {1, 1, 0.8}  -- Brighter glow color
+    self.completed_color = {0.3, 0.3, 0.4}  -- Dim gray for completed zones
 
     -- Note: Delivery zones are NOT registered with the collision system
     -- They use distance-based detection for proximity and delivery prompts
@@ -59,6 +65,19 @@ function DeliveryZone:update(dt, player_x, player_y)
     self.glow_timer = self.glow_timer + dt
     if self.glow_timer >= self.glow_cycle_time then
         self.glow_timer = self.glow_timer - self.glow_cycle_time
+    end
+
+    -- Update delivery animation timer if active
+    if self.delivery_animation_timer > 0 then
+        self.delivery_animation_timer = self.delivery_animation_timer - dt
+    end
+
+    -- Skip proximity detection if completed
+    if self.completed then
+        self.player_nearby = false
+        self.player_in_zone = false
+        self.proximity_brightness = 0
+        return
     end
 
     -- Calculate proximity to player (if player position provided)
@@ -86,6 +105,23 @@ function DeliveryZone:update(dt, player_x, player_y)
     end
 end
 
+-- Mark zone as delivered and trigger animation
+function DeliveryZone:deliver()
+    if self.completed then
+        return false  -- Already completed
+    end
+
+    self.completed = true
+    self.delivery_animation_timer = self.delivery_animation_duration
+    print("[DeliveryZone] Delivery completed at (" .. self.transform.x .. ", " .. self.transform.y .. ")")
+    return true  -- Delivery successful
+end
+
+-- Check if this zone can accept delivery
+function DeliveryZone:canDeliver()
+    return not self.completed and self.player_in_zone
+end
+
 -- Get glow alpha based on animation cycle
 function DeliveryZone:getGlowAlpha()
     -- Use sine wave for smooth pulsing animation
@@ -108,7 +144,7 @@ end
 
 -- Check if player should see delivery prompt
 function DeliveryZone:shouldShowPrompt()
-    return self.player_in_zone
+    return self.player_in_zone and not self.completed
 end
 
 -- Draw delivery zone
@@ -117,42 +153,62 @@ function DeliveryZone:draw()
     local y = self.transform.y
     local radius = self.collision.width / 2  -- Half of collision box width
 
-    -- Get current glow alpha and size
-    local glow_alpha = self:getGlowAlpha()
-    local glow_size = self:getGlowSize()
+    -- Different rendering for completed zones
+    if self.completed then
+        -- Draw dim, static completed zone
+        love.graphics.setColor(
+            self.completed_color[1],
+            self.completed_color[2],
+            self.completed_color[3],
+            0.4
+        )
+        love.graphics.circle("fill", x, y, radius * 0.8)
 
-    -- Draw outer glow (larger, more transparent) - grows with proximity
-    love.graphics.setColor(
-        self.glow_color[1],
-        self.glow_color[2],
-        self.glow_color[3],
-        glow_alpha * 0.3
-    )
-    love.graphics.circle("fill", x, y, radius * 1.5 * glow_size)
+        -- Brief flash during delivery animation
+        if self.delivery_animation_timer > 0 then
+            local flash_alpha = self.delivery_animation_timer / self.delivery_animation_duration
+            love.graphics.setColor(1, 1, 1, flash_alpha * 0.8)
+            love.graphics.circle("fill", x, y, radius * (1 + flash_alpha * 0.5))
+        end
+    else
+        -- Normal active zone rendering
+        -- Get current glow alpha and size
+        local glow_alpha = self:getGlowAlpha()
+        local glow_size = self:getGlowSize()
 
-    -- Draw inner glow (smaller, more opaque) - grows with proximity
-    love.graphics.setColor(
-        self.glow_color[1],
-        self.glow_color[2],
-        self.glow_color[3],
-        glow_alpha * 0.6
-    )
-    love.graphics.circle("fill", x, y, radius * glow_size)
+        -- Draw outer glow (larger, more transparent) - grows with proximity
+        love.graphics.setColor(
+            self.glow_color[1],
+            self.glow_color[2],
+            self.glow_color[3],
+            glow_alpha * 0.3
+        )
+        love.graphics.circle("fill", x, y, radius * 1.5 * glow_size)
 
-    -- Draw core (always visible)
-    love.graphics.setColor(
-        self.base_color[1],
-        self.base_color[2],
-        self.base_color[3],
-        1
-    )
-    love.graphics.circle("fill", x, y, radius * 0.5)
+        -- Draw inner glow (smaller, more opaque) - grows with proximity
+        love.graphics.setColor(
+            self.glow_color[1],
+            self.glow_color[2],
+            self.glow_color[3],
+            glow_alpha * 0.6
+        )
+        love.graphics.circle("fill", x, y, radius * glow_size)
 
-    -- Draw delivery prompt if player is in zone
-    if self:shouldShowPrompt() then
-        love.graphics.setColor(1, 1, 1, 1)
-        -- Draw simple text prompt instead of Unicode character
-        love.graphics.print("E", x - 3, y - 24)
+        -- Draw core (always visible)
+        love.graphics.setColor(
+            self.base_color[1],
+            self.base_color[2],
+            self.base_color[3],
+            1
+        )
+        love.graphics.circle("fill", x, y, radius * 0.5)
+
+        -- Draw delivery prompt if player is in zone
+        if self:shouldShowPrompt() then
+            love.graphics.setColor(1, 1, 1, 1)
+            -- Draw simple text prompt instead of Unicode character
+            love.graphics.print("E", x - 3, y - 24)
+        end
     end
 
     -- Debug: Draw collision box (if F2 is held)

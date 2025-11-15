@@ -74,6 +74,11 @@ function Player.new(x, y, collision_system, input_system)
     self.input_jump = false  -- Jump button pressed this frame
     self.input_jump_release = false  -- Jump button released this frame
     self.input_dash = false  -- Dash button pressed this frame
+    self.input_deliver = false  -- Deliver button pressed this frame
+
+    -- Delivery state
+    self.delivery_zones = {}  -- Reference to delivery zones (set externally)
+    self.deliver_held = false  -- Is deliver button currently held?
 
     -- Visual representation (placeholder rectangle)
     self.color = {0.9, 0.6, 0.3}  -- Orange color for the cat
@@ -96,6 +101,7 @@ function Player:handleInput()
     self.input_jump = false
     self.input_jump_release = false
     self.input_dash = false
+    self.input_deliver = false
 
     -- Use input system if available, otherwise fallback to direct keyboard input
     if self.input_system then
@@ -137,6 +143,17 @@ function Player:handleInput()
 
         -- Update dash held state (for edge detection)
         self.dash_held = dash_down
+
+        -- Check deliver input using input system
+        local deliver_down = self.input_system:is_down("deliver")
+
+        -- Detect deliver press (rising edge detection)
+        if deliver_down and not self.deliver_held then
+            self.input_deliver = true
+        end
+
+        -- Update deliver held state (for edge detection)
+        self.deliver_held = deliver_down
     else
         -- Fallback to direct keyboard input (for backwards compatibility)
         -- Check left/right arrow keys or WASD
@@ -178,6 +195,19 @@ function Player:handleInput()
 
         -- Update dash held state (for edge detection)
         self.dash_held = dash_down
+
+        -- Check deliver input (S, Down, or E key)
+        local deliver_down = love.keyboard.isDown("s") or
+                            love.keyboard.isDown("down") or
+                            love.keyboard.isDown("e")
+
+        -- Detect deliver press (rising edge detection)
+        if deliver_down and not self.deliver_held then
+            self.input_deliver = true
+        end
+
+        -- Update deliver held state (for edge detection)
+        self.deliver_held = deliver_down
     end
 end
 
@@ -596,6 +626,7 @@ function Player:update(dt)
     self:updateDash(dt)
     self:applyMovement(dt)
     self:handleJumping()
+    self:handleDelivery()  -- Handle delivery action
     self:updateWallSliding(dt)
     self:applyGravity(dt)
     self:updatePhysicsAndCollision(dt)
@@ -780,6 +811,35 @@ function Player:dash()
     -- Clear other movement states
     self.wall_sliding = false
     self.control_lock_timer = 0
+end
+
+-- Handle delivery input
+function Player:handleDelivery()
+    if self.input_deliver then
+        self:attemptDelivery()
+    end
+end
+
+-- Attempt to deliver to a nearby delivery zone
+function Player:attemptDelivery()
+    -- Check if we have delivery zones reference
+    if not self.delivery_zones or #self.delivery_zones == 0 then
+        return false
+    end
+
+    -- Try to deliver to each zone
+    for _, zone in ipairs(self.delivery_zones) do
+        if zone:canDeliver() then
+            -- Perform delivery
+            if zone:deliver() then
+                print("[Player] Delivery successful!")
+                -- TODO: Add score, combo, time extension here
+                return true
+            end
+        end
+    end
+
+    return false
 end
 
 -- Draw player
