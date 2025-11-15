@@ -32,6 +32,11 @@ function MoonTimer.new(timer, x, y)
     self.pulse_speed = 2  -- Pulsing cycles per second
     self.pulse_intensity = 0.1  -- How much the moon pulses
 
+    -- Delivery effect (VETS-26)
+    self.delivery_pulse_timer = 0  -- Timer for delivery pulse effect
+    self.delivery_pulse_duration = 0.4  -- How long the delivery pulse lasts
+    self.delivery_pulse_intensity = 0  -- Current intensity of delivery pulse (0-1)
+
     print("[MoonTimer] Moon visual created at (" .. self.x .. ", " .. self.y .. ")")
 
     return self
@@ -53,6 +58,15 @@ function MoonTimer:update(dt)
     -- Update sky color based on timer state
     local state = self.timer:getState()
     self.sky_color = self.timer:getStateColor()
+
+    -- Update delivery pulse effect (VETS-26)
+    if self.delivery_pulse_timer > 0 then
+        self.delivery_pulse_timer = self.delivery_pulse_timer - dt
+        -- Calculate pulse intensity (starts at 1, fades to 0)
+        self.delivery_pulse_intensity = self.delivery_pulse_timer / self.delivery_pulse_duration
+    else
+        self.delivery_pulse_intensity = 0
+    end
 end
 
 -- Draw moon and sky gradient
@@ -68,7 +82,10 @@ function MoonTimer:draw()
     local pulse_phase = (self.pulse_timer * self.pulse_speed) * math.pi * 2
     local pulse_offset = math.sin(pulse_phase) * self.pulse_intensity * self.current_radius
 
-    local display_radius = self.current_radius + pulse_offset
+    -- Add delivery pulse effect (VETS-26)
+    local delivery_pulse_offset = self.delivery_pulse_intensity * self.current_radius * 0.5  -- Grow by 50%
+
+    local display_radius = self.current_radius + pulse_offset + delivery_pulse_offset
 
     -- Draw outer glow
     love.graphics.setColor(
@@ -117,6 +134,13 @@ function MoonTimer:drawSkyGradient()
         0.1  -- Very subtle overlay
     )
     love.graphics.rectangle("fill", 0, 0, screen_width, screen_height)
+end
+
+-- Trigger delivery pulse effect (VETS-26)
+-- Called when player makes a successful delivery
+function MoonTimer:triggerDeliveryPulse()
+    self.delivery_pulse_timer = self.delivery_pulse_duration
+    self.delivery_pulse_intensity = 1  -- Start at full intensity
 end
 
 return MoonTimer
