@@ -1118,7 +1118,7 @@ function Player:defineAnimations()
     })
 
     -- wall-slide: frame 12, static (no animation)
-    self.animation:define("wall-slide", "12", 1.0, {
+    self.animation:define("wall-slide", "12-12", 1.0, {
         loop = true
     })
 end
