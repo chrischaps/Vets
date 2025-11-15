@@ -2,16 +2,16 @@
   "version": 1,
   "night": 1,
   "name": "First Flight",
-  "description": "The first night of deliveries. Learn the basics of rooftop delivery.",
+  "description": "Your first night of deliveries. Learn the basics of rooftop parkour and letter delivery.",
   "spawn": {
-    "x": 80,
-    "y": 100
+    "x": 40,
+    "y": 128
   },
   "platforms": [
     {
       "x": 0,
-      "y": 150,
-      "width": 160,
+      "y": 144,
+      "width": 96,
       "height": 16,
       "type": "rooftop",
       "properties": {
@@ -20,9 +20,9 @@
       }
     },
     {
-      "x": 200,
-      "y": 150,
-      "width": 120,
+      "x": 128,
+      "y": 144,
+      "width": 80,
       "height": 16,
       "type": "rooftop",
       "properties": {
@@ -31,9 +31,9 @@
       }
     },
     {
-      "x": 360,
-      "y": 130,
-      "width": 100,
+      "x": 240,
+      "y": 128,
+      "width": 96,
       "height": 16,
       "type": "rooftop",
       "properties": {
@@ -42,9 +42,9 @@
       }
     },
     {
-      "x": 500,
-      "y": 120,
-      "width": 140,
+      "x": 368,
+      "y": 112,
+      "width": 80,
       "height": 16,
       "type": "rooftop",
       "properties": {
@@ -53,9 +53,31 @@
       }
     },
     {
-      "x": 680,
-      "y": 140,
-      "width": 120,
+      "x": 496,
+      "y": 96,
+      "width": 96,
+      "height": 16,
+      "type": "rooftop",
+      "properties": {
+        "friction": 1.0,
+        "grippable": true
+      }
+    },
+    {
+      "x": 640,
+      "y": 128,
+      "width": 112,
+      "height": 16,
+      "type": "rooftop",
+      "properties": {
+        "friction": 1.0,
+        "grippable": true
+      }
+    },
+    {
+      "x": 784,
+      "y": 112,
+      "width": 96,
       "height": 16,
       "type": "rooftop",
       "properties": {
@@ -66,10 +88,10 @@
   ],
   "walls": [
     {
-      "x": 200,
-      "y": 100,
+      "x": 224,
+      "y": 80,
       "width": 16,
-      "height": 50,
+      "height": 48,
       "type": "building_wall",
       "properties": {
         "climbable": true,
@@ -77,10 +99,10 @@
       }
     },
     {
-      "x": 460,
-      "y": 80,
+      "x": 448,
+      "y": 64,
       "width": 16,
-      "height": 40,
+      "height": 48,
       "type": "building_wall",
       "properties": {
         "climbable": true,
@@ -90,8 +112,8 @@
   ],
   "delivery_zones": [
     {
-      "x": 120,
-      "y": 135,
+      "x": 64,
+      "y": 120,
       "width": 16,
       "height": 24,
       "id": "delivery_1",
@@ -103,8 +125,8 @@
       }
     },
     {
-      "x": 280,
-      "y": 135,
+      "x": 168,
+      "y": 120,
       "width": 16,
       "height": 24,
       "id": "delivery_2",
@@ -116,8 +138,8 @@
       }
     },
     {
-      "x": 420,
-      "y": 115,
+      "x": 288,
+      "y": 104,
       "width": 16,
       "height": 24,
       "id": "delivery_3",
@@ -129,8 +151,8 @@
       }
     },
     {
-      "x": 580,
-      "y": 105,
+      "x": 536,
+      "y": 72,
       "width": 16,
       "height": 24,
       "id": "delivery_4",
@@ -142,8 +164,8 @@
       }
     },
     {
-      "x": 740,
-      "y": 125,
+      "x": 824,
+      "y": 88,
       "width": 16,
       "height": 24,
       "id": "delivery_5",
@@ -156,25 +178,11 @@
       }
     }
   ],
-  "hazards": [
-    {
-      "x": 350,
-      "y": 140,
-      "width": 16,
-      "height": 16,
-      "type": "vent",
-      "properties": {
-        "pattern": "2s_on_1.5s_off",
-        "damage": 0,
-        "knockback": true,
-        "force_y": -200
-      }
-    }
-  ],
+  "hazards": [],
   "powerups": [
     {
-      "x": 240,
-      "y": 130,
+      "x": 680,
+      "y": 108,
       "width": 12,
       "height": 12,
       "type": "coffee",
@@ -189,7 +197,7 @@
       "type": "color",
       "layer": 0,
       "properties": {
-        "color": [30, 20, 40, 255]
+        "color": [25, 15, 35, 255]
       }
     },
     {
@@ -225,8 +233,8 @@
     }
   },
   "environment": {
-    "time_limit": 300,
-    "starting_time": 240,
+    "time_limit": 180,
+    "starting_time": 180,
     "wind": {
       "enabled": false,
       "direction_x": 0,
@@ -236,10 +244,10 @@
   },
   "metadata": {
     "author": "Courier Cat Team",
-    "created_date": "2024-11-15",
+    "created_date": "2025-01-15",
     "difficulty": "beginner",
-    "required_deliveries": 3,
-    "par_time": 60,
-    "tags": ["tutorial", "easy", "beginner"]
+    "required_deliveries": 5,
+    "par_time": 120,
+    "tags": ["tutorial", "easy", "beginner", "first_night"]
   }
 }
