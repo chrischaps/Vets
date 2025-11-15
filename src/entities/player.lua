@@ -5,6 +5,7 @@ local Entity = require("src.entities.entity")
 local Transform = require("src.components.transform")
 local Physics = require("src.components.physics")
 local Collision = require("src.components.collision")
+local Animation = require("src.components.animation")
 local Constants = require("src.core.constants")
 local Time = require("src.core.time")
 
@@ -89,6 +90,21 @@ function Player.new(x, y, collision_system, input_system)
 
     -- Visual representation (placeholder rectangle)
     self.color = {0.9, 0.6, 0.3}  -- Orange color for the cat
+
+    -- Create placeholder sprite sheet
+    -- Total frames: idle(2) + run(4) + jump(3) + dash(2) + wall-slide(1) = 12 frames
+    -- Layout: 12 frames horizontal, 16x16 pixels each = 192x16 sprite sheet
+    self.sprite_sheet = self:createPlaceholderSpriteSheet()
+
+    -- Create Animation component
+    self.animation = Animation.new(self.sprite_sheet, 16, 16)
+    self.entity:addComponent("animation", self.animation)
+
+    -- Define all animations
+    self:defineAnimations()
+
+    -- Start with idle animation
+    self.animation:play("idle")
 
     -- Dash visual effects
     self.dash_trail = {}  -- Array of trail positions {x, y, alpha, time}
@@ -650,6 +666,7 @@ function Player:update(dt)
     self:updatePhysicsAndCollision(dt)
     self:updateDashTrail(dt)
     self:updateScreenShake(dt)
+    self:updateAnimation(dt)  -- Update animation state machine
 end
 
 -- Perform jump
@@ -934,25 +951,41 @@ function Player:draw()
         draw_y = y + (h - draw_h) / 2  -- Offset to keep bottom aligned
     end
 
-    -- Draw player as colored rectangle (placeholder)
-    -- Change color based on state
-    if self.dashing then
-        -- Dashing - bright white/cyan glow (distinct from magenta trail)
-        love.graphics.setColor(0.3, 1, 1)  -- Cyan glow when dashing
-    elseif self.dash_crouch_timer > 0 then
-        -- Crouching before dash - yellow anticipation glow
-        love.graphics.setColor(1, 1, 0.3)  -- Yellow glow when crouching
-    elseif self.control_lock_timer > 0 then
-        -- Control-locked after wall-jump - bright cyan/white glow
-        love.graphics.setColor(0.7, 1, 1)  -- Cyan glow when wall-jumping
-    elseif self.wall_sliding then
-        -- Wall-sliding - brighter orange/yellow glow
-        love.graphics.setColor(1, 0.8, 0.5)
-    else
-        -- Normal state
-        love.graphics.setColor(self.color)
+    -- Draw player animation sprite
+    -- Center the sprite on the player's position
+    -- Calculate scale factor to match desired size (sprite is 16x16, player hitbox is 10x14)
+    local scale_x = w / 16  -- Scale width to match hitbox
+    local scale_y = draw_h / 16  -- Scale height to match hitbox (can be squashed during dash crouch)
+
+    -- Flip sprite horizontally based on facing direction
+    if not self.facing_right then
+        scale_x = -scale_x  -- Negative scale flips horizontally
     end
-    love.graphics.rectangle("fill", x - w/2, draw_y - draw_h/2, w, draw_h)
+
+    -- Origin offset (center of 16x16 sprite)
+    local origin_x = 8
+    local origin_y = 8
+
+    -- Apply color tint based on state
+    if self.dashing then
+        -- Dashing - cyan tint
+        love.graphics.setColor(0.3, 1, 1, 1)
+    elseif self.dash_crouch_timer > 0 then
+        -- Crouching before dash - yellow tint
+        love.graphics.setColor(1, 1, 0.3, 1)
+    elseif self.control_lock_timer > 0 then
+        -- Control-locked after wall-jump - bright cyan tint
+        love.graphics.setColor(0.7, 1, 1, 1)
+    elseif self.wall_sliding then
+        -- Wall-sliding - brighter orange tint
+        love.graphics.setColor(1, 0.8, 0.5, 1)
+    else
+        -- Normal state - no tint
+        love.graphics.setColor(1, 1, 1, 1)
+    end
+
+    -- Draw the animation
+    self.animation:draw(x, draw_y, 0, scale_x, scale_y, origin_x, origin_y)
 
     -- Draw dash direction indicator when dashing
     if self.dashing then
@@ -994,6 +1027,141 @@ end
 -- Get screen shake offset (for camera)
 function Player:getScreenShakeOffset()
     return self.dash_screen_shake_x, self.dash_screen_shake_y
+end
+
+-- Create placeholder sprite sheet for player animations
+-- Layout: 12 frames horizontal (idle, run, jump, dash, wall-slide)
+-- Frame breakdown:
+--   Frames 1-2: idle (orange)
+--   Frames 3-6: run (yellow-orange gradient for motion)
+--   Frames 7-9: jump (green shades: squat, rise, fall)
+--   Frames 10-11: dash (cyan)
+--   Frame 12: wall-slide (magenta)
+function Player:createPlaceholderSpriteSheet()
+    local frame_width = 16
+    local frame_height = 16
+    local num_frames = 12
+    local sheet_width = frame_width * num_frames
+    local sheet_height = frame_height
+
+    -- Create canvas for sprite sheet
+    local canvas = love.graphics.newCanvas(sheet_width, sheet_height)
+    love.graphics.setCanvas(canvas)
+    love.graphics.clear(0, 0, 0, 0)  -- Transparent background
+
+    -- Helper function to draw a simple cat sprite (rectangle with ears)
+    local function drawCatSprite(x, y, r, g, b)
+        -- Body
+        love.graphics.setColor(r, g, b, 1)
+        love.graphics.rectangle("fill", x + 3, y + 4, 10, 10)
+
+        -- Ears (triangular shapes approximated with rectangles)
+        love.graphics.rectangle("fill", x + 3, y + 2, 3, 3)  -- Left ear
+        love.graphics.rectangle("fill", x + 10, y + 2, 3, 3)  -- Right ear
+
+        -- Tail (small rectangle extending from body)
+        love.graphics.rectangle("fill", x + 11, y + 11, 4, 2)
+    end
+
+    -- Frames 1-2: idle (orange cat)
+    drawCatSprite(0, 0, 0.9, 0.6, 0.3)    -- Frame 1
+    drawCatSprite(16, 0, 0.95, 0.65, 0.35)  -- Frame 2 (slightly brighter)
+
+    -- Frames 3-6: run (yellow-orange gradient)
+    drawCatSprite(32, 0, 1.0, 0.7, 0.2)    -- Frame 3
+    drawCatSprite(48, 0, 1.0, 0.75, 0.25)  -- Frame 4
+    drawCatSprite(64, 0, 1.0, 0.7, 0.2)    -- Frame 5
+    drawCatSprite(80, 0, 1.0, 0.65, 0.15)  -- Frame 6
+
+    -- Frames 7-9: jump (green shades: squat, rise, fall)
+    drawCatSprite(96, 0, 0.4, 0.9, 0.4)    -- Frame 7 (squat - bright green)
+    drawCatSprite(112, 0, 0.3, 0.8, 0.3)   -- Frame 8 (rise - medium green)
+    drawCatSprite(128, 0, 0.2, 0.7, 0.2)   -- Frame 9 (fall - darker green)
+
+    -- Frames 10-11: dash (cyan)
+    drawCatSprite(144, 0, 0.3, 1.0, 1.0)   -- Frame 10
+    drawCatSprite(160, 0, 0.4, 0.95, 0.95) -- Frame 11
+
+    -- Frame 12: wall-slide (magenta)
+    drawCatSprite(176, 0, 1.0, 0.3, 1.0)   -- Frame 12
+
+    love.graphics.setCanvas()
+    love.graphics.setColor(1, 1, 1, 1)  -- Reset color
+
+    -- Get image data from canvas and create image
+    local image_data = canvas:newImageData()
+    local sprite_sheet = love.graphics.newImage(image_data)
+
+    return sprite_sheet
+end
+
+-- Define all player animations using the sprite sheet
+function Player:defineAnimations()
+    -- idle: frames 1-2, 1 FPS (1 second per frame), loops
+    self.animation:define("idle", "1-2", 1.0, {
+        loop = true
+    })
+
+    -- run: frames 3-6, 12 FPS (~0.083 seconds per frame), loops
+    self.animation:define("run", "3-6", 1/12, {
+        loop = true
+    })
+
+    -- jump: frames 7-9, 10 FPS (0.1 seconds per frame), no loop
+    self.animation:define("jump", "7-9", 0.1, {
+        loop = false
+    })
+
+    -- dash: frames 10-11, 8 FPS (0.125 seconds per frame), loops
+    self.animation:define("dash", "10-11", 0.125, {
+        loop = true
+    })
+
+    -- wall-slide: frame 12, static (no animation)
+    self.animation:define("wall-slide", "12", 1.0, {
+        loop = true
+    })
+end
+
+-- Update animation based on player state
+-- Animation priority:
+--   1. Dash (highest priority)
+--   2. Wall-slide
+--   3. Jump (airborne with upward velocity)
+--   4. Fall (airborne with downward velocity) - uses jump animation frame 3
+--   5. Run (grounded with movement)
+--   6. Idle (grounded, no movement)
+function Player:updateAnimation(dt)
+    -- Update the animation component
+    self.animation:update(dt)
+
+    -- Determine which animation should be playing based on state
+    local desired_animation = "idle"  -- Default to idle
+
+    if self.dashing then
+        desired_animation = "dash"
+    elseif self.wall_sliding then
+        desired_animation = "wall-slide"
+    elseif not self.grounded then
+        -- Airborne - use jump animation
+        desired_animation = "jump"
+        -- If falling (velocity_y > 0), lock to last frame of jump animation (fall pose)
+        if self.physics.velocity_y > 0 and self.animation:getCurrentAnimation() == "jump" then
+            -- Let the jump animation play through naturally, it will stay on frame 3 (fall)
+            -- since it's a non-looping animation
+        end
+    elseif math.abs(self.physics.velocity_x) > 5 then
+        -- Grounded and moving - run animation
+        desired_animation = "run"
+    else
+        -- Grounded and stationary - idle animation
+        desired_animation = "idle"
+    end
+
+    -- Only switch animations if different from current
+    if self.animation:getCurrentAnimation() ~= desired_animation then
+        self.animation:play(desired_animation)
+    end
 end
 
 return Player
