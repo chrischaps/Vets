@@ -1,64 +1,30 @@
 -- main.lua
 -- Entry point for Courier Cat
+-- Refactored to use StateManager for proper game flow
 
 -- Load external libraries
 local libs = require("libraries.init")
 
 -- Load core systems
 local Time = require("src.core.time")
-local Constants = require("src.core.constants")
 
--- Load entity system
-local Entity = require("src.entities.entity")
-
--- Load components
-local Transform = require("src.components.transform")
-local Physics = require("src.components.physics")
-local Collision = require("src.components.collision")
-
--- Load entities
-local Player = require("src.entities.player")
-local Platform = require("src.entities.platform")
-local DeliveryZone = require("src.entities.delivery_zone")
-
--- Load systems
-local CollisionSystem = require("src.systems.collision_system")
-local CameraSystem = require("src.systems.camera")
-local Input = require("src.systems.input")
-local Timer = require("src.systems.timer")
-local Scoring = require("src.systems.scoring")
-
--- Load UI
-local MoonTimer = require("src.ui.moon_timer")
+-- Load StateManager and states
+local StateManager = require("src.systems.state_manager")
+local MenuState = require("src.states.menu_state")
+local GameState = require("src.states.game_state")
 
 -- Virtual resolution for pixel-perfect rendering
 VIRTUAL_WIDTH = 320
 VIRTUAL_HEIGHT = 180
 
--- Test entity for verification
-local test_entity = nil
-
--- Game entities
-local player = nil
-local platforms = {}
-local delivery_zones = {}
-
--- Game systems
-local collision_system = nil
-local camera = nil
-local input = nil
-local timer = nil
-local moon_timer = nil
-local scoring = nil
+-- Game state management
+local state_manager = nil
 
 -- Game canvas for rendering
 local game_canvas = nil
 local game_scale = 1
 local offset_x = 0
 local offset_y = 0
-
--- Debug display toggle (F4)
-local show_debug_text = false
 
 function love.load()
     -- Set up pixel-perfect rendering
@@ -74,7 +40,7 @@ function love.load()
     -- Set window title
     love.window.setTitle("Courier Cat")
 
-    print("Courier Cat initialized!")
+    print("=== Courier Cat ===")
     print("Virtual resolution: " .. VIRTUAL_WIDTH .. "x" .. VIRTUAL_HEIGHT)
     print("Window resolution: " .. love.graphics.getWidth() .. "x" .. love.graphics.getHeight())
 
@@ -90,251 +56,20 @@ function love.load()
     print("\nTime system initialized:")
     print("  - Fixed timestep: " .. Time.FIXED_DT .. "s (" .. Time:getFPS() .. " FPS)")
 
-    -- Test Entity-Component System
-    print("\nTesting Entity-Component System:")
-    test_entity = Entity.new("test")
-    print("  - Entity created with ID: " .. test_entity.id .. ", type: " .. test_entity.type)
+    -- Initialize StateManager
+    print("\nInitializing StateManager...")
+    state_manager = StateManager.new()
 
-    -- Test component management
-    local test_component = { name = "test_component", value = 42 }
-    test_entity:addComponent("test", test_component)
-    print("  - Component added: " .. (test_entity:hasComponent("test") and "OK" or "FAILED"))
-    print("  - Component retrieval: " .. (test_entity:getComponent("test").value == 42 and "OK" or "FAILED"))
+    -- Register states
+    state_manager:register("menu", MenuState)
+    state_manager:register("game", GameState)
 
-    -- Test tag system
-    test_entity:addTag("player")
-    test_entity:addTag("controllable")
-    print("  - Tags added: " .. (test_entity:hasTag("player") and test_entity:hasTag("controllable") and "OK" or "FAILED"))
+    -- Start with GameState (Option 1: Direct to GameState)
+    -- TODO: Switch to MenuState when it's fully functional (Option 2)
+    print("\nStarting game...")
+    state_manager:switch("game", 1)  -- Night 1
 
-    -- Test active/inactive system
-    test_entity:deactivate()
-    print("  - Deactivate: " .. (not test_entity:isActive() and "OK" or "FAILED"))
-    test_entity:activate()
-    print("  - Activate: " .. (test_entity:isActive() and "OK" or "FAILED"))
-
-    print("\nEntity-Component System: OK")
-
-    -- Test Core Components
-    print("\nTesting Core Components:")
-
-    -- Test Transform component
-    local test_transform = Transform.new(100, 50, 0, 1, 1, 0)
-    print("  - Transform created at (" .. test_transform.x .. ", " .. test_transform.y .. "): OK")
-    test_transform:translate(10, 20)
-    print("  - Transform translate: " .. (test_transform.x == 110 and test_transform.y == 70 and "OK" or "FAILED"))
-    test_transform:setRotation(math.pi / 4)
-    print("  - Transform rotation: " .. (math.abs(test_transform.rotation - math.pi/4) < 0.001 and "OK" or "FAILED"))
-
-    -- Test Physics component
-    local test_physics = Physics.new()
-    print("  - Physics created with velocity (" .. test_physics.velocity_x .. ", " .. test_physics.velocity_y .. "): OK")
-    test_physics:setVelocity(100, -200)
-    print("  - Physics velocity set: " .. (test_physics.velocity_x == 100 and test_physics.velocity_y == -200 and "OK" or "FAILED"))
-    test_physics:applyImpulse(50, 0)
-    print("  - Physics impulse: " .. (test_physics.velocity_x == 150 and "OK" or "FAILED"))
-
-    -- Test Collision component
-    local test_collision = Collision.new(16, 16, Collision.SHAPE.AABB)
-    print("  - Collision created (AABB " .. test_collision.width .. "x" .. test_collision.height .. "): OK")
-    test_collision:setLayer(Collision.LAYER.PLAYER)
-    test_collision:setMask(Collision.LAYER.TERRAIN)
-    print("  - Collision layer/mask: " .. (test_collision:collidesWithLayer(Collision.LAYER.TERRAIN) and "OK" or "FAILED"))
-
-    -- Test integrated entity with all components
-    print("\n  Testing integrated entity:")
-    local player_entity = Entity.new("player")
-    player_entity:addComponent("transform", Transform.new(160, 90))
-    player_entity:addComponent("physics", Physics.new())
-    player_entity:addComponent("collision", Collision.new(Constants.PLAYER_WIDTH, Constants.PLAYER_HEIGHT))
-    print("  - Entity with all components: " .. (player_entity:hasComponent("transform") and player_entity:hasComponent("physics") and player_entity:hasComponent("collision") and "OK" or "FAILED"))
-
-    print("\nCore Components: OK")
-
-    -- Initialize input system
-    print("\nInitializing Input System:")
-    input = Input.new()
-    input:init()
-    print("  - Input system: OK")
-
-    -- Initialize collision system
-    print("\nInitializing Collision System:")
-    collision_system = CollisionSystem.new(16)
-    print("  - Collision system created with 16px cell size: OK")
-
-    -- Create comprehensive test level with platforms (VETS-9 + VETS-10)
-    print("\nCreating test level:")
-
-    -- Ground level platform (160px wide as specified in VETS-10)
-    local ground = Platform.new(10, 150, 160, 30)
-    table.insert(platforms, ground)
-    collision_system:add(ground, 10, 150, 160, 30)
-    print("  - Ground platform: 160x30 at (10, 150)")
-
-    -- Elevated platforms with varying gaps (32px, 48px, 64px)
-    -- Platform 1: Starting platform
-    local p1 = Platform.new(40, 120, 50, 8)
-    table.insert(platforms, p1)
-    collision_system:add(p1, 40, 120, 50, 8)
-    print("  - Platform 1: 50x8 at (40, 120) - Start")
-
-    -- Platform 2: 32px gap from Platform 1
-    local p2 = Platform.new(122, 110, 45, 8)  -- 90 + 32 = 122
-    table.insert(platforms, p2)
-    collision_system:add(p2, 122, 110, 45, 8)
-    print("  - Platform 2: 45x8 at (122, 110) - 32px gap")
-
-    -- Platform 3: 48px gap from Platform 2
-    local p3 = Platform.new(215, 95, 40, 8)  -- 167 + 48 = 215
-    table.insert(platforms, p3)
-    collision_system:add(p3, 215, 95, 40, 8)
-    print("  - Platform 3: 40x8 at (215, 95) - 48px gap")
-
-    -- Platform 4: 64px gap from Platform 3 (challenging jump)
-    local p4 = Platform.new(40, 70, 50, 8)  -- Back to left side, 64px gap
-    table.insert(platforms, p4)
-    collision_system:add(p4, 40, 70, 50, 8)
-    print("  - Platform 4: 50x8 at (40, 70) - 64px gap")
-
-    -- Vertical section with walls for testing (VETS-10 spec)
-    -- Left wall
-    local wall_left = Platform.new(5, 30, 8, 90)
-    table.insert(platforms, wall_left)
-    collision_system:add(wall_left, 5, 30, 8, 90)
-    print("  - Left wall: 8x90 at (5, 30)")
-
-    -- Right wall (for wall mechanics testing in later phases)
-    local wall_right = Platform.new(307, 30, 8, 90)
-    table.insert(platforms, wall_right)
-    collision_system:add(wall_right, 307, 30, 8, 90)
-    print("  - Right wall: 8x90 at (307, 30)")
-
-    -- Small platforms in vertical section
-    local p5 = Platform.new(120, 50, 45, 8)
-    table.insert(platforms, p5)
-    collision_system:add(p5, 120, 50, 45, 8)
-    print("  - Platform 5: 45x8 at (120, 50)")
-
-    local p6 = Platform.new(180, 35, 40, 8)
-    table.insert(platforms, p6)
-    collision_system:add(p6, 180, 35, 40, 8)
-    print("  - Platform 6: 40x8 at (180, 35)")
-
-    -- Wall-jump combo test area (VETS-28) - vertical column with two walls
-    -- Perfect for practicing wall-jump combos
-    print("\n  Creating wall-jump combo test area:")
-
-    -- Left wall of test column (60 pixels apart = good wall-jump distance)
-    local combo_wall_left = Platform.new(250, 20, 8, 120)
-    table.insert(platforms, combo_wall_left)
-    collision_system:add(combo_wall_left, 250, 20, 8, 120)
-    print("  - Combo test left wall: 8x120 at (250, 20)")
-
-    -- Right wall of test column
-    local combo_wall_right = Platform.new(302, 20, 8, 120)
-    table.insert(platforms, combo_wall_right)
-    collision_system:add(combo_wall_right, 302, 20, 8, 120)
-    print("  - Combo test right wall: 8x120 at (302, 20)")
-
-    -- Floor for combo area (to catch player)
-    local combo_floor = Platform.new(250, 142, 60, 8)
-    table.insert(platforms, combo_floor)
-    collision_system:add(combo_floor, 250, 142, 60, 8)
-    print("  - Combo test floor: 60x8 at (250, 142)")
-
-    print("  - Total platforms/walls: " .. #platforms)
-
-    -- Create player
-    print("\nCreating player:")
-    player = Player.new(160, 100, collision_system, input)
-
-    -- Add player to collision system
-    local px = player.transform.x - player.collision.width / 2
-    local py = player.transform.y - player.collision.height / 2
-    collision_system:add(player, px, py, player.collision.width, player.collision.height)
-
-    print("  - Player created at (" .. player.transform.x .. ", " .. player.transform.y .. ")")
-    print("  - Player hitbox: " .. player.collision.width .. "x" .. player.collision.height .. " pixels")
-    print("  - Run speed: " .. Constants.RUN_SPEED .. " px/s")
-    print("  - Acceleration: " .. Constants.ACCELERATION .. " px/s²")
-    print("  - Jump force: " .. Constants.JUMP_FORCE .. " px/s")
-    print("\nPlayer: OK")
-
-    -- Create delivery zones for testing (VETS-23, VETS-28)
-    print("\nCreating delivery zones:")
-
-    -- Wall-jump combo test zones (between the two walls)
-    -- Positioned at different heights for wall-jump combo practice
-    local zone1 = DeliveryZone.new(280, 130, collision_system)  -- Bottom zone
-    table.insert(delivery_zones, zone1)
-    print("  - Zone 1 created at (280, 130) - Wall-jump combo area (bottom)")
-
-    local zone2 = DeliveryZone.new(280, 105, collision_system)  -- Lower-mid zone
-    table.insert(delivery_zones, zone2)
-    print("  - Zone 2 created at (280, 105) - Wall-jump combo area (lower-mid)")
-
-    local zone3 = DeliveryZone.new(280, 80, collision_system)  -- Mid zone
-    table.insert(delivery_zones, zone3)
-    print("  - Zone 3 created at (280, 80) - Wall-jump combo area (mid)")
-
-    local zone4 = DeliveryZone.new(280, 55, collision_system)  -- Upper-mid zone
-    table.insert(delivery_zones, zone4)
-    print("  - Zone 4 created at (280, 55) - Wall-jump combo area (upper-mid)")
-
-    local zone5 = DeliveryZone.new(280, 30, collision_system)  -- Top zone
-    table.insert(delivery_zones, zone5)
-    print("  - Zone 5 created at (280, 30) - Wall-jump combo area (top)")
-
-    print("  - Total delivery zones: " .. #delivery_zones)
-    print("  - Zones positioned between walls at x=280 (walls at x=250 and x=302)")
-    print("  - Wall-jump between walls and deliver at each zone for combos!")
-    print("\nDelivery Zones: OK")
-
-    -- Connect player to delivery zones (VETS-24)
-    player.delivery_zones = delivery_zones
-    print("  - Player connected to delivery zones")
-
-    -- Initialize camera system
-    print("\nInitializing Camera System:")
-    -- Start camera at player position to avoid initial offset
-    camera = CameraSystem.new(player.transform.x, player.transform.y)
-    camera:setTarget(player)
-    camera:setSmoothing(0.1)
-    print("  - Camera created and targeting player")
-    print("  - Camera smoothing: 0.1 (smooth following)")
-    print("  - Camera initial position: (" .. player.transform.x .. ", " .. player.transform.y .. ")")
-    print("  - Player position: (" .. player.transform.x .. ", " .. player.transform.y .. ")")
-    print("\nCamera System: OK")
-
-    -- Initialize dawn timer system (VETS-25)
-    print("\nInitializing Dawn Timer System:")
-    timer = Timer.new(180)  -- 180 seconds (3 minutes) for Night 1
-    moon_timer = MoonTimer.new(timer, 280, 20)  -- Position at top-right
-    print("  - Timer set to 180 seconds (3:00)")
-    print("  - Moon visual created")
-    print("  - Press P to pause/resume timer")
-
-    -- Connect player to timer for time extensions (VETS-26)
-    player.timer = timer
-    player.moon_timer = moon_timer
-    print("  - Player connected to timer for delivery bonuses")
-
-    print("\nDawn Timer System: OK")
-
-    -- Initialize scoring system (VETS-27)
-    print("\nInitializing Scoring System:")
-    scoring = Scoring.new()
-    print("  - Scoring system created")
-    print("  - Base delivery score: " .. Scoring.BASE_DELIVERY_SCORE .. " points")
-    print("  - Time bonus multiplier: " .. Scoring.TIME_BONUS_MULTIPLIER .. "x per second")
-    print("  - Completion bonus: " .. Scoring.COMPLETION_BONUS .. " points")
-
-    -- Connect player to scoring system
-    player.scoring = scoring
-    print("  - Player connected to scoring system")
-
-    print("\nScoring System: OK")
-
-    print("\n=== Use arrow keys/WASD to move, Space to jump, P to pause ===")
+    print("\n=== Game started! Use arrow keys/WASD to move, Space to jump, P to pause ===")
 end
 
 function love.resize(w, h)
@@ -356,52 +91,15 @@ function calculate_scale()
 end
 
 function love.update(dt)
-    -- Update input state once per frame (before fixed timestep loop)
-    if input then
-        input:update()
-    end
-
     -- Fixed timestep game loop
     -- This ensures consistent physics and deterministic gameplay at 60 FPS
     local updates = Time:update(dt)
 
     -- Perform fixed updates
     for i = 1, updates do
-        -- Update game logic here using Time.FIXED_DT
-        -- All game entities, physics, etc. should use Time.FIXED_DT for consistency
-
-        -- Update player
-        if player then
-            player:update(Time.FIXED_DT)
-        end
-
-        -- Update delivery zones (pass player position for proximity detection)
-        if player then
-            for _, zone in ipairs(delivery_zones) do
-                zone:update(Time.FIXED_DT, player.transform.x, player.transform.y)
-            end
-        end
-
-        -- Update camera (smooth following)
-        if camera then
-            camera:update(Time.FIXED_DT)
-
-            -- Apply player screen shake to camera
-            if player then
-                local shake_x, shake_y = player:getScreenShakeOffset()
-                camera.shake_x = shake_x
-                camera.shake_y = shake_y
-            end
-        end
-
-        -- Update dawn timer (VETS-25)
-        if timer then
-            timer:update(Time.FIXED_DT)
-        end
-
-        -- Update moon timer visual
-        if moon_timer then
-            moon_timer:update(Time.FIXED_DT)
+        -- Delegate to StateManager
+        if state_manager then
+            state_manager:update(Time.FIXED_DT)
         end
     end
 end
@@ -411,133 +109,12 @@ function love.draw()
     love.graphics.setCanvas(game_canvas)
     love.graphics.clear()
 
-    -- Draw game content here
-    love.graphics.setColor(0.2, 0.2, 0.3)  -- Dark blue-purple background
-    love.graphics.rectangle("fill", 0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT)
-
-    -- Apply camera transform (pass virtual resolution for correct centering)
-    if camera then
-        camera:attach(0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT)
+    -- Delegate to StateManager
+    if state_manager then
+        state_manager:draw()
     end
 
-    -- Draw platforms
-    for _, platform in ipairs(platforms) do
-        platform:draw()
-    end
-
-    -- Draw delivery zones
-    for _, zone in ipairs(delivery_zones) do
-        zone:draw()
-    end
-
-    -- Draw player
-    if player then
-        player:draw()
-    end
-
-    -- Debug: Draw collision boundaries
-    if collision_system and love.keyboard.isDown("f1") then
-        collision_system:debugDraw()
-    end
-
-    -- Detach camera (UI elements drawn after this won't move with camera)
-    if camera then
-        camera:detach()
-    end
-
-    -- Draw moon timer (VETS-25) - always visible
-    if moon_timer then
-        moon_timer:draw()
-    end
-
-    -- Draw score display (VETS-27, VETS-28) - always visible
-    if scoring then
-        love.graphics.setColor(1, 1, 1)
-        love.graphics.print(string.format("Score: %d", scoring:getTotal()), 10, 10)
-        love.graphics.print(string.format("Deliveries: %d", scoring:getDeliveries()), 10, 22)
-
-        -- Draw combo display (VETS-28)
-        local combo_count = scoring:getComboCount()
-        local combo_multiplier = scoring:getComboMultiplier()
-        if combo_count > 0 then
-            -- Highlight combo text based on multiplier level
-            if combo_multiplier >= 5 then
-                love.graphics.setColor(1, 0.3, 1)  -- Magenta for max combo (5x)
-            elseif combo_multiplier >= 3 then
-                love.graphics.setColor(1, 1, 0.3)  -- Yellow for high combo (3-4x)
-            else
-                love.graphics.setColor(0.3, 1, 1)  -- Cyan for active combo (1-2x)
-            end
-            love.graphics.print(string.format("COMBO: %dx (%dx multiplier)", combo_count, combo_multiplier), 10, 34)
-        end
-    end
-
-    -- Draw UI overlay (toggle with F4)
-    if show_debug_text then
-        love.graphics.setColor(1, 1, 1)
-        love.graphics.print("Courier Cat", 10, 10)
-        love.graphics.print("LOVE " .. love.getVersion(), 10, 30)
-        love.graphics.print("Press ESC to quit", 10, 50)
-
-        -- Debug: Display time and player info
-        love.graphics.setColor(0.7, 0.7, 0.7)
-        love.graphics.print("Fixed timestep: " .. Time.FIXED_DT .. "s (" .. Time:getFPS() .. " FPS)", 10, 80)
-        love.graphics.print("Frame: " .. Time.frame, 10, 95)
-        love.graphics.print("Total time: " .. string.format("%.2f", Time.total) .. "s", 10, 110)
-        love.graphics.print("Actual FPS: " .. love.timer.getFPS(), 10, 125)
-
-        -- Player debug info
-        if player then
-            love.graphics.print(string.format("Player pos: (%.1f, %.1f)", player.transform.x, player.transform.y), 10, 145)
-            love.graphics.print(string.format("Player vel: (%.1f, %.1f)", player.physics.velocity_x, player.physics.velocity_y), 10, 160)
-            love.graphics.print("Grounded: " .. (player.grounded and "YES" or "NO") .. " | Jumping: " .. (player.jumping and "YES" or "NO"), 10, 175)
-        end
-
-        -- Camera debug info
-        if camera then
-            local cam_x, cam_y = camera:getPosition()
-            love.graphics.setColor(0.7, 0.7, 0.7)
-            love.graphics.print(string.format("Camera pos: (%.1f, %.1f)", cam_x, cam_y), 200, 145)
-        end
-
-        -- Debug help
-        love.graphics.setColor(0.5, 0.5, 0.5)
-        love.graphics.print("F1: Collision debug | F2: Camera debug | F3: Input debug | F4: Toggle text", 200, 10)
-    end
-
-    -- Input debug info (F3)
-    if input and love.keyboard.isDown("f3") then
-        love.graphics.setColor(1, 1, 1)
-        love.graphics.print("=== INPUT DEBUG ===", 10, 200)
-        local y_offset = 215
-        local actions = input:get_actions()
-        for i, action in ipairs(actions) do
-            local state = input:is_down(action)
-            local pressed = input:is_pressed(action)
-            local released = input:is_released(action)
-            local color = state and {0, 1, 0} or {0.5, 0.5, 0.5}
-            love.graphics.setColor(color)
-            local status = state and "DOWN" or "UP"
-            if pressed then status = status .. " (PRESSED)" end
-            if released then status = status .. " (RELEASED)" end
-            love.graphics.print(action .. ": " .. status, 10, y_offset)
-            y_offset = y_offset + 12
-        end
-        love.graphics.setColor(1, 1, 1)
-        love.graphics.print("Horizontal axis: " .. input:get_horizontal_axis(), 10, y_offset + 5)
-    end
-
-    -- Draw crosshair at camera center (world space)
-    if camera and love.keyboard.isDown("f2") then
-        camera:attach(0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT)
-        love.graphics.setColor(1, 0, 0)
-        local cam_x, cam_y = camera:getPosition()
-        love.graphics.line(cam_x - 10, cam_y, cam_x + 10, cam_y)
-        love.graphics.line(cam_x, cam_y - 10, cam_x, cam_y + 10)
-        camera:detach()
-    end
-
-    -- Draw to screen
+    -- Draw to screen with letterboxing
     love.graphics.setCanvas()
     love.graphics.setColor(1, 1, 1)
     love.graphics.draw(
@@ -549,26 +126,32 @@ function love.draw()
 end
 
 function love.keypressed(key)
+    -- Handle global keypresses
     if key == "escape" then
         love.event.quit()
-    elseif key == "f4" then
-        show_debug_text = not show_debug_text
-    elseif key == "p" then
-        -- Toggle timer pause (VETS-25)
-        if timer then
-            timer:togglePause()
+    end
+
+    -- Handle state-specific keypresses
+    -- Menu state: ENTER to start game
+    if state_manager and state_manager:current() == MenuState then
+        if key == "return" then
+            state_manager:switch("game", 1)  -- Start Night 1
         end
     end
 end
 
 function love.joystickadded(joystick)
-    if input then
-        input:joystick_added(joystick)
+    -- Forward to current state if it has input system
+    local current = state_manager and state_manager:current()
+    if current and current.input then
+        current.input:joystick_added(joystick)
     end
 end
 
 function love.joystickremoved(joystick)
-    if input then
-        input:joystick_removed(joystick)
+    -- Forward to current state if it has input system
+    local current = state_manager and state_manager:current()
+    if current and current.input then
+        current.input:joystick_removed(joystick)
     end
 end
