@@ -19,6 +19,7 @@ local Collision = require("src.components.collision")
 -- Load entities
 local Player = require("src.entities.player")
 local Platform = require("src.entities.platform")
+local DeliveryZone = require("src.entities.delivery_zone")
 
 -- Load systems
 local CollisionSystem = require("src.systems.collision_system")
@@ -35,6 +36,7 @@ local test_entity = nil
 -- Game entities
 local player = nil
 local platforms = {}
+local delivery_zones = {}
 
 -- Game systems
 local collision_system = nil
@@ -227,6 +229,23 @@ function love.load()
     print("  - Jump force: " .. Constants.JUMP_FORCE .. " px/s")
     print("\nPlayer: OK")
 
+    -- Create delivery zones for testing (VETS-23)
+    print("\nCreating delivery zones:")
+    local zone1 = DeliveryZone.new(100, 145, collision_system)
+    table.insert(delivery_zones, zone1)
+    print("  - Zone 1 created at (100, 145)")
+
+    local zone2 = DeliveryZone.new(200, 90, collision_system)
+    table.insert(delivery_zones, zone2)
+    print("  - Zone 2 created at (200, 90)")
+
+    local zone3 = DeliveryZone.new(150, 45, collision_system)
+    table.insert(delivery_zones, zone3)
+    print("  - Zone 3 created at (150, 45)")
+
+    print("  - Total delivery zones: " .. #delivery_zones)
+    print("\nDelivery Zones: OK")
+
     -- Initialize camera system
     print("\nInitializing Camera System:")
     -- Start camera at player position to avoid initial offset
@@ -280,6 +299,13 @@ function love.update(dt)
             player:update(Time.FIXED_DT)
         end
 
+        -- Update delivery zones (pass player position for proximity detection)
+        if player then
+            for _, zone in ipairs(delivery_zones) do
+                zone:update(Time.FIXED_DT, player.transform.x, player.transform.y)
+            end
+        end
+
         -- Update camera (smooth following)
         if camera then
             camera:update(Time.FIXED_DT)
@@ -311,6 +337,11 @@ function love.draw()
     -- Draw platforms
     for _, platform in ipairs(platforms) do
         platform:draw()
+    end
+
+    -- Draw delivery zones
+    for _, zone in ipairs(delivery_zones) do
+        zone:draw()
     end
 
     -- Draw player
