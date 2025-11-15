@@ -13,6 +13,7 @@ local Timer = require("src.systems.timer")
 local Scoring = require("src.systems.scoring")
 local MoonTimer = require("src.ui.moon_timer")
 local Constants = require("src.core.constants")
+local Level = require("src.systems.level")
 
 local GameState = {}
 
@@ -53,7 +54,13 @@ end
 function GameState:exit()
     print("[GameState] Exiting game state")
 
-    -- Cleanup (future: destroy entities, clear collision system, etc.)
+    -- Unload level and cleanup entities
+    if self.level then
+        Level.unload(self.level)
+        self.level = nil
+    end
+
+    -- Cleanup
     self.player = nil
     self.platforms = nil
     self.delivery_zones = nil
@@ -95,78 +102,25 @@ function GameState:initializeSystems()
 end
 
 -- Load level data for specified night
--- TODO: Load from JSON/Tiled map files in future
--- For now, use hardcoded level from main.lua
 function GameState:loadLevel(night_number)
     print("[GameState] Loading level for Night " .. night_number)
 
-    -- Initialize entity arrays
-    self.platforms = {}
-    self.delivery_zones = {}
+    -- Load level from JSON using Level system (VETS-35, VETS-36)
+    local level, err = Level.load(night_number, self.collision_system)
+    if not level then
+        error("[GameState] Failed to load level: " .. err)
+    end
 
-    -- Create test level (from main.lua)
-    -- Ground platform
-    local ground = Platform.new(10, 150, 160, 30)
-    table.insert(self.platforms, ground)
-    self.collision_system:add(ground, 10, 150, 160, 30)
+    -- Store level instance and entity arrays
+    self.level = level
+    self.platforms = level.platforms  -- Already in collision system
+    self.delivery_zones = level.delivery_zones
 
-    -- Elevated platforms
-    local p1 = Platform.new(40, 120, 50, 8)
-    table.insert(self.platforms, p1)
-    self.collision_system:add(p1, 40, 120, 50, 8)
+    -- Get spawn point from level data
+    local spawn = Level.get_spawn_point(level)
+    local spawn_x, spawn_y = spawn.x, spawn.y
 
-    local p2 = Platform.new(122, 110, 45, 8)
-    table.insert(self.platforms, p2)
-    self.collision_system:add(p2, 122, 110, 45, 8)
-
-    local p3 = Platform.new(215, 95, 40, 8)
-    table.insert(self.platforms, p3)
-    self.collision_system:add(p3, 215, 95, 40, 8)
-
-    local p4 = Platform.new(40, 70, 50, 8)
-    table.insert(self.platforms, p4)
-    self.collision_system:add(p4, 40, 70, 50, 8)
-
-    -- Walls
-    local wall_left = Platform.new(5, 30, 8, 90)
-    table.insert(self.platforms, wall_left)
-    self.collision_system:add(wall_left, 5, 30, 8, 90)
-
-    local wall_right = Platform.new(307, 30, 8, 90)
-    table.insert(self.platforms, wall_right)
-    self.collision_system:add(wall_right, 307, 30, 8, 90)
-
-    local p5 = Platform.new(120, 50, 45, 8)
-    table.insert(self.platforms, p5)
-    self.collision_system:add(p5, 120, 50, 45, 8)
-
-    local p6 = Platform.new(180, 35, 40, 8)
-    table.insert(self.platforms, p6)
-    self.collision_system:add(p6, 180, 35, 40, 8)
-
-    -- Wall-jump combo test area
-    local combo_wall_left = Platform.new(250, 20, 8, 120)
-    table.insert(self.platforms, combo_wall_left)
-    self.collision_system:add(combo_wall_left, 250, 20, 8, 120)
-
-    local combo_wall_right = Platform.new(302, 20, 8, 120)
-    table.insert(self.platforms, combo_wall_right)
-    self.collision_system:add(combo_wall_right, 302, 20, 8, 120)
-
-    local combo_floor = Platform.new(250, 142, 60, 8)
-    table.insert(self.platforms, combo_floor)
-    self.collision_system:add(combo_floor, 250, 142, 60, 8)
-
-    -- Create delivery zones
-    table.insert(self.delivery_zones, DeliveryZone.new(280, 130, self.collision_system))
-    table.insert(self.delivery_zones, DeliveryZone.new(280, 105, self.collision_system))
-    table.insert(self.delivery_zones, DeliveryZone.new(280, 80, self.collision_system))
-    table.insert(self.delivery_zones, DeliveryZone.new(280, 55, self.collision_system))
-    table.insert(self.delivery_zones, DeliveryZone.new(280, 30, self.collision_system))
-
-    -- Create player at spawn point (center of screen)
-    local spawn_x = 160
-    local spawn_y = 100
+    -- Create player at level spawn point
     self.player = Player.new(spawn_x, spawn_y, self.collision_system, self.input)
 
     -- Add player to collision system
@@ -186,6 +140,7 @@ function GameState:loadLevel(night_number)
     self.camera:setSmoothing(0.1)
 
     print("[GameState] Level loaded:")
+    print("  - Level: " .. level.name)
     print("  - Platforms: " .. #self.platforms)
     print("  - Delivery zones: " .. #self.delivery_zones)
     print("  - Player spawn: (" .. spawn_x .. ", " .. spawn_y .. ")")
