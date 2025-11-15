@@ -44,7 +44,7 @@ local ACTION_BINDINGS = {
         }
     },
     pause = {
-        keyboard = {"escape"},
+        keyboard = {"p", "escape"},
         gamepad = {
             buttons = {"start"},
             axis = nil
