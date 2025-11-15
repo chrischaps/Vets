@@ -1,0 +1,120 @@
+AL lib: (EE) alc_cleanup: 1 device not closed
+Courier Cat initialized!
+Virtual resolution: 320x180
+Window resolution: 1280x720
+
+Libraries loaded:
+  - bump.lua: OK
+  - anim8: OK
+  - camera: OK
+  - json: OK
+
+Time system initialized:
+  - Fixed timestep: 0.016666666666667s (60 FPS)
+
+Testing Entity-Component System:
+  - Entity created with ID: 1, type: test
+  - Component added: OK
+  - Component retrieval: OK
+  - Tags added: OK
+  - Deactivate: OK
+  - Activate: OK
+
+Entity-Component System: OK
+
+Testing Core Components:
+  - Transform created at (100, 50): OK
+  - Transform translate: OK
+  - Transform rotation: OK
+  - Physics created with velocity (0, 0): OK
+  - Physics velocity set: OK
+  - Physics impulse: OK
+  - Collision created (AABB 16x16): OK
+  - Collision layer/mask: OK
+
+  Testing integrated entity:
+  - Entity with all components: OK
+
+Core Components: OK
+
+Initializing Input System:
+Input system initialized:
+  - No gamepads connected
+  - Axis deadzone: 0.15
+  - Gamepads will be detected on hot-plug
+  - Input system: OK
+
+Initializing Collision System:
+  - Collision system created with 16px cell size: OK
+
+Creating test level:
+  - Ground platform: 160x30 at (10, 150)
+  - Platform 1: 50x8 at (40, 120) - Start
+  - Platform 2: 45x8 at (122, 110) - 32px gap
+  - Platform 3: 40x8 at (215, 95) - 48px gap
+  - Platform 4: 50x8 at (40, 70) - 64px gap
+  - Left wall: 8x90 at (5, 30)
+  - Right wall: 8x90 at (307, 30)
+  - Platform 5: 45x8 at (120, 50)
+  - Platform 6: 40x8 at (180, 35)
+
+  Creating wall-jump combo test area:
+  - Combo test left wall: 8x120 at (250, 20)
+  - Combo test right wall: 8x120 at (302, 20)
+  - Combo test floor: 60x8 at (250, 142)
+  - Total platforms/walls: 12
+
+Creating player:
+  - Player created at (160, 100)
+  - Player hitbox: 10x14 pixels
+  - Run speed: 120 px/s
+  - Acceleration: 1200 px/s²
+  - Jump force: -300 px/s
+
+Player: OK
+
+Creating delivery zones:
+  - Zone 1 created at (280, 130) - Wall-jump combo area (bottom)
+  - Zone 2 created at (280, 105) - Wall-jump combo area (lower-mid)
+  - Zone 3 created at (280, 80) - Wall-jump combo area (mid)
+  - Zone 4 created at (280, 55) - Wall-jump combo area (upper-mid)
+  - Zone 5 created at (280, 30) - Wall-jump combo area (top)
+  - Total delivery zones: 5
+  - Zones positioned between walls at x=280 (walls at x=250 and x=302)
+  - Wall-jump between walls and deliver at each zone for combos!
+
+Delivery Zones: OK
+  - Player connected to delivery zones
+
+Initializing Camera System:
+  - Camera created and targeting player
+  - Camera smoothing: 0.1 (smooth following)
+  - Camera initial position: (160, 100)
+  - Player position: (160, 100)
+
+Camera System: OK
+
+Initializing Dawn Timer System:
+[Timer] Initialized with 180s (3:00)
+[MoonTimer] Moon visual created at (280, 20)
+  - Timer set to 180 seconds (3:00)
+  - Moon visual created
+  - Press P to pause/resume timer
+  - Player connected to timer for delivery bonuses
+
+Dawn Timer System: OK
+
+Initializing Scoring System:
+  - Scoring system created
+  - Base delivery score: 100 points
+  - Time bonus multiplier: 10x per second
+  - Completion bonus: 500 points
+  - Player connected to scoring system
+
+Scoring System: OK
+
+=== Use arrow keys/WASD to move, Space to jump, P to pause ===
+[DeliveryZone] Delivery completed at (280, 80)
+[Timer] Extended by 8s (+8s requested)
+[Player] Delivery successful! Combo: 1x | Time bonus: +8s
+[Scoring] Delivery scored! Combo: 1x | +100 points | Total: 100

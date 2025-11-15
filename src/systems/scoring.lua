@@ -20,6 +20,10 @@ function Scoring.new()
     self.time_bonus = 0      -- Time bonus (calculated at completion)
     self.completion_bonus = 0  -- Completion bonus (awarded at win)
 
+    -- Combo tracking (VETS-28)
+    self.combo_count = 0  -- Current consecutive deliveries without ground touch
+    self.current_multiplier = 1  -- Current combo multiplier
+
     return self
 end
 
@@ -30,15 +34,32 @@ function Scoring:reset()
     self.delivery_score = 0
     self.time_bonus = 0
     self.completion_bonus = 0
+    self.combo_count = 0
+    self.current_multiplier = 1
 end
 
--- Award points for a delivery
-function Scoring:addDelivery()
+-- Award points for a delivery with combo multiplier (VETS-28)
+-- @param combo_count: Number of consecutive deliveries without ground touch
+-- @return: Points awarded for this delivery
+function Scoring:addDelivery(combo_count)
     self.deliveries = self.deliveries + 1
-    self.delivery_score = self.delivery_score + Scoring.BASE_DELIVERY_SCORE
+
+    -- Update combo count
+    self.combo_count = combo_count or 0
+
+    -- Calculate combo multiplier: floor(consecutive_deliveries / 2) + 1
+    -- Examples: 1→1x, 2-3→2x, 4-5→3x, 6-7→4x, 8+→5x
+    self.current_multiplier = math.floor(self.combo_count / 2) + 1
+
+    -- Cap multiplier at 5x
+    self.current_multiplier = math.min(self.current_multiplier, 5)
+
+    -- Calculate score with multiplier
+    local points = Scoring.BASE_DELIVERY_SCORE * self.current_multiplier
+    self.delivery_score = self.delivery_score + points
     self:updateTotal()
 
-    return Scoring.BASE_DELIVERY_SCORE
+    return points
 end
 
 -- Calculate and add time bonus based on remaining seconds
@@ -74,6 +95,22 @@ function Scoring:getDeliveries()
     return self.deliveries
 end
 
+-- Get current combo count (VETS-28)
+function Scoring:getComboCount()
+    return self.combo_count
+end
+
+-- Get current combo multiplier (VETS-28)
+function Scoring:getComboMultiplier()
+    return self.current_multiplier
+end
+
+-- Reset combo (called when player touches ground) (VETS-28)
+function Scoring:resetCombo()
+    self.combo_count = 0
+    self.current_multiplier = 1
+end
+
 -- Get score breakdown for display
 function Scoring:getBreakdown()
     return {
@@ -81,15 +118,22 @@ function Scoring:getBreakdown()
         delivery_score = self.delivery_score,
         time_bonus = self.time_bonus,
         completion_bonus = self.completion_bonus,
-        total = self.total_score
+        total = self.total_score,
+        combo_count = self.combo_count,
+        combo_multiplier = self.current_multiplier
     }
 end
 
 -- Display score information (for debugging)
 function Scoring:printBreakdown()
     print("\n=== SCORE BREAKDOWN ===")
-    print(string.format("Deliveries: %d × %d = %d points",
-        self.deliveries, Scoring.BASE_DELIVERY_SCORE, self.delivery_score))
+    print(string.format("Deliveries: %d", self.deliveries))
+    print(string.format("Delivery Score: %d points", self.delivery_score))
+
+    if self.combo_count > 0 then
+        print(string.format("Current Combo: %dx (multiplier: %dx)",
+            self.combo_count, self.current_multiplier))
+    end
 
     if self.time_bonus > 0 then
         local seconds = self.time_bonus / Scoring.TIME_BONUS_MULTIPLIER

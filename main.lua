@@ -219,6 +219,28 @@ function love.load()
     collision_system:add(p6, 180, 35, 40, 8)
     print("  - Platform 6: 40x8 at (180, 35)")
 
+    -- Wall-jump combo test area (VETS-28) - vertical column with two walls
+    -- Perfect for practicing wall-jump combos
+    print("\n  Creating wall-jump combo test area:")
+
+    -- Left wall of test column (60 pixels apart = good wall-jump distance)
+    local combo_wall_left = Platform.new(250, 20, 8, 120)
+    table.insert(platforms, combo_wall_left)
+    collision_system:add(combo_wall_left, 250, 20, 8, 120)
+    print("  - Combo test left wall: 8x120 at (250, 20)")
+
+    -- Right wall of test column
+    local combo_wall_right = Platform.new(302, 20, 8, 120)
+    table.insert(platforms, combo_wall_right)
+    collision_system:add(combo_wall_right, 302, 20, 8, 120)
+    print("  - Combo test right wall: 8x120 at (302, 20)")
+
+    -- Floor for combo area (to catch player)
+    local combo_floor = Platform.new(250, 142, 60, 8)
+    table.insert(platforms, combo_floor)
+    collision_system:add(combo_floor, 250, 142, 60, 8)
+    print("  - Combo test floor: 60x8 at (250, 142)")
+
     print("  - Total platforms/walls: " .. #platforms)
 
     -- Create player
@@ -237,21 +259,34 @@ function love.load()
     print("  - Jump force: " .. Constants.JUMP_FORCE .. " px/s")
     print("\nPlayer: OK")
 
-    -- Create delivery zones for testing (VETS-23)
+    -- Create delivery zones for testing (VETS-23, VETS-28)
     print("\nCreating delivery zones:")
-    local zone1 = DeliveryZone.new(100, 145, collision_system)
+
+    -- Wall-jump combo test zones (between the two walls)
+    -- Positioned at different heights for wall-jump combo practice
+    local zone1 = DeliveryZone.new(280, 130, collision_system)  -- Bottom zone
     table.insert(delivery_zones, zone1)
-    print("  - Zone 1 created at (100, 145)")
+    print("  - Zone 1 created at (280, 130) - Wall-jump combo area (bottom)")
 
-    local zone2 = DeliveryZone.new(200, 90, collision_system)
+    local zone2 = DeliveryZone.new(280, 105, collision_system)  -- Lower-mid zone
     table.insert(delivery_zones, zone2)
-    print("  - Zone 2 created at (200, 90)")
+    print("  - Zone 2 created at (280, 105) - Wall-jump combo area (lower-mid)")
 
-    local zone3 = DeliveryZone.new(150, 45, collision_system)
+    local zone3 = DeliveryZone.new(280, 80, collision_system)  -- Mid zone
     table.insert(delivery_zones, zone3)
-    print("  - Zone 3 created at (150, 45)")
+    print("  - Zone 3 created at (280, 80) - Wall-jump combo area (mid)")
+
+    local zone4 = DeliveryZone.new(280, 55, collision_system)  -- Upper-mid zone
+    table.insert(delivery_zones, zone4)
+    print("  - Zone 4 created at (280, 55) - Wall-jump combo area (upper-mid)")
+
+    local zone5 = DeliveryZone.new(280, 30, collision_system)  -- Top zone
+    table.insert(delivery_zones, zone5)
+    print("  - Zone 5 created at (280, 30) - Wall-jump combo area (top)")
 
     print("  - Total delivery zones: " .. #delivery_zones)
+    print("  - Zones positioned between walls at x=280 (walls at x=250 and x=302)")
+    print("  - Wall-jump between walls and deliver at each zone for combos!")
     print("\nDelivery Zones: OK")
 
     -- Connect player to delivery zones (VETS-24)
@@ -415,11 +450,26 @@ function love.draw()
         moon_timer:draw()
     end
 
-    -- Draw score display (VETS-27) - always visible
+    -- Draw score display (VETS-27, VETS-28) - always visible
     if scoring then
         love.graphics.setColor(1, 1, 1)
         love.graphics.print(string.format("Score: %d", scoring:getTotal()), 10, 10)
         love.graphics.print(string.format("Deliveries: %d", scoring:getDeliveries()), 10, 22)
+
+        -- Draw combo display (VETS-28)
+        local combo_count = scoring:getComboCount()
+        local combo_multiplier = scoring:getComboMultiplier()
+        if combo_count > 0 then
+            -- Highlight combo text based on multiplier level
+            if combo_multiplier >= 5 then
+                love.graphics.setColor(1, 0.3, 1)  -- Magenta for max combo (5x)
+            elseif combo_multiplier >= 3 then
+                love.graphics.setColor(1, 1, 0.3)  -- Yellow for high combo (3-4x)
+            else
+                love.graphics.setColor(0.3, 1, 1)  -- Cyan for active combo (1-2x)
+            end
+            love.graphics.print(string.format("COMBO: %dx (%dx multiplier)", combo_count, combo_multiplier), 10, 34)
+        end
     end
 
     -- Draw UI overlay (toggle with F4)

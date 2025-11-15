@@ -265,10 +265,14 @@ function Player:updatePhysicsAndCollision(dt)
                 -- Reset coyote time when grounded
                 self.coyote_frames = Constants.COYOTE_FRAMES
 
-                -- Reset combo when landing (VETS-26)
+                -- Reset combo when landing (VETS-28)
                 if self.combo_count > 0 and not self.combo_was_grounded then
                     print("[Player] Combo reset on landing (was " .. self.combo_count .. "x)")
                     self.combo_count = 0
+                    -- Reset combo in scoring system as well
+                    if self.scoring then
+                        self.scoring:resetCombo()
+                    end
                 end
                 self.combo_was_grounded = true
             end
@@ -846,7 +850,7 @@ function Player:attemptDelivery()
         if zone:canDeliver() then
             -- Perform delivery
             if zone:deliver() then
-                -- Increment combo if in air (VETS-26)
+                -- Increment combo if in air (VETS-28)
                 if not self.grounded then
                     self.combo_count = self.combo_count + 1
                     self.combo_was_grounded = false  -- Mark that combo is active
@@ -856,9 +860,11 @@ function Player:attemptDelivery()
                     self.combo_was_grounded = true
                 end
 
-                -- Calculate combo multiplier (1x to 5x max)
-                local combo_level = math.min(self.combo_count, 5)
-                local combo_multiplier = combo_level > 0 and combo_level or 1
+                -- Calculate combo multiplier using VETS-28 formula
+                -- floor(consecutive_deliveries / 2) + 1, capped at 5x
+                -- Examples: 1→1x, 2-3→2x, 4-5→3x, 6-7→4x, 8+→5x
+                local combo_multiplier = math.floor(self.combo_count / 2) + 1
+                combo_multiplier = math.min(combo_multiplier, 5)
 
                 -- Calculate time bonus based on combo level (VETS-26)
                 -- Standard: +8s, 2x: +10s, 3x: +12s, 4x: +14s, 5x: +16s
@@ -879,11 +885,11 @@ function Player:attemptDelivery()
                         combo_multiplier))
                 end
 
-                -- Add score for delivery (VETS-27)
+                -- Add score for delivery with combo (VETS-28)
                 if self.scoring then
-                    local points = self.scoring:addDelivery()
-                    print(string.format("[Scoring] Delivery scored! +%d points | Total: %d",
-                        points, self.scoring:getTotal()))
+                    local points = self.scoring:addDelivery(self.combo_count)
+                    print(string.format("[Scoring] Delivery scored! Combo: %dx | +%d points | Total: %d",
+                        combo_multiplier, points, self.scoring:getTotal()))
                 end
 
                 return true
