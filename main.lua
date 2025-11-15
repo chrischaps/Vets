@@ -143,9 +143,9 @@ function love.keypressed(key)
         end
     end
 
-    -- Results state: ENTER to confirm selection (VETS-31)
+    -- Results state: ENTER/SPACE/Gamepad A to confirm selection (VETS-31)
     if current_state == ResultsState then
-        if key == "return" then
+        if key == "return" or key == "space" then
             -- Handle Continue/Retry (option 1) or Restart (option 2)
             if current_state.selected_option == 1 then
                 -- Continue (if won) or Retry (if lost)
@@ -154,6 +154,23 @@ function love.keypressed(key)
                 state_manager:switch("menu", "Returning to menu...")
             elseif current_state.selected_option == 2 then
                 -- Restart same night
+                state_manager:switch("game", current_state.night_number, state_manager)
+            end
+        end
+    end
+end
+
+function love.gamepadpressed(joystick, button)
+    -- Handle gamepad input for results state
+    local current_state = state_manager and state_manager:current()
+
+    if current_state == ResultsState then
+        -- A button (Xbox) / Cross (PlayStation) confirms selection
+        if button == "a" then
+            -- Handle Continue/Retry (option 1) or Restart (option 2)
+            if current_state.selected_option == 1 then
+                state_manager:switch("menu", "Returning to menu...")
+            elseif current_state.selected_option == 2 then
                 state_manager:switch("game", current_state.night_number, state_manager)
             end
         end

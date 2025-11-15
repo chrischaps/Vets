@@ -2,6 +2,8 @@
 -- Results/end screen state for Courier Cat
 -- Displays game completion stats, rank, and options to continue or restart
 
+local Input = require("src.systems.input")
+
 local ResultsState = {}
 
 -- Virtual resolution (shared across states)
@@ -40,6 +42,10 @@ function ResultsState:enter(data)
     self.total_deliveries = data.total_deliveries or 0
     self.combo_peak = data.combo_peak or 0
 
+    -- Initialize input system
+    self.input = Input.new()
+    self.input:init()
+
     -- Calculate rank based on score
     self.rank_data = self:calculateRank(self.score)
 
@@ -47,6 +53,10 @@ function ResultsState:enter(data)
     self.selected_option = 1  -- 1 = Continue/Retry, 2 = Restart
     self.blink_timer = 0
     self.blink_state = true
+
+    -- Input handling state
+    self.input_cooldown = 0  -- Prevent rapid input spam
+    self.INPUT_COOLDOWN_TIME = 0.15  -- 150ms between inputs
 
     -- Log results
     print("[ResultsState] Results:")
@@ -79,6 +89,11 @@ function ResultsState:calculateRank(score)
 end
 
 function ResultsState:update(dt)
+    -- Update input system
+    if self.input then
+        self.input:update()
+    end
+
     -- Update blink timer for selected option
     self.blink_timer = self.blink_timer + dt
     if self.blink_timer >= 0.5 then
@@ -86,21 +101,31 @@ function ResultsState:update(dt)
         self.blink_timer = 0
     end
 
-    -- Handle input (simple keyboard input for now)
-    -- TODO: Use Input system when integrated
-    if love.keyboard.isDown("up") or love.keyboard.isDown("w") then
-        if self.selected_option ~= 1 then
-            self.selected_option = 1
-            -- Reset blink to make selection visible immediately
-            self.blink_state = true
-            self.blink_timer = 0
-        end
-    elseif love.keyboard.isDown("down") or love.keyboard.isDown("s") then
-        if self.selected_option ~= 2 then
-            self.selected_option = 2
-            -- Reset blink to make selection visible immediately
-            self.blink_state = true
-            self.blink_timer = 0
+    -- Update input cooldown
+    if self.input_cooldown > 0 then
+        self.input_cooldown = self.input_cooldown - dt
+    end
+
+    -- Handle input (supports both keyboard and gamepad)
+    if self.input and self.input_cooldown <= 0 then
+        -- Move up (UP arrow, W, or D-pad up/left stick up)
+        if self.input:is_down("up") then
+            if self.selected_option ~= 1 then
+                self.selected_option = 1
+                -- Reset blink to make selection visible immediately
+                self.blink_state = true
+                self.blink_timer = 0
+                self.input_cooldown = self.INPUT_COOLDOWN_TIME
+            end
+        -- Move down (DOWN arrow, S, or D-pad down/left stick down)
+        elseif self.input:is_down("down") then
+            if self.selected_option ~= 2 then
+                self.selected_option = 2
+                -- Reset blink to make selection visible immediately
+                self.blink_state = true
+                self.blink_timer = 0
+                self.input_cooldown = self.INPUT_COOLDOWN_TIME
+            end
         end
     end
 end
@@ -202,7 +227,7 @@ function ResultsState:draw()
     -- Instructions
     y_offset = y_offset + 20
     love.graphics.setColor(0.5, 0.5, 0.6)
-    love.graphics.print("Arrow keys to select, ENTER to confirm", VIRTUAL_WIDTH / 2 - 95, y_offset)
+    love.graphics.print("Arrow keys/D-pad to select, ENTER/A to confirm", VIRTUAL_WIDTH / 2 - 110, y_offset)
 end
 
 return ResultsState
