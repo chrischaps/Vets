@@ -1,0 +1,53 @@
+AL lib: (EE) alc_cleanup: 1 device not closed
+=== Courier Cat ===
+Virtual resolution: 320x180
+Window resolution: 1280x720
+
+Libraries loaded:
+  - bump.lua: OK
+  - anim8: OK
+  - camera: OK
+  - json: OK
+
+Time system initialized:
+  - Fixed timestep: 0.016666666666667s (60 FPS)
+
+Initializing StateManager...
+[StateManager] Initialized
+[StateManager] Registered state: menu
+[StateManager] Registered state: game
+[StateManager] Registered state: results
+
+Starting game...
+[GameState] Entering game state for Night 1
+[GameState] Initializing systems...
+Input system initialized:
+  - 1 gamepad(s) connected
+    1: Controller (Xbox One For Windows)
+      Type: Gamepad (supports standard mapping)
+  - Axis deadzone: 0.15
+[Timer] Initialized with 180s (3:00)
+[GameState] Systems initialized
+[GameState] Loading level for Night 1
+Loading 7 platform(s)...
+Skipping 2 wall(s) - Wall entity class not yet implemented
+Loading 5 delivery zone(s)...
+Loading 1 powerup(s)...
+Level 'First Flight' (Night 1) loaded successfully!
+[Timer] Reset to 3:00
+[GameState] Timer set to 180 seconds from level data
+[GameState] Level loaded:
+  - Level: First Flight
+  - Platforms: 7
+  - Delivery zones: 5
+  - Hazards: 0
+  - Powerups: 1
+  - Player spawn: (40, 128)
+[GameState] Game initialized:
+  - Night: 1
+  - Total deliveries: 5
+  - Timer: 3:00
+[StateManager] Switched to state: game
+
+=== Game started! Use arrow keys/WASD to move, Space to jump, P to pause ===
+Input: Gamepad connected - Controller (Xbox One For Windows)

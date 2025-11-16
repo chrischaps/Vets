@@ -7,6 +7,7 @@ local libs = require("libraries.init")
 
 -- Load core systems
 local Time = require("src.core.time")
+local Audio = require("src.systems.audio")  -- VETS-49
 
 -- Load StateManager and states
 local StateManager = require("src.systems.state_manager")
@@ -68,6 +69,19 @@ function love.load()
     state_manager:register("results", ResultsState)
     state_manager:register("pause", PauseState)  -- VETS-47
 
+    -- Load audio files (VETS-49)
+    print("\nLoading audio...")
+    Audio:load_music("gameplay_music1", "assets/audio/music/music1.ogg")
+    Audio:load_music("gameplay_music2", "assets/audio/music/music2.ogg")
+
+    -- Load SFX (placeholder for future use)
+    Audio:load_sfx("jump", "assets/audio/sfx/jump1.wav")
+    Audio:load_sfx("dash1", "assets/audio/sfx/dash1.wav")
+    Audio:load_sfx("dash2", "assets/audio/sfx/dash2.wav")
+    Audio:load_sfx("delivery1", "assets/audio/sfx/delivery1.wav")
+    Audio:load_sfx("delivery2", "assets/audio/sfx/delivery2.wav")
+    print("Audio loaded successfully")
+
     -- Start with GameState (Option 1: Direct to GameState)
     -- TODO: Switch to MenuState when it's fully functional (Option 2)
     print("\nStarting game...")
@@ -95,6 +109,9 @@ function calculate_scale()
 end
 
 function love.update(dt)
+    -- Update audio system (for fades) (VETS-49)
+    Audio:update(dt)
+
     -- Fixed timestep game loop
     -- This ensures consistent physics and deterministic gameplay at 60 FPS
     local updates = Time:update(dt)
@@ -167,4 +184,10 @@ function love.joystickremoved(joystick)
     if current and current.input then
         current.input:joystick_removed(joystick)
     end
+end
+
+function love.quit()
+    -- Cleanup audio on exit (VETS-49)
+    Audio:cleanup()
+    print("Audio cleaned up")
 end
