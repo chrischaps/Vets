@@ -1,10 +1,10 @@
 {
   "version": 1,
   "night": 2,
-  "name": "Hazard Course",
-  "description": "The night gets busier. Navigate steam vents, avoid laundry lines, and master the rooftops.",
+  "name": "Climbing Higher",
+  "description": "The rooftops grow taller. Master wall-jumps and navigate your first hazards to reach distant windows.",
   "spawn": {
-    "x": 32,
+    "x": 40,
     "y": 144
   },
   "platforms": [
@@ -13,255 +13,361 @@
       "y": 160,
       "width": 96,
       "height": 16,
-      "type": "brick"
+      "type": "rooftop",
+      "properties": {
+        "friction": 1.0,
+        "grippable": true
+      }
     },
     {
       "x": 144,
       "y": 160,
       "width": 80,
       "height": 16,
-      "type": "brick"
+      "type": "rooftop",
+      "properties": {
+        "friction": 1.0,
+        "grippable": true
+      }
     },
     {
-      "x": 272,
-      "y": 144,
+      "x": 288,
+      "y": 152,
+      "width": 80,
+      "height": 16,
+      "type": "rooftop",
+      "properties": {
+        "friction": 1.0,
+        "grippable": true
+      }
+    },
+    {
+      "x": 288,
+      "y": 112,
       "width": 64,
       "height": 16,
-      "type": "brick"
+      "type": "rooftop",
+      "properties": {
+        "friction": 1.0,
+        "grippable": true
+      }
     },
     {
-      "x": 384,
+      "x": 448,
       "y": 128,
       "width": 96,
       "height": 16,
-      "type": "brick"
+      "type": "rooftop",
+      "properties": {
+        "friction": 1.0,
+        "grippable": true
+      }
     },
     {
       "x": 528,
-      "y": 96,
-      "width": 80,
+      "y": 80,
+      "width": 48,
       "height": 16,
-      "type": "brick"
+      "type": "rooftop",
+      "properties": {
+        "friction": 1.0,
+        "grippable": true
+      }
     },
     {
-      "x": 672,
-      "y": 112,
-      "width": 96,
-      "height": 16,
-      "type": "brick"
-    },
-    {
-      "x": 816,
-      "y": 144,
+      "x": 624,
+      "y": 104,
       "width": 80,
       "height": 16,
-      "type": "brick"
+      "type": "rooftop",
+      "properties": {
+        "friction": 1.0,
+        "grippable": true
+      }
+    },
+    {
+      "x": 768,
+      "y": 136,
+      "width": 80,
+      "height": 16,
+      "type": "rooftop",
+      "properties": {
+        "friction": 1.0,
+        "grippable": true
+      }
     },
     {
       "x": 944,
-      "y": 128,
-      "width": 96,
+      "y": 112,
+      "width": 80,
       "height": 16,
-      "type": "brick"
+      "type": "rooftop",
+      "properties": {
+        "friction": 1.0,
+        "grippable": true
+      }
     },
     {
       "x": 1088,
-      "y": 96,
-      "width": 80,
-      "height": 16,
-      "type": "brick"
-    },
-    {
-      "x": 1216,
-      "y": 128,
+      "y": 160,
       "width": 96,
       "height": 16,
-      "type": "brick"
-    },
-    {
-      "x": 1360,
-      "y": 144,
-      "width": 112,
-      "height": 16,
-      "type": "brick"
+      "type": "rooftop",
+      "properties": {
+        "friction": 1.0,
+        "grippable": true
+      }
     }
   ],
   "walls": [
     {
-      "x": 256,
-      "y": 96,
-      "width": 16,
-      "height": 64,
-      "type": "brick"
-    },
-    {
-      "x": 512,
-      "y": 64,
-      "width": 16,
-      "height": 64,
-      "type": "brick"
-    },
-    {
-      "x": 656,
-      "y": 80,
+      "x": 272,
+      "y": 112,
       "width": 16,
       "height": 48,
-      "type": "brick"
+      "type": "building_wall",
+      "properties": {
+        "climbable": true,
+        "friction": 0.8
+      }
     },
     {
-      "x": 1072,
-      "y": 64,
+      "x": 608,
+      "y": 72,
       "width": 16,
-      "height": 64,
-      "type": "brick"
+      "height": 56,
+      "type": "building_wall",
+      "properties": {
+        "climbable": true,
+        "friction": 0.8
+      }
+    },
+    {
+      "x": 928,
+      "y": 96,
+      "width": 16,
+      "height": 40,
+      "type": "building_wall",
+      "properties": {
+        "climbable": true,
+        "friction": 0.8
+      }
     }
   ],
   "delivery_zones": [
     {
+      "x": 56,
+      "y": 160,
+      "width": 16,
+      "height": 24,
       "id": "delivery_1",
-      "x": 48,
-      "y": 160,
-      "width": 16,
-      "height": 32,
-      "recipient": "Morning Coffee Shop",
-      "letter_message": "Fresh start, fresh brew."
+      "type": "standard",
+      "letter_fragment_id": null,
+      "properties": {
+        "glow_color": [255, 220, 100, 200],
+        "recipient_name": "Early Riser's Apartment"
+      }
     },
     {
+      "x": 184,
+      "y": 160,
+      "width": 16,
+      "height": 24,
       "id": "delivery_2",
-      "x": 176,
+      "type": "standard",
+      "letter_fragment_id": null,
+      "properties": {
+        "glow_color": [255, 220, 100, 200],
+        "recipient_name": "Corner Bookshop"
+      }
+    },
+    {
+      "x": 320,
+      "y": 112,
+      "width": 16,
+      "height": 24,
+      "id": "delivery_3",
+      "type": "standard",
+      "letter_fragment_id": null,
+      "properties": {
+        "glow_color": [255, 220, 100, 200],
+        "recipient_name": "Painter's Loft"
+      }
+    },
+    {
+      "x": 488,
+      "y": 128,
+      "width": 16,
+      "height": 24,
+      "id": "delivery_4",
+      "type": "standard",
+      "letter_fragment_id": null,
+      "properties": {
+        "glow_color": [255, 220, 100, 200],
+        "recipient_name": "Tea House"
+      }
+    },
+    {
+      "x": 656,
+      "y": 104,
+      "width": 16,
+      "height": 24,
+      "id": "delivery_5",
+      "type": "standard",
+      "letter_fragment_id": null,
+      "properties": {
+        "glow_color": [255, 220, 100, 200],
+        "recipient_name": "Watchmaker's Tower"
+      }
+    },
+    {
+      "x": 808,
+      "y": 136,
+      "width": 16,
+      "height": 24,
+      "id": "delivery_6",
+      "type": "standard",
+      "letter_fragment_id": null,
+      "properties": {
+        "glow_color": [255, 220, 100, 200],
+        "recipient_name": "Night Owl Diner"
+      }
+    },
+    {
+      "x": 1136,
       "y": 160,
       "width": 16,
-      "height": 32,
-      "recipient": "The Tailor",
-      "letter_message": "Mending more than clothes."
-    },
-    {
-      "id": "delivery_3",
-      "x": 304,
-      "y": 144,
-      "width": 16,
-      "height": 32,
-      "recipient": "Rooftop Garden",
-      "letter_message": "Seeds of hope grow here."
-    },
-    {
-      "id": "delivery_4",
-      "x": 560,
-      "y": 96,
-      "width": 16,
-      "height": 32,
-      "recipient": "Artist's Studio",
-      "letter_message": "Paint the night beautiful."
-    },
-    {
-      "id": "delivery_5",
-      "x": 848,
-      "y": 144,
-      "width": 16,
-      "height": 32,
-      "recipient": "Night Watchman",
-      "letter_message": "Keeping us all safe."
-    },
-    {
-      "id": "delivery_6",
-      "x": 1120,
-      "y": 96,
-      "width": 16,
-      "height": 32,
-      "recipient": "Musician's Loft",
-      "letter_message": "Your melody reaches far."
-    },
-    {
+      "height": 24,
       "id": "delivery_7",
-      "x": 1408,
-      "y": 144,
-      "width": 16,
-      "height": 32,
-      "recipient": "Grandmother's Window",
-      "letter_message": "From one who remembers you.",
-      "has_letter_fragment": true
+      "type": "standard",
+      "letter_fragment_id": "fragment_002",
+      "properties": {
+        "glow_color": [255, 100, 220, 200],
+        "recipient_name": "Lonely Lighthouse",
+        "special": true
+      }
     }
   ],
   "hazards": [
     {
       "type": "steam_vent",
-      "x": 224,
-      "y": 160,
+      "x": 368,
+      "y": 152,
       "width": 16,
-      "height": 16
+      "height": 16,
+      "properties": {
+        "cycle_time": 3.5,
+        "warning_time": 0.5,
+        "active_time": 1.0,
+        "push_force": -180
+      }
     },
     {
       "type": "laundry_line",
-      "x": 304,
-      "y": 120,
-      "width": 48,
-      "height": 4
-    },
-    {
-      "type": "steam_vent",
-      "x": 480,
-      "y": 128,
-      "width": 16,
-      "height": 16
-    },
-    {
-      "type": "laundry_line",
-      "x": 608,
-      "y": 88,
+      "x": 544,
+      "y": 100,
       "width": 64,
-      "height": 4
-    },
-    {
-      "type": "laundry_line",
-      "x": 896,
-      "y": 120,
-      "width": 48,
-      "height": 4
+      "height": 4,
+      "properties": {
+        "height_above_ground": 24,
+        "slow_multiplier": 0.4,
+        "stun_duration": 0.5
+      }
     },
     {
       "type": "steam_vent",
-      "x": 1040,
-      "y": 128,
+      "x": 1024,
+      "y": 112,
       "width": 16,
-      "height": 16
+      "height": 16,
+      "properties": {
+        "cycle_time": 3.5,
+        "warning_time": 0.5,
+        "active_time": 1.0,
+        "push_force": -180
+      }
     }
   ],
   "powerups": [
     {
+      "x": 552,
+      "y": 60,
+      "width": 12,
+      "height": 12,
       "type": "coffee",
-      "x": 432,
-      "y": 108,
-      "respawn": false
+      "properties": {
+        "duration": 10.0,
+        "speed_multiplier": 1.5
+      }
     },
     {
+      "x": 976,
+      "y": 92,
+      "width": 12,
+      "height": 12,
       "type": "coffee",
-      "x": 1264,
-      "y": 108,
-      "respawn": false
+      "properties": {
+        "duration": 10.0,
+        "speed_multiplier": 1.5
+      }
+    }
+  ],
+  "background_layers": [
+    {
+      "type": "color",
+      "layer": 0,
+      "properties": {
+        "color": [25, 15, 35, 255]
+      }
+    },
+    {
+      "type": "skyline",
+      "layer": 1,
+      "properties": {
+        "parallax_factor": 0.3,
+        "texture": "skyline_far",
+        "y_offset": 80
+      }
+    },
+    {
+      "type": "skyline",
+      "layer": 2,
+      "properties": {
+        "parallax_factor": 0.6,
+        "texture": "skyline_near",
+        "y_offset": 100
+      }
     }
   ],
   "camera": {
-    "follow_player": true,
     "bounds": {
-      "min_x": 0,
-      "max_x": 1472,
-      "min_y": 0,
-      "max_y": 180
+      "left": 0,
+      "right": 1200,
+      "top": 0,
+      "bottom": 180
     },
-    "smoothing": 0.1
+    "follow_speed": 3.0,
+    "dead_zone": {
+      "x": 40,
+      "y": 30
+    }
   },
   "environment": {
-    "time_limit": 240,
-    "starting_time": 240,
+    "time_limit": 210,
+    "starting_time": 210,
     "wind": {
-      "enabled": false
-    }
+      "enabled": false,
+      "direction_x": 0,
+      "strength": 0
+    },
+    "weather": "clear"
   },
   "metadata": {
     "author": "Courier Cat Team",
-    "difficulty": "easy",
+    "created_date": "2025-01-16",
+    "difficulty": "learning",
     "required_deliveries": 7,
     "par_time": 150,
-    "tags": ["showcase", "easy", "hazards", "powerups", "second_night"]
+    "tags": ["second_night", "learning", "wall_jumps", "hazards", "vertical"]
   }
 }
