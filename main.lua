@@ -88,6 +88,7 @@ function love.load()
     Audio:load_sfx("delivery1", "assets/audio/sfx/delivery1.wav")
     Audio:load_sfx("delivery2", "assets/audio/sfx/delivery2.wav")
     Audio:load_sfx("failure_sting", "assets/audio/sfx/failure_sting.wav")  -- VETS-62
+    Audio:load_sfx("success_jingle", "assets/audio/sfx/success_jingle.wav")  -- VETS-61
     print("Audio loaded successfully")
 
     -- Start with MenuState (VETS-58)
