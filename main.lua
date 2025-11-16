@@ -8,6 +8,7 @@ local libs = require("libraries.init")
 -- Load core systems
 local Time = require("src.core.time")
 local Audio = require("src.systems.audio")  -- VETS-49
+local SaveSystem = require("src.systems.save_system")  -- VETS-55
 
 -- Load StateManager and states
 local StateManager = require("src.systems.state_manager")
@@ -59,6 +60,10 @@ function love.load()
     Time:init()
     print("\nTime system initialized:")
     print("  - Fixed timestep: " .. Time.FIXED_DT .. "s (" .. Time:getFPS() .. " FPS)")
+
+    -- Initialize save system (VETS-55)
+    print("\nInitializing SaveSystem...")
+    SaveSystem.init()
 
     -- Initialize StateManager
     print("\nInitializing StateManager...")
