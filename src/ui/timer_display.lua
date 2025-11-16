@@ -53,6 +53,12 @@ function TimerDisplay:new(options)
     display.pulse_scale = 1.0
     display.pulsing = false
 
+    -- Sparkle effect properties (VETS-61)
+    display.sparkling = false
+    display.sparkle_timer = 0
+    display.sparkle_duration = 1.5  -- Sparkle lasts 1.5 seconds
+    display.sparkle_particles = {}
+
     -- UI options
     display.show_digital = options.show_digital or false
     display.show_horizon = options.show_horizon ~= false  -- Default true
@@ -86,12 +92,69 @@ function TimerDisplay:update(dt)
         local pulse_speed = 3.0  -- Pulses per second
         self.pulse_scale = 1.0 + 0.1 * math.sin(love.timer.getTime() * pulse_speed * math.pi * 2)
     end
+
+    -- Update sparkle effect (VETS-61)
+    if self.sparkling then
+        self.sparkle_timer = self.sparkle_timer + dt
+
+        -- Update existing particles
+        for i = #self.sparkle_particles, 1, -1 do
+            local p = self.sparkle_particles[i]
+            p.life = p.life + dt
+            p.x = p.x + p.vx * dt
+            p.y = p.y + p.vy * dt
+            p.alpha = 1.0 - (p.life / self.sparkle_duration)
+
+            -- Remove dead particles
+            if p.life >= self.sparkle_duration then
+                table.remove(self.sparkle_particles, i)
+            end
+        end
+
+        -- Stop sparkling when time is up
+        if self.sparkle_timer >= self.sparkle_duration then
+            self.sparkling = false
+            self.sparkle_timer = 0
+            self.sparkle_particles = {}
+        end
+    end
 end
 
 -- Trigger pulse effect (e.g., on time extension)
 function TimerDisplay:triggerPulse()
     self.pulsing = true
     self.pulse_timer = 0
+end
+
+-- Trigger sparkle effect (VETS-61: on success)
+function TimerDisplay:triggerSparkle()
+    self.sparkling = true
+    self.sparkle_timer = 0
+    self.sparkle_particles = {}
+
+    -- Create sparkle particles around the moon
+    local base_x, base_y = self:getScreenPosition()
+    local moon_y = self:getMoonY(base_y)
+    local radius = self:getMoonRadius()
+
+    -- Create 12 sparkle particles in a burst pattern
+    for i = 1, 12 do
+        local angle = (i / 12) * math.pi * 2
+        local speed = 20 + math.random() * 30  -- Random speed between 20-50
+        local distance = radius + 5 + math.random() * 10  -- Start just outside moon
+
+        table.insert(self.sparkle_particles, {
+            x = base_x + math.cos(angle) * distance,
+            y = moon_y + math.sin(angle) * distance,
+            vx = math.cos(angle) * speed,
+            vy = math.sin(angle) * speed,
+            life = 0,
+            size = 1 + math.random() * 2,  -- Random size 1-3
+            alpha = 1.0
+        })
+    end
+
+    print("[TimerDisplay] Sparkle effect triggered!")
 end
 
 -- Add time to timer
@@ -165,6 +228,18 @@ function TimerDisplay:draw()
     love.graphics.setColor(color[1] * 0.8, color[2] * 0.8, color[3] * 0.8, color[4] * 0.7)
     love.graphics.setLineWidth(1)
     love.graphics.circle("line", base_x, moon_y, radius)
+
+    -- Draw sparkle particles (VETS-61)
+    if self.sparkling and #self.sparkle_particles > 0 then
+        for _, p in ipairs(self.sparkle_particles) do
+            love.graphics.setColor(1, 1, 1, p.alpha)
+            love.graphics.circle("fill", p.x, p.y, p.size)
+            -- Draw a small cross for extra sparkle effect
+            love.graphics.setLineWidth(1)
+            love.graphics.line(p.x - p.size, p.y, p.x + p.size, p.y)
+            love.graphics.line(p.x, p.y - p.size, p.x, p.y + p.size)
+        end
+    end
 
     -- Draw digital timer (optional, for accessibility)
     if self.show_digital then
