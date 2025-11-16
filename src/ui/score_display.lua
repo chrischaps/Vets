@@ -132,6 +132,7 @@ function ScoreDisplay:draw()
     if not self.visible then return end
 
     local base_x, base_y = self:getScreenPosition()
+    local scale = 2.0  -- 2x size
 
     -- Save graphics state
     local r, g, b, a = love.graphics.getColor()
@@ -142,11 +143,11 @@ function ScoreDisplay:draw()
     love.graphics.setFont(self.font)
 
     local score_text = string.format("Score: %s", formatNumber(math.floor(self.displayed_score)))
-    local score_width = self.font:getWidth(score_text)
+    local score_width = self.font:getWidth(score_text) * scale
 
     -- Adjust position for right anchor (text should end at base_x, not start)
     local score_x = base_x - score_width
-    love.graphics.print(score_text, score_x, base_y)
+    love.graphics.print(score_text, score_x, base_y, 0, scale, scale)
 
     -- Draw bonus text (below main score)
     if self.bonus_timer > 0 and self.bonus_text ~= "" then
@@ -160,11 +161,11 @@ function ScoreDisplay:draw()
             self.bonus_alpha
         )
 
-        local bonus_width = self.bonus_font:getWidth(self.bonus_text)
+        local bonus_width = self.bonus_font:getWidth(self.bonus_text) * scale
         local bonus_x = base_x - bonus_width
-        local bonus_y = base_y + self.font:getHeight() + 4  -- 4px spacing
+        local bonus_y = base_y + (self.font:getHeight() * scale) + 8  -- 8px spacing (scaled)
 
-        love.graphics.print(self.bonus_text, bonus_x, bonus_y)
+        love.graphics.print(self.bonus_text, bonus_x, bonus_y, 0, scale, scale)
     end
 
     -- Restore graphics state
