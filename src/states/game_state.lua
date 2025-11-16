@@ -16,6 +16,7 @@ local TimerDisplay = require("src.ui.timer_display")
 local ScoreDisplay = require("src.ui.score_display")
 local Constants = require("src.core.constants")
 local Level = require("src.systems.level")
+local Audio = require("src.systems.audio")  -- VETS-49
 
 local GameState = {}
 
@@ -46,6 +47,9 @@ function GameState:enter(night_number, state_manager)
     self.total_deliveries = #self.delivery_zones
     self.completed_deliveries = 0
 
+    -- Start gameplay music with fade in (VETS-49)
+    Audio:play_music("gameplay_music1", 1.5)  -- 1.5s fade in
+
     print("[GameState] Game initialized:")
     print("  - Night: " .. self.night_number)
     print("  - Total deliveries: " .. self.total_deliveries)
@@ -54,6 +58,9 @@ end
 
 function GameState:exit()
     print("[GameState] Exiting game state")
+
+    -- Stop music with fade out (VETS-49)
+    Audio:stop_music(1.0)  -- 1.0s fade out
 
     -- Unload level and cleanup entities
     if self.level then
