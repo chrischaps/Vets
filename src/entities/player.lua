@@ -936,7 +936,7 @@ function Player:attemptDelivery()
 
                     -- Trigger moon pulse visual feedback (VETS-26)
                     if self.moon_timer then
-                        self.moon_timer:triggerDeliveryPulse()
+                        self.moon_timer:triggerPulse()
                     end
                 else
                     print(string.format("[Player] Delivery successful! Combo: %dx (timer not connected)",
@@ -948,6 +948,11 @@ function Player:attemptDelivery()
                     local points = self.scoring:addDelivery(self.combo_count)
                     print(string.format("[Scoring] Delivery scored! Combo: %dx | +%d points | Total: %d",
                         combo_multiplier, points, self.scoring:getTotal()))
+
+                    -- Show bonus in score display (VETS-46)
+                    if self.score_display then
+                        self.score_display:showBonus(points, combo_multiplier)
+                    end
                 end
 
                 return true

@@ -13,6 +13,7 @@ local Timer = require("src.systems.timer")
 local Scoring = require("src.systems.scoring")
 local HUD = require("src.ui.hud")
 local TimerDisplay = require("src.ui.timer_display")
+local ScoreDisplay = require("src.ui.score_display")
 local Constants = require("src.core.constants")
 local Level = require("src.systems.level")
 
@@ -115,6 +116,15 @@ function GameState:initializeSystems()
     })
     self.hud:addElement(self.moon_timer)
 
+    -- Initialize score display (VETS-46)
+    self.score_display = ScoreDisplay:new({
+        initial_score = 0,
+        x = 10,  -- 10px padding from right edge
+        y = 10,  -- 10px padding from top
+        anchor = HUD.ANCHOR.TOP_RIGHT
+    })
+    self.hud:addElement(self.score_display)
+
     -- Initialize scoring system
     self.scoring = Scoring.new()
 
@@ -155,6 +165,7 @@ function GameState:loadLevel(night_number)
     self.player.timer = self.timer
     self.player.moon_timer = self.moon_timer
     self.player.scoring = self.scoring
+    self.player.score_display = self.score_display
 
     -- Update timer with level's time limit (if specified in environment)
     if level.environment and level.environment.time_limit then
@@ -294,7 +305,12 @@ function GameState:update(dt)
         end
     end
 
-    -- Update HUD (includes moon timer visual)
+    -- Sync score display with scoring system (VETS-46)
+    if self.score_display and self.scoring then
+        self.score_display:setScore(self.scoring:getTotal())
+    end
+
+    -- Update HUD (includes moon timer visual and score display)
     if self.hud then
         self.hud:update(dt)
     end
@@ -349,28 +365,6 @@ function GameState:draw()
     -- Detach camera (UI elements drawn after this won't move with camera)
     if self.camera then
         self.camera:detach()
-    end
-
-    -- Draw score display
-    if self.scoring then
-        love.graphics.setColor(1, 1, 1)
-        love.graphics.print(string.format("Score: %d", self.scoring:getTotal()), 10, 10)
-        love.graphics.print(string.format("Deliveries: %d/%d", self.completed_deliveries, self.total_deliveries), 10, 22)
-
-        -- Draw combo display
-        local combo_count = self.scoring:getComboCount()
-        local combo_multiplier = self.scoring:getComboMultiplier()
-        if combo_count > 0 then
-            -- Highlight combo text based on multiplier level
-            if combo_multiplier >= 5 then
-                love.graphics.setColor(1, 0.3, 1)  -- Magenta for max combo (5x)
-            elseif combo_multiplier >= 3 then
-                love.graphics.setColor(1, 1, 0.3)  -- Yellow for high combo (3-4x)
-            else
-                love.graphics.setColor(0.3, 1, 1)  -- Cyan for active combo (1-2x)
-            end
-            love.graphics.print(string.format("COMBO: %dx (%dx multiplier)", combo_count, combo_multiplier), 10, 34)
-        end
     end
 
     -- Draw pause overlay
