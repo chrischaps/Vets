@@ -109,7 +109,8 @@ function StateManager:push(name, ...)
 end
 
 -- Pop the top state from the stack and return to previous state
--- Calls exit() on current state and enter() on the state below it
+-- Calls exit() on current state but does NOT call enter() on restored state
+-- (The restored state was never exited, so it doesn't need to be re-entered)
 function StateManager:pop()
     if #self.state_stack == 0 then
         print("[StateManager] Warning: Cannot pop state, stack is empty")
@@ -124,10 +125,9 @@ function StateManager:pop()
     -- Pop previous state from stack
     self.current_state = table.remove(self.state_stack)
 
-    -- Call enter on restored state if it exists
-    if self.current_state and self.current_state.enter then
-        self.current_state:enter()
-    end
+    -- NOTE: Do NOT call enter() on restored state
+    -- The state was never exited when pushed, so it shouldn't be re-entered
+    -- This prevents the state from being re-initialized
 
     -- Disable stack mode if stack is empty
     if #self.state_stack == 0 then
