@@ -24,6 +24,7 @@ local RANK_THRESHOLDS = {
 -- Enter results state with completion data
 -- @param data: Table containing completion data
 --   - success: boolean (true if won, false if lost)
+--   - failure_reason: string (optional, "time" or "fall" for failures)
 --   - night_number: number (which night was completed)
 --   - score: number (final score)
 --   - time_remaining: number (seconds left, or negative for overtime)
@@ -35,6 +36,7 @@ function ResultsState:enter(data)
 
     -- Store completion data
     self.success = data.success or false
+    self.failure_reason = data.failure_reason  -- "time" or "fall"
     self.night_number = data.night_number or 1
     self.score = data.score or 0
     self.time_remaining = data.time_remaining or 0
@@ -148,8 +150,15 @@ function ResultsState:draw()
         love.graphics.setColor(0.3, 1, 0.5)  -- Green for success
         love.graphics.print("Dawn arrives safely", VIRTUAL_WIDTH / 2 - 65, y_offset)
     else
-        love.graphics.setColor(1, 0.5, 0.3)  -- Orange for failure
-        love.graphics.print("Dawn has arrived...", VIRTUAL_WIDTH / 2 - 65, y_offset)
+        -- Different messages based on failure reason
+        if self.failure_reason == "fall" then
+            love.graphics.setColor(1, 0.5, 0.3)  -- Orange for failure
+            love.graphics.print("Kitty fell from a great height...", VIRTUAL_WIDTH / 2 - 95, y_offset)
+        else
+            -- Default failure message (time ran out)
+            love.graphics.setColor(1, 0.5, 0.3)  -- Orange for failure
+            love.graphics.print("Dawn has arrived...", VIRTUAL_WIDTH / 2 - 65, y_offset)
+        end
     end
 
     y_offset = y_offset + 20

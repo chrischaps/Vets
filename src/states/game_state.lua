@@ -326,6 +326,11 @@ function GameState:update(dt)
         self.hud:update(dt)
     end
 
+    -- Check fall death condition (player fell below level)
+    if self.player and self.player.transform.y > Constants.FALL_DEATH_HEIGHT then
+        self:onFallDeath()
+    end
+
     -- Check win condition (all deliveries completed)
     if self.completed_deliveries >= self.total_deliveries then
         self:onWinCondition()
@@ -431,7 +436,26 @@ function GameState:onTimerExpired()
     self.game_over = true
 
     -- Transition to ResultsState with lose condition (VETS-31)
-    self:transitionToResults(false)
+    self:transitionToResults(false, "time")
+end
+
+-- Called when player falls below fall death threshold
+function GameState:onFallDeath()
+    -- Only trigger once
+    if self.game_over or self.game_won then
+        return
+    end
+
+    print("[GameState] Player fell to their doom - Game Over!")
+    self.game_over = true
+
+    -- Pause timer to prevent additional time running out
+    if self.timer then
+        self.timer:pause()
+    end
+
+    -- Transition to ResultsState with lose condition (fall death)
+    self:transitionToResults(false, "fall")
 end
 
 -- Called when all deliveries are completed
@@ -460,10 +484,12 @@ end
 
 -- Transition to ResultsState with completion data (VETS-31)
 -- @param success: Boolean indicating win (true) or lose (false)
-function GameState:transitionToResults(success)
+-- @param failure_reason: Optional string indicating why the player failed ("time" or "fall")
+function GameState:transitionToResults(success, failure_reason)
     -- Prepare results data
     local results_data = {
         success = success,
+        failure_reason = failure_reason,  -- Optional: "time" or "fall"
         night_number = self.night_number,
         score = self.scoring:getTotal(),
         time_remaining = self.timer:getTimeRemaining(),

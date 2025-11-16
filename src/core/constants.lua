@@ -45,4 +45,7 @@ Constants.DASH_SCREEN_SHAKE_INTENSITY = 2   -- Screen shake intensity (pixels)
 Constants.JUMP_BUFFER_FRAMES = 8  -- Jump buffer window (frames) - can press jump before landing
 Constants.COYOTE_FRAMES = 5       -- Coyote time window (frames) - can jump after leaving platform
 
+-- Fall Death Constant
+Constants.FALL_DEATH_HEIGHT = 300  -- Y position threshold for fall death (pixels below level)
+
 return Constants
