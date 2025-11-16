@@ -35,8 +35,9 @@ function PauseState:enter(state_manager, night_number)
     self.input:init()
 
     -- Input cooldown to prevent accidental double-presses
-    self.input_cooldown = 0
     self.cooldown_duration = 0.2  -- 200ms between inputs
+    -- IMPORTANT: Start with cooldown active to ignore the pause button that opened this menu
+    self.input_cooldown = self.cooldown_duration
 end
 
 function PauseState:exit()
