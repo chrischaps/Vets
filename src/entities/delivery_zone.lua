@@ -4,6 +4,7 @@
 local Entity = require("src.entities.entity")
 local Transform = require("src.components.transform")
 local Collision = require("src.components.collision")
+local Audio = require("src.systems.audio")  -- VETS-50
 
 local DeliveryZone = {}
 DeliveryZone.__index = DeliveryZone
@@ -170,6 +171,10 @@ function DeliveryZone:deliver()
 
     self.completed = true
     self.delivery_animation_timer = self.delivery_animation_duration
+
+    -- Play delivery sound effect - randomize between delivery1 and delivery2 (VETS-50)
+    local delivery_sound = math.random(1, 2) == 1 and "delivery1" or "delivery2"
+    Audio:play_sfx(delivery_sound)
 
     -- Spawn letter float effect
     self.letter_active = true
