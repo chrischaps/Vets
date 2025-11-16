@@ -19,6 +19,9 @@ function NightSelectState:enter(message, state_manager)
     -- Initialize input system
     self.input = Input.new()
     self.input:init()
+    -- Update immediately to consume any held buttons from previous state
+    -- This prevents input from cascading through state transitions
+    self.input:update()
 
     -- UI state
     self.selected_night = 1

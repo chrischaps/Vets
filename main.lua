@@ -8,10 +8,12 @@ local libs = require("libraries.init")
 -- Load core systems
 local Time = require("src.core.time")
 local Audio = require("src.systems.audio")  -- VETS-49
+local SaveSystem = require("src.systems.save_system")  -- VETS-55
 
 -- Load StateManager and states
 local StateManager = require("src.systems.state_manager")
 local MenuState = require("src.states.menu_state")
+local NightSelectState = require("src.states.night_select_state")  -- VETS-57
 local GameState = require("src.states.game_state")
 local ResultsState = require("src.states.results_state")
 local PauseState = require("src.states.pause_state")  -- VETS-47
@@ -59,12 +61,17 @@ function love.load()
     print("\nTime system initialized:")
     print("  - Fixed timestep: " .. Time.FIXED_DT .. "s (" .. Time:getFPS() .. " FPS)")
 
+    -- Initialize save system (VETS-55)
+    print("\nInitializing SaveSystem...")
+    SaveSystem.init()
+
     -- Initialize StateManager
     print("\nInitializing StateManager...")
     state_manager = StateManager.new()
 
     -- Register states
     state_manager:register("menu", MenuState)
+    state_manager:register("night_select", NightSelectState)  -- VETS-57
     state_manager:register("game", GameState)
     state_manager:register("results", ResultsState)
     state_manager:register("pause", PauseState)  -- VETS-47
@@ -82,12 +89,11 @@ function love.load()
     Audio:load_sfx("delivery2", "assets/audio/sfx/delivery2.wav")
     print("Audio loaded successfully")
 
-    -- Start with GameState (Option 1: Direct to GameState)
-    -- TODO: Switch to MenuState when it's fully functional (Option 2)
+    -- Start with MenuState (VETS-58)
     print("\nStarting game...")
-    state_manager:switch("game", 1, state_manager)  -- Night 1, pass state_manager
+    state_manager:switch("menu", "Welcome to Courier Cat!", state_manager)
 
-    print("\n=== Game started! Use arrow keys/WASD to move, Space to jump, P to pause ===")
+    print("\n=== Game started! Navigate menu with arrow keys or gamepad ===")
 end
 
 function love.resize(w, h)
