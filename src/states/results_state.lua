@@ -159,16 +159,16 @@ function ResultsState:drawUI()
         local msg_width = font:getWidth(msg) * text_scale * 1.2
         love.graphics.print(msg, screen_width / 2 - msg_width / 2, y_offset, 0, text_scale * 1.2, text_scale * 1.2)
     else
-        -- Different messages based on failure reason
+        -- Different messages based on failure reason (VETS-62)
         if self.failure_reason == "fall" then
             love.graphics.setColor(1, 0.5, 0.3)  -- Orange for failure
-            local msg = "Kitty fell from a great height..."
+            local msg = "Fell off the rooftops!"
             local msg_width = font:getWidth(msg) * text_scale * 1.2
             love.graphics.print(msg, screen_width / 2 - msg_width / 2, y_offset, 0, text_scale * 1.2, text_scale * 1.2)
         else
             -- Default failure message (time ran out)
             love.graphics.setColor(1, 0.5, 0.3)  -- Orange for failure
-            local msg = "Dawn has arrived..."
+            local msg = "Time's up!"
             local msg_width = font:getWidth(msg) * text_scale * 1.2
             love.graphics.print(msg, screen_width / 2 - msg_width / 2, y_offset, 0, text_scale * 1.2, text_scale * 1.2)
         end

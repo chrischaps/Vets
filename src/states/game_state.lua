@@ -405,16 +405,8 @@ function GameState:draw()
 
     -- Score display now handled by HUD system (see drawUI method)
 
-    -- Draw game over overlay
-    if self.game_over then
-        love.graphics.setColor(0, 0, 0, 0.7)
-        love.graphics.rectangle("fill", 0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT)
-        love.graphics.setColor(1, 0.3, 0.3)
-        love.graphics.print("TIME'S UP!", VIRTUAL_WIDTH / 2 - 30, VIRTUAL_HEIGHT / 2 - 20)
-        love.graphics.setColor(1, 1, 1)
-        love.graphics.print(string.format("Final Score: %d", self.scoring:getTotal()), VIRTUAL_WIDTH / 2 - 45, VIRTUAL_HEIGHT / 2)
-        love.graphics.print("Press ESC to exit", VIRTUAL_WIDTH / 2 - 45, VIRTUAL_HEIGHT / 2 + 20)
-    end
+    -- Draw game over overlay (removed - now handled by transition fade VETS-62)
+    -- Old overlay code removed to allow smooth failure transition
 
     -- Draw win overlay (removed - now handled by transition fade VETS-61)
     -- Old overlay code removed to allow smooth fade transition
@@ -431,8 +423,8 @@ function GameState:onTimerExpired()
     print("[GameState] Timer expired - Game Over!")
     self.game_over = true
 
-    -- Transition to ResultsState with lose condition (VETS-31)
-    self:transitionToResults(false, "time")
+    -- VETS-62: Start failure transition instead of immediate transition
+    self:startFailureTransition("time")
 end
 
 -- Called when player falls below fall death threshold
@@ -450,8 +442,8 @@ function GameState:onFallDeath()
         self.timer:pause()
     end
 
-    -- Transition to ResultsState with lose condition (fall death)
-    self:transitionToResults(false, "fall")
+    -- VETS-62: Start failure transition instead of immediate transition
+    self:startFailureTransition("fall")
 end
 
 -- Called when all deliveries are completed
@@ -500,6 +492,28 @@ function GameState:startSuccessTransition()
         function()
             -- Callback: Transition to results when fade completes
             self:transitionToResults(true)
+        end
+    )
+end
+
+-- VETS-62: Start the failure transition with visual/audio effects
+-- @param failure_reason: String indicating why the player failed ("time" or "fall")
+function GameState:startFailureTransition(failure_reason)
+    print("[GameState] Starting failure transition (" .. failure_reason .. ")...")
+
+    -- Set transitioning flag
+    self.transitioning_to_results = true
+
+    -- Play failure audio
+    Audio:play_sfx("failure_sting")
+
+    -- Create white fade effect (harsh sunrise, representing time running out)
+    self.transition_fade = ScreenEffects.createFade(
+        {255, 255, 255},  -- Pure white (harsh sunrise)
+        1.5,              -- 1.5 second fade duration
+        function()
+            -- Callback: Transition to results when fade completes
+            self:transitionToResults(false, failure_reason)
         end
     )
 end
