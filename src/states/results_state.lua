@@ -6,10 +6,6 @@ local Input = require("src.systems.input")
 
 local ResultsState = {}
 
--- Virtual resolution (shared across states)
-local VIRTUAL_WIDTH = 320
-local VIRTUAL_HEIGHT = 180
-
 -- Rank thresholds (Night 1)
 -- TODO: Adjust thresholds based on night number in future
 local RANK_THRESHOLDS = {
@@ -139,110 +135,145 @@ function ResultsState:update(dt)
 end
 
 function ResultsState:draw()
+    -- Empty - results state renders everything in drawUI() for high resolution
+end
+
+function ResultsState:drawUI()
+    -- Get window dimensions
+    local screen_width = love.graphics.getWidth()
+    local screen_height = love.graphics.getHeight()
+    local font = love.graphics.getFont()
+
     -- Draw dark background
     love.graphics.setColor(0.1, 0.1, 0.15)
-    love.graphics.rectangle("fill", 0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT)
+    love.graphics.rectangle("fill", 0, 0, screen_width, screen_height)
 
-    local y_offset = 20
+    local y_offset = screen_height * 0.05
+    local text_scale = 2.0  -- Scale for high-res text
 
     -- Draw result header (win/lose message)
     if self.success then
         love.graphics.setColor(0.3, 1, 0.5)  -- Green for success
-        love.graphics.print("Dawn arrives safely", VIRTUAL_WIDTH / 2 - 65, y_offset)
+        local msg = "Dawn arrives safely"
+        local msg_width = font:getWidth(msg) * text_scale * 1.2
+        love.graphics.print(msg, screen_width / 2 - msg_width / 2, y_offset, 0, text_scale * 1.2, text_scale * 1.2)
     else
         -- Different messages based on failure reason
         if self.failure_reason == "fall" then
             love.graphics.setColor(1, 0.5, 0.3)  -- Orange for failure
-            love.graphics.print("Kitty fell from a great height...", VIRTUAL_WIDTH / 2 - 95, y_offset)
+            local msg = "Kitty fell from a great height..."
+            local msg_width = font:getWidth(msg) * text_scale * 1.2
+            love.graphics.print(msg, screen_width / 2 - msg_width / 2, y_offset, 0, text_scale * 1.2, text_scale * 1.2)
         else
             -- Default failure message (time ran out)
             love.graphics.setColor(1, 0.5, 0.3)  -- Orange for failure
-            love.graphics.print("Dawn has arrived...", VIRTUAL_WIDTH / 2 - 65, y_offset)
+            local msg = "Dawn has arrived..."
+            local msg_width = font:getWidth(msg) * text_scale * 1.2
+            love.graphics.print(msg, screen_width / 2 - msg_width / 2, y_offset, 0, text_scale * 1.2, text_scale * 1.2)
         end
     end
 
-    y_offset = y_offset + 20
+    y_offset = y_offset + 80
 
     -- Draw stats
     love.graphics.setColor(0.9, 0.9, 0.9)
 
     -- Deliveries
-    y_offset = y_offset + 5
-    love.graphics.print(string.format("Letters Delivered: %d/%d",
-        self.deliveries_completed, self.total_deliveries),
-        VIRTUAL_WIDTH / 2 - 70, y_offset)
+    y_offset = y_offset + 20
+    local deliveries_text = string.format("Letters Delivered: %d/%d",
+        self.deliveries_completed, self.total_deliveries)
+    local deliveries_width = font:getWidth(deliveries_text) * text_scale
+    love.graphics.print(deliveries_text, screen_width / 2 - deliveries_width / 2, y_offset, 0, text_scale, text_scale)
 
     -- Time
-    y_offset = y_offset + 12
+    y_offset = y_offset + 45
     if self.time_remaining >= 0 then
-        love.graphics.print(string.format("Time Remaining: %ds", math.floor(self.time_remaining)),
-            VIRTUAL_WIDTH / 2 - 65, y_offset)
+        local time_text = string.format("Time Remaining: %ds", math.floor(self.time_remaining))
+        local time_width = font:getWidth(time_text) * text_scale
+        love.graphics.print(time_text, screen_width / 2 - time_width / 2, y_offset, 0, text_scale, text_scale)
     else
         love.graphics.setColor(1, 0.5, 0.5)  -- Red for overtime
-        love.graphics.print("Time: Expired", VIRTUAL_WIDTH / 2 - 40, y_offset)
+        local time_text = "Time: Expired"
+        local time_width = font:getWidth(time_text) * text_scale
+        love.graphics.print(time_text, screen_width / 2 - time_width / 2, y_offset, 0, text_scale, text_scale)
         love.graphics.setColor(0.9, 0.9, 0.9)
     end
 
     -- Combo Peak
-    y_offset = y_offset + 12
-    love.graphics.print(string.format("Combo Peak: x%d", self.combo_peak),
-        VIRTUAL_WIDTH / 2 - 50, y_offset)
+    y_offset = y_offset + 45
+    local combo_text = string.format("Combo Peak: x%d", self.combo_peak)
+    local combo_width = font:getWidth(combo_text) * text_scale
+    love.graphics.print(combo_text, screen_width / 2 - combo_width / 2, y_offset, 0, text_scale, text_scale)
 
     -- Final Score
-    y_offset = y_offset + 12
+    y_offset = y_offset + 45
     love.graphics.setColor(1, 1, 0.7)  -- Light yellow for score
-    love.graphics.print(string.format("Final Score: %d", self.score),
-        VIRTUAL_WIDTH / 2 - 50, y_offset)
+    local score_text = string.format("Final Score: %d", self.score)
+    local score_width = font:getWidth(score_text) * text_scale
+    love.graphics.print(score_text, screen_width / 2 - score_width / 2, y_offset, 0, text_scale, text_scale)
 
     -- Rank display
-    y_offset = y_offset + 18
+    y_offset = y_offset + 60
     love.graphics.setColor(self.rank_data.color)
-    love.graphics.print(string.format("Rank: %s (%s)",
-        self.rank_data.rank, self.rank_data.title),
-        VIRTUAL_WIDTH / 2 - 80, y_offset)
+    local rank_text = string.format("Rank: %s (%s)",
+        self.rank_data.rank, self.rank_data.title)
+    local rank_width = font:getWidth(rank_text) * text_scale
+    love.graphics.print(rank_text, screen_width / 2 - rank_width / 2, y_offset, 0, text_scale, text_scale)
 
     -- Encouragement text for failure
     if not self.success then
-        y_offset = y_offset + 15
+        y_offset = y_offset + 50
         love.graphics.setColor(0.7, 0.7, 0.8)
-        love.graphics.print("Better luck next time!", VIRTUAL_WIDTH / 2 - 65, y_offset)
+        local encourage_text = "Better luck next time!"
+        local encourage_width = font:getWidth(encourage_text) * text_scale
+        love.graphics.print(encourage_text, screen_width / 2 - encourage_width / 2, y_offset, 0, text_scale, text_scale)
     end
 
     -- Options (Continue/Retry and Restart)
-    y_offset = y_offset + 25
+    y_offset = y_offset + 80
 
     -- Option 1: Continue (if won) or Retry (if lost)
     local option1_text = self.success and "Continue" or "Retry"
-    local option1_x = VIRTUAL_WIDTH / 2 - 60
+    local option_scale = 2.5
 
     if self.selected_option == 1 then
         if self.blink_state then
             love.graphics.setColor(1, 1, 1)
-            love.graphics.print("> " .. option1_text .. " <", option1_x, y_offset)
+            local opt1_text = "> " .. option1_text .. " <"
+            local opt1_width = font:getWidth(opt1_text) * option_scale
+            love.graphics.print(opt1_text, screen_width / 2 - opt1_width / 2, y_offset, 0, option_scale, option_scale)
         end
     else
         love.graphics.setColor(0.5, 0.5, 0.5)
-        love.graphics.print("  " .. option1_text .. "  ", option1_x, y_offset)
+        local opt1_text = "  " .. option1_text .. "  "
+        local opt1_width = font:getWidth(opt1_text) * option_scale
+        love.graphics.print(opt1_text, screen_width / 2 - opt1_width / 2, y_offset, 0, option_scale, option_scale)
     end
 
     -- Option 2: Restart
-    y_offset = y_offset + 15
-    local option2_x = VIRTUAL_WIDTH / 2 - 60
+    y_offset = y_offset + 60
 
     if self.selected_option == 2 then
         if self.blink_state then
             love.graphics.setColor(1, 1, 1)
-            love.graphics.print("> Restart <", option2_x, y_offset)
+            local opt2_text = "> Restart <"
+            local opt2_width = font:getWidth(opt2_text) * option_scale
+            love.graphics.print(opt2_text, screen_width / 2 - opt2_width / 2, y_offset, 0, option_scale, option_scale)
         end
     else
         love.graphics.setColor(0.5, 0.5, 0.5)
-        love.graphics.print("  Restart  ", option2_x, y_offset)
+        local opt2_text = "  Restart  "
+        local opt2_width = font:getWidth(opt2_text) * option_scale
+        love.graphics.print(opt2_text, screen_width / 2 - opt2_width / 2, y_offset, 0, option_scale, option_scale)
     end
 
     -- Instructions
-    y_offset = y_offset + 20
+    y_offset = y_offset + 70
     love.graphics.setColor(0.5, 0.5, 0.6)
-    love.graphics.print("Arrow keys/D-pad to select, ENTER/A to confirm", VIRTUAL_WIDTH / 2 - 110, y_offset)
+    local inst_scale = 1.5
+    local inst_text = "Arrow keys/D-pad to select, ENTER/A to confirm"
+    local inst_width = font:getWidth(inst_text) * inst_scale
+    love.graphics.print(inst_text, screen_width / 2 - inst_width / 2, y_offset, 0, inst_scale, inst_scale)
 end
 
 -- Handle confirmation of selected option

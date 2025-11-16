@@ -6,10 +6,6 @@ local Input = require("src.systems.input")
 
 local PauseState = {}
 
--- Virtual resolution (for positioning)
-local VIRTUAL_WIDTH = 320
-local VIRTUAL_HEIGHT = 180
-
 -- Menu options
 local MENU_OPTIONS = {
     {label = "Resume", action = "resume"},
@@ -142,20 +138,32 @@ function PauseState:quit()
 end
 
 function PauseState:draw()
+    -- Empty - pause state renders everything in drawUI() for high resolution
+end
+
+function PauseState:drawUI()
+    -- Get window dimensions
+    local screen_width = love.graphics.getWidth()
+    local screen_height = love.graphics.getHeight()
+
     -- Draw dimmed background (semi-transparent black overlay)
     love.graphics.setColor(0, 0, 0, 0.7)
-    love.graphics.rectangle("fill", 0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT)
+    love.graphics.rectangle("fill", 0, 0, screen_width, screen_height)
 
     -- Draw "PAUSED" title
     love.graphics.setColor(1, 1, 1)
     local title = "PAUSED"
-    local title_x = VIRTUAL_WIDTH / 2 - 30
-    local title_y = 40
-    love.graphics.print(title, title_x, title_y, 0, 1.5, 1.5)  -- 1.5x scale for title
+    local font = love.graphics.getFont()
+    local title_scale = 3.0  -- Scale up for high-res
+    local title_width = font:getWidth(title) * title_scale
+    local title_x = screen_width / 2 - title_width / 2
+    local title_y = screen_height * 0.2
+    love.graphics.print(title, title_x, title_y, 0, title_scale, title_scale)
 
     -- Draw menu options
-    local menu_start_y = 80
-    local menu_spacing = 20
+    local menu_start_y = screen_height * 0.4
+    local menu_spacing = 60  -- Increased spacing for high-res
+    local option_scale = 2.0  -- Scale up for high-res
 
     for i, option in ipairs(self.menu_options) do
         local y = menu_start_y + (i - 1) * menu_spacing
@@ -164,18 +172,27 @@ function PauseState:draw()
         if i == self.selected_option then
             -- Draw selection indicator
             love.graphics.setColor(1, 1, 0.3)  -- Yellow for selected
-            love.graphics.print("> " .. option.label, VIRTUAL_WIDTH / 2 - 40, y, 0, 1.2, 1.2)
+            local text = "> " .. option.label
+            local text_width = font:getWidth(text) * option_scale
+            love.graphics.print(text, screen_width / 2 - text_width / 2, y, 0, option_scale, option_scale)
         else
             -- Normal text
             love.graphics.setColor(0.7, 0.7, 0.7)  -- Gray for unselected
-            love.graphics.print("  " .. option.label, VIRTUAL_WIDTH / 2 - 40, y)
+            local text = "  " .. option.label
+            local text_width = font:getWidth(text) * option_scale
+            love.graphics.print(text, screen_width / 2 - text_width / 2, y, 0, option_scale, option_scale)
         end
     end
 
     -- Draw control hints
     love.graphics.setColor(0.6, 0.6, 0.6)
-    love.graphics.print("Arrow Keys/D-pad: Navigate", VIRTUAL_WIDTH / 2 - 65, VIRTUAL_HEIGHT - 30)
-    love.graphics.print("Enter/A: Select", VIRTUAL_WIDTH / 2 - 40, VIRTUAL_HEIGHT - 15)
+    local hint_scale = 1.5
+    local hint1 = "Arrow Keys/D-pad: Navigate"
+    local hint2 = "Enter/A: Select"
+    local hint1_width = font:getWidth(hint1) * hint_scale
+    local hint2_width = font:getWidth(hint2) * hint_scale
+    love.graphics.print(hint1, screen_width / 2 - hint1_width / 2, screen_height - 80, 0, hint_scale, hint_scale)
+    love.graphics.print(hint2, screen_width / 2 - hint2_width / 2, screen_height - 40, 0, hint_scale, hint_scale)
 end
 
 return PauseState

@@ -55,20 +55,46 @@ function MenuState:startGame()
 end
 
 function MenuState:draw()
+    -- Empty - menu state renders everything in drawUI() for high resolution
+end
+
+function MenuState:drawUI()
+    -- Get window dimensions
+    local screen_width = love.graphics.getWidth()
+    local screen_height = love.graphics.getHeight()
+    local font = love.graphics.getFont()
+
+    -- Draw dark background
     love.graphics.setColor(0.1, 0.1, 0.2)
-    love.graphics.rectangle("fill", 0, 0, 320, 180)
+    love.graphics.rectangle("fill", 0, 0, screen_width, screen_height)
 
+    -- Draw "MENU STATE" title
     love.graphics.setColor(1, 1, 1)
-    love.graphics.print("MENU STATE", 120, 60)
-    love.graphics.print(self.message, 120, 75)
+    local title = "MENU STATE"
+    local title_scale = 3.0
+    local title_width = font:getWidth(title) * title_scale
+    love.graphics.print(title, screen_width / 2 - title_width / 2, screen_height * 0.3, 0, title_scale, title_scale)
 
+    -- Draw message
+    local msg_scale = 2.0
+    local msg_width = font:getWidth(self.message) * msg_scale
+    love.graphics.print(self.message, screen_width / 2 - msg_width / 2, screen_height * 0.4, 0, msg_scale, msg_scale)
+
+    -- Draw blinking prompt
     if self.blink then
         love.graphics.setColor(0.8, 0.8, 1)
-        love.graphics.print("Press ENTER/A to start game", 80, 110)
+        local prompt = "Press ENTER/A to start game"
+        local prompt_scale = 2.5
+        local prompt_width = font:getWidth(prompt) * prompt_scale
+        love.graphics.print(prompt, screen_width / 2 - prompt_width / 2, screen_height * 0.6, 0, prompt_scale, prompt_scale)
     end
 
+    -- Draw hint text
     love.graphics.setColor(0.6, 0.6, 0.6)
-    love.graphics.print("(supports keyboard and gamepad)", 70, 125)
+    local hint = "(supports keyboard and gamepad)"
+    local hint_scale = 1.5
+    local hint_width = font:getWidth(hint) * hint_scale
+    love.graphics.print(hint, screen_width / 2 - hint_width / 2, screen_height * 0.7, 0, hint_scale, hint_scale)
 end
 
 return MenuState

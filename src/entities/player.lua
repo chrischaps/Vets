@@ -437,6 +437,8 @@ function Player:handleJumping()
     -- Handle jumping
     -- Jump when on ground (or coyote time) and jump pressed or buffered
     if can_coyote_jump and (self.input_jump or (has_buffered_jump and self.grounded)) then
+        -- Play jump sound immediately for instant feedback
+        Audio:play_sfx("jump")
         self:jump()
         -- Consume buffered jump if input system is available
         if self.input_system then
@@ -446,6 +448,8 @@ function Player:handleJumping()
         self.coyote_frames = 0
     -- Wall-jump when wall-sliding and jump pressed (and actually on a wall)
     elseif self.wall_sliding and self.input_jump and self.wall_direction ~= 0 then
+        -- Play jump sound immediately for instant feedback
+        Audio:play_sfx("jump")
         self:wallJump()
         -- Consume buffered jump if input system is available
         if self.input_system then
@@ -539,12 +543,16 @@ function Player:updateDash(dt)
         -- Check for dash canceling with jump FIRST (before setting velocity)
         if self.input_jump then
             if self.is_ground_dash then
+                -- Play jump sound immediately for instant feedback
+                Audio:play_sfx("jump")
                 self:jump()
                 self.dashing = false
                 self.dash_cooldown_timer = Constants.DASH_COOLDOWN
                 -- Restore normal max velocity
                 self.physics:setMaxVelocity(Constants.RUN_SPEED, Constants.TERMINAL_VELOCITY)
             elseif self.wall_sliding and self.wall_direction ~= 0 then
+                -- Play jump sound immediately for instant feedback
+                Audio:play_sfx("jump")
                 self:wallJump()
                 self.dashing = false
                 self.dash_cooldown_timer = Constants.DASH_COOLDOWN
@@ -694,9 +702,6 @@ function Player:jump()
     self.physics:setVelocity(self.physics.velocity_x, Constants.JUMP_FORCE)
     self.jumping = true
     self.grounded = false
-
-    -- Play jump sound effect (VETS-50)
-    Audio:play_sfx("jump")
 end
 
 -- Perform wall-jump
@@ -758,9 +763,6 @@ function Player:wallJump()
 
     -- Update facing direction to match jump direction
     self.facing_right = jump_direction > 0
-
-    -- Play jump sound effect (VETS-50)
-    Audio:play_sfx("jump")
 end
 
 -- Perform dash
@@ -858,7 +860,7 @@ function Player:dash()
 
     -- Play dash sound effect - randomize between dash1 and dash2 (VETS-50)
     local dash_sound = math.random(1, 2) == 1 and "dash1" or "dash2"
-    Audio:play_sfx(dash_sound)
+    Audio:play_sfx("dash1")
 
     -- Trigger screen shake
     self.dash_screen_shake_timer = Constants.DASH_SCREEN_SHAKE_DURATION

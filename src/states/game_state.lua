@@ -383,27 +383,7 @@ function GameState:draw()
         self.camera:detach()
     end
 
-    -- Draw score display
-    if self.scoring then
-        love.graphics.setColor(1, 1, 1)
-        love.graphics.print(string.format("Score: %d", self.scoring:getTotal()), 10, 10)
-        love.graphics.print(string.format("Deliveries: %d/%d", self.completed_deliveries, self.total_deliveries), 10, 22)
-
-        -- Draw combo display
-        local combo_count = self.scoring:getComboCount()
-        local combo_multiplier = self.scoring:getComboMultiplier()
-        if combo_count > 0 then
-            -- Highlight combo text based on multiplier level
-            if combo_multiplier >= 5 then
-                love.graphics.setColor(1, 0.3, 1)  -- Magenta for max combo (5x)
-            elseif combo_multiplier >= 3 then
-                love.graphics.setColor(1, 1, 0.3)  -- Yellow for high combo (3-4x)
-            else
-                love.graphics.setColor(0.3, 1, 1)  -- Cyan for active combo (1-2x)
-            end
-            love.graphics.print(string.format("COMBO: %dx (%dx multiplier)", combo_count, combo_multiplier), 10, 34)
-        end
-    end
+    -- Score display now handled by HUD system (see drawUI method)
 
     -- Draw game over overlay
     if self.game_over then
