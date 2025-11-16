@@ -17,6 +17,7 @@ local ScoreDisplay = require("src.ui.score_display")
 local Constants = require("src.core.constants")
 local Level = require("src.systems.level")
 local Audio = require("src.systems.audio")  -- VETS-49
+local ScreenEffects = require("src.systems.screen_effects")  -- VETS-61
 
 local GameState = {}
 
@@ -36,6 +37,12 @@ function GameState:enter(night_number, state_manager)
     -- Initialize game state flags
     self.game_over = false
     self.game_won = false
+
+    -- Initialize transition state (VETS-61)
+    self.transitioning_to_results = false
+    self.transition_fade = nil
+    self.transition_delay = 0
+    self.transition_duration = 2.0  -- Total transition time in seconds
 
     -- Initialize systems
     self:initializeSystems()
@@ -210,6 +217,12 @@ function GameState:update(dt)
                 self.state_manager:push("pause", self.state_manager, self.night_number)
             end
         end
+    end
+
+    -- VETS-61: Update transition fade if active
+    if self.transitioning_to_results and self.transition_fade then
+        ScreenEffects.updateFade(self.transition_fade, dt)
+        return  -- Don't update game logic during transition
     end
 
     -- Don't update game logic if game over
@@ -403,16 +416,12 @@ function GameState:draw()
         love.graphics.print("Press ESC to exit", VIRTUAL_WIDTH / 2 - 45, VIRTUAL_HEIGHT / 2 + 20)
     end
 
-    -- Draw win overlay
-    if self.game_won then
-        love.graphics.setColor(0, 0, 0, 0.7)
-        love.graphics.rectangle("fill", 0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT)
-        love.graphics.setColor(0.3, 1, 0.3)
-        love.graphics.print("ALL DELIVERIES COMPLETE!", VIRTUAL_WIDTH / 2 - 70, VIRTUAL_HEIGHT / 2 - 30)
-        love.graphics.setColor(1, 1, 1)
-        love.graphics.print(string.format("Final Score: %d", self.scoring:getTotal()), VIRTUAL_WIDTH / 2 - 45, VIRTUAL_HEIGHT / 2 - 10)
-        love.graphics.print(string.format("Time Remaining: %s", self.timer:getFormattedTime()), VIRTUAL_WIDTH / 2 - 60, VIRTUAL_HEIGHT / 2 + 5)
-        love.graphics.print("Press ESC to exit", VIRTUAL_WIDTH / 2 - 45, VIRTUAL_HEIGHT / 2 + 25)
+    -- Draw win overlay (removed - now handled by transition fade VETS-61)
+    -- Old overlay code removed to allow smooth fade transition
+
+    -- VETS-61: Draw transition fade overlay if active
+    if self.transition_fade then
+        ScreenEffects.drawFade(self.transition_fade, VIRTUAL_WIDTH, VIRTUAL_HEIGHT)
     end
 end
 
@@ -465,8 +474,34 @@ function GameState:onWinCondition()
     print("[GameState] Completion Bonus: +" .. completion_bonus .. " points")
     print("[GameState] Final Score: " .. self.scoring:getTotal())
 
-    -- Transition to ResultsState with win condition (VETS-31)
-    self:transitionToResults(true)
+    -- VETS-61: Start success transition instead of immediately going to results
+    self:startSuccessTransition()
+end
+
+-- VETS-61: Start the success transition with visual/audio effects
+function GameState:startSuccessTransition()
+    print("[GameState] Starting success transition...")
+
+    -- Set transitioning flag
+    self.transitioning_to_results = true
+
+    -- Play success audio
+    Audio:play_sfx("success_jingle")
+
+    -- Trigger moon sparkle effect
+    if self.moon_timer and self.moon_timer.triggerSparkle then
+        self.moon_timer:triggerSparkle()
+    end
+
+    -- Create warm sunrise fade effect (orange/pink color)
+    self.transition_fade = ScreenEffects.createFade(
+        {255, 200, 150},  -- Warm orange/pink color
+        1.5,              -- 1.5 second fade duration
+        function()
+            -- Callback: Transition to results when fade completes
+            self:transitionToResults(true)
+        end
+    )
 end
 
 -- Transition to ResultsState with completion data (VETS-31)
