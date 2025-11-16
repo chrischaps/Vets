@@ -162,4 +162,61 @@ function Scoring:printBreakdown()
     print("======================\n")
 end
 
+-- VETS-56: Rank Calculation Functions
+-- Get rank letter based on final score
+-- @param score: Final score value
+-- @return: Rank letter string ("S+", "S", "A", "B", "C", "D", or "E")
+function Scoring.getRank(score)
+    if score >= 12000 then
+        return "S+"
+    elseif score >= 9000 then
+        return "S"
+    elseif score >= 7000 then
+        return "A"
+    elseif score >= 5000 then
+        return "B"
+    elseif score >= 3000 then
+        return "C"
+    elseif score >= 1000 then
+        return "D"
+    else
+        return "E"
+    end
+end
+
+-- Get rank color for display
+-- @param rank: Rank letter string
+-- @return: RGB color table {r, g, b} with values 0-1
+function Scoring.getRankColor(rank)
+    local colors = {
+        ["S+"] = {1, 0.84, 0},      -- Gold
+        ["S"] = {1, 0.92, 0.23},    -- Yellow
+        ["A"] = {0.2, 1, 0.3},      -- Green
+        ["B"] = {0.3, 0.7, 1},      -- Blue
+        ["C"] = {0.8, 0.8, 0.8},    -- Gray
+        ["D"] = {0.6, 0.4, 0.2},    -- Brown
+        ["E"] = {0.5, 0.5, 0.5}     -- Dark Gray
+    }
+    return colors[rank] or {1, 1, 1}  -- Default to white if rank not found
+end
+
+-- Check if rank1 is better than rank2
+-- @param rank1: First rank letter string
+-- @param rank2: Second rank letter string
+-- @return: true if rank1 is better than rank2, false otherwise
+function Scoring.isRankBetter(rank1, rank2)
+    local order = {
+        ["S+"] = 7,
+        ["S"] = 6,
+        ["A"] = 5,
+        ["B"] = 4,
+        ["C"] = 3,
+        ["D"] = 2,
+        ["E"] = 1
+    }
+    local rank1_value = order[rank1] or 0
+    local rank2_value = order[rank2] or 0
+    return rank1_value > rank2_value
+end
+
 return Scoring
