@@ -16,6 +16,9 @@ function MenuState:enter(message, state_manager)
     -- Initialize input system
     self.input = Input.new()
     self.input:init()
+    -- Update immediately to consume any held buttons from previous state
+    -- This prevents input from cascading through state transitions
+    self.input:update()
 
     -- Menu options (VETS-58)
     self.selected_option = 1
