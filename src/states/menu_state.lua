@@ -25,7 +25,7 @@ function MenuState:enter(message, state_manager)
             action = function()
                 if self.state_manager then
                     print("[MenuState] Transitioning to Night Select")
-                    self.state_manager:switch("night_select", self.state_manager)
+                    self.state_manager:switch("night_select", "", self.state_manager)
                 end
             end
         },
