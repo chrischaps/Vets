@@ -8,6 +8,7 @@ local Collision = require("src.components.collision")
 local Animation = require("src.components.animation")
 local Constants = require("src.core.constants")
 local Time = require("src.core.time")
+local Audio = require("src.systems.audio")  -- VETS-50
 
 local Player = {}
 Player.__index = Player
@@ -693,6 +694,9 @@ function Player:jump()
     self.physics:setVelocity(self.physics.velocity_x, Constants.JUMP_FORCE)
     self.jumping = true
     self.grounded = false
+
+    -- Play jump sound effect (VETS-50)
+    Audio:play_sfx("jump")
 end
 
 -- Perform wall-jump
@@ -754,6 +758,9 @@ function Player:wallJump()
 
     -- Update facing direction to match jump direction
     self.facing_right = jump_direction > 0
+
+    -- Play jump sound effect (VETS-50)
+    Audio:play_sfx("jump")
 end
 
 -- Perform dash
@@ -848,6 +855,10 @@ function Player:dash()
     self.dashing = true
     self.dash_timer = Constants.DASH_DURATION
     self.iframe_timer = Constants.DASH_IFRAME_DURATION
+
+    -- Play dash sound effect - randomize between dash1 and dash2 (VETS-50)
+    local dash_sound = math.random(1, 2) == 1 and "dash1" or "dash2"
+    Audio:play_sfx(dash_sound)
 
     -- Trigger screen shake
     self.dash_screen_shake_timer = Constants.DASH_SCREEN_SHAKE_DURATION
