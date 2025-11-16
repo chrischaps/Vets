@@ -13,6 +13,7 @@ local Timer = require("src.systems.timer")
 local Scoring = require("src.systems.scoring")
 local HUD = require("src.ui.hud")
 local TimerDisplay = require("src.ui.timer_display")
+local ScoreDisplay = require("src.ui.score_display")
 local Constants = require("src.core.constants")
 local Level = require("src.systems.level")
 
@@ -114,6 +115,15 @@ function GameState:initializeSystems()
     })
     self.hud:addElement(self.moon_timer)
 
+    -- Initialize score display (VETS-46)
+    self.score_display = ScoreDisplay:new({
+        initial_score = 0,
+        x = 10,  -- 10px padding from right edge
+        y = 10,  -- 10px padding from top
+        anchor = HUD.ANCHOR.TOP_RIGHT
+    })
+    self.hud:addElement(self.score_display)
+
     -- Initialize scoring system
     self.scoring = Scoring.new()
 
@@ -154,6 +164,7 @@ function GameState:loadLevel(night_number)
     self.player.timer = self.timer
     self.player.moon_timer = self.moon_timer
     self.player.scoring = self.scoring
+    self.player.score_display = self.score_display
 
     -- Update timer with level's time limit (if specified in environment)
     if level.environment and level.environment.time_limit then
@@ -298,7 +309,12 @@ function GameState:update(dt)
         end
     end
 
-    -- Update HUD (includes moon timer visual)
+    -- Sync score display with scoring system (VETS-46)
+    if self.score_display and self.scoring then
+        self.score_display:setScore(self.scoring:getTotal())
+    end
+
+    -- Update HUD (includes moon timer visual and score display)
     if self.hud then
         self.hud:update(dt)
     end
