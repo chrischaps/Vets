@@ -67,6 +67,15 @@ This project uses JIRA for task management and follows a structured git workflow
 
 ### Working on JIRA Tickets
 
+**IMPORTANT: JIRA MCP Authentication:**
+- The JIRA MCP integration occasionally loses authentication permissions
+- If you encounter authentication errors (e.g., "Unauthorized", "Authentication failed", "accessibleResources.filter is not a function"), you should:
+  1. **PAUSE your current work immediately**
+  2. **Inform the user** that JIRA MCP authentication has been lost
+  3. **Request that the user re-authenticate** the MCP before continuing
+  4. **Do NOT attempt to continue** working on JIRA tickets without authentication
+- Once the user has re-authenticated, you can resume the ticket workflow
+
 **JIRA Status Flow:**
 - **To Do** → **In Progress** → **In Review** → **Done**
 
