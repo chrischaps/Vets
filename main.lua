@@ -13,6 +13,7 @@ local StateManager = require("src.systems.state_manager")
 local MenuState = require("src.states.menu_state")
 local GameState = require("src.states.game_state")
 local ResultsState = require("src.states.results_state")
+local PauseState = require("src.states.pause_state")  -- VETS-47
 
 -- Virtual resolution for pixel-perfect rendering
 VIRTUAL_WIDTH = 320
@@ -65,6 +66,7 @@ function love.load()
     state_manager:register("menu", MenuState)
     state_manager:register("game", GameState)
     state_manager:register("results", ResultsState)
+    state_manager:register("pause", PauseState)  -- VETS-47
 
     -- Start with GameState (Option 1: Direct to GameState)
     -- TODO: Switch to MenuState when it's fully functional (Option 2)

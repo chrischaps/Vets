@@ -32,7 +32,6 @@ function GameState:enter(night_number, state_manager)
     self.state_manager = state_manager
 
     -- Initialize game state flags
-    self.paused = false
     self.game_over = false
     self.game_won = false
 
@@ -183,13 +182,18 @@ function GameState:update(dt)
         self.input:update()
     end
 
-    -- Handle pause input
+    -- Handle pause input (VETS-47: Push pause state)
     if self.input and self.input:is_pressed("pause") then
-        self:togglePause()
+        if not self.game_over and not self.game_won then
+            -- Push pause state onto stack
+            if self.state_manager then
+                self.state_manager:push("pause", self.state_manager, self.night_number)
+            end
+        end
     end
 
-    -- Don't update game logic if paused or game over
-    if self.paused or self.game_over or self.game_won then
+    -- Don't update game logic if game over
+    if self.game_over or self.game_won then
         return
     end
 
@@ -373,15 +377,6 @@ function GameState:draw()
         end
     end
 
-    -- Draw pause overlay
-    if self.paused then
-        love.graphics.setColor(0, 0, 0, 0.5)
-        love.graphics.rectangle("fill", 0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT)
-        love.graphics.setColor(1, 1, 1)
-        love.graphics.print("PAUSED", VIRTUAL_WIDTH / 2 - 20, VIRTUAL_HEIGHT / 2 - 10)
-        love.graphics.print("Press P to resume", VIRTUAL_WIDTH / 2 - 40, VIRTUAL_HEIGHT / 2 + 5)
-    end
-
     -- Draw game over overlay
     if self.game_over then
         love.graphics.setColor(0, 0, 0, 0.7)
@@ -406,22 +401,6 @@ function GameState:draw()
     end
 end
 
--- Toggle pause state
-function GameState:togglePause()
-    if self.game_over or self.game_won then
-        return  -- Can't pause during game over/win
-    end
-
-    self.paused = not self.paused
-
-    if self.paused then
-        self.timer:pause()
-        print("[GameState] Game paused")
-    else
-        self.timer:resume()
-        print("[GameState] Game resumed")
-    end
-end
 
 -- Called when timer expires
 function GameState:onTimerExpired()
