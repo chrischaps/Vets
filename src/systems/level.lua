@@ -4,6 +4,7 @@
 
 local LevelLoader = require("src.systems.level_loader")
 local Platform = require("src.entities.platform")
+local Wall = require("src.entities.wall")
 local DeliveryZone = require("src.entities.delivery_zone")
 
 -- Hazard classes
@@ -84,15 +85,29 @@ function Level.load(night_number, collision_system)
         table.insert(level_instance.platforms, platform)
     end
 
-    -- Instantiate walls (if Wall class exists in future)
+    -- Instantiate walls
     if #level_data.walls > 0 then
-        print(string.format("Skipping %d wall(s) - Wall entity class not yet implemented", #level_data.walls))
-        -- TODO: Implement when Wall entity class is created
-        -- for i, wall_data in ipairs(level_data.walls) do
-        --     local wall = Wall.new(wall_data.x, wall_data.y, wall_data.width, wall_data.height)
-        --     collision_system:add(wall, wall_data.x, wall_data.y, wall_data.width, wall_data.height)
-        --     table.insert(level_instance.walls, wall)
-        -- end
+        print(string.format("Loading %d wall(s)...", #level_data.walls))
+        for i, wall_data in ipairs(level_data.walls) do
+            local wall = Wall.new(wall_data.x, wall_data.y, wall_data.width, wall_data.height)
+
+            -- Store wall type and properties from JSON
+            wall.wall_type = wall_data.type or "building_wall"
+            if wall_data.properties then
+                wall.properties = wall_data.properties
+            end
+
+            -- Add to collision system
+            collision_system:add(
+                wall,
+                wall_data.x,
+                wall_data.y,
+                wall_data.width,
+                wall_data.height
+            )
+
+            table.insert(level_instance.walls, wall)
+        end
     end
 
     -- Instantiate delivery zones

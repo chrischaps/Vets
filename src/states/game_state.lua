@@ -71,6 +71,7 @@ function GameState:exit()
     -- Cleanup
     self.player = nil
     self.platforms = nil
+    self.walls = nil
     self.delivery_zones = nil
     self.hazards = nil
     self.powerups = nil
@@ -150,6 +151,7 @@ function GameState:loadLevel(night_number)
     -- Store level instance and entity arrays
     self.level = level
     self.platforms = level.platforms  -- Already in collision system
+    self.walls = level.walls  -- Climbable walls
     self.delivery_zones = level.delivery_zones
     self.hazards = level.hazards
     self.powerups = level.powerups
@@ -351,6 +353,11 @@ function GameState:draw()
     -- Draw platforms
     for _, platform in ipairs(self.platforms) do
         platform:draw()
+    end
+
+    -- Draw walls
+    for _, wall in ipairs(self.walls) do
+        wall:draw()
     end
 
     -- Draw delivery zones
