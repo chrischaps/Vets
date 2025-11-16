@@ -33,7 +33,6 @@ function GameState:enter(night_number, state_manager)
     self.state_manager = state_manager
 
     -- Initialize game state flags
-    self.paused = false
     self.game_over = false
     self.game_won = false
 
@@ -194,13 +193,18 @@ function GameState:update(dt)
         self.input:update()
     end
 
-    -- Handle pause input
+    -- Handle pause input (VETS-47: Push pause state)
     if self.input and self.input:is_pressed("pause") then
-        self:togglePause()
+        if not self.game_over and not self.game_won then
+            -- Push pause state onto stack
+            if self.state_manager then
+                self.state_manager:push("pause", self.state_manager, self.night_number)
+            end
+        end
     end
 
-    -- Don't update game logic if paused or game over
-    if self.paused or self.game_over or self.game_won then
+    -- Don't update game logic if game over
+    if self.game_over or self.game_won then
         return
     end
 
@@ -367,13 +371,26 @@ function GameState:draw()
         self.camera:detach()
     end
 
-    -- Draw pause overlay
-    if self.paused then
-        love.graphics.setColor(0, 0, 0, 0.5)
-        love.graphics.rectangle("fill", 0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT)
+    -- Draw score display
+    if self.scoring then
         love.graphics.setColor(1, 1, 1)
-        love.graphics.print("PAUSED", VIRTUAL_WIDTH / 2 - 20, VIRTUAL_HEIGHT / 2 - 10)
-        love.graphics.print("Press P to resume", VIRTUAL_WIDTH / 2 - 40, VIRTUAL_HEIGHT / 2 + 5)
+        love.graphics.print(string.format("Score: %d", self.scoring:getTotal()), 10, 10)
+        love.graphics.print(string.format("Deliveries: %d/%d", self.completed_deliveries, self.total_deliveries), 10, 22)
+
+        -- Draw combo display
+        local combo_count = self.scoring:getComboCount()
+        local combo_multiplier = self.scoring:getComboMultiplier()
+        if combo_count > 0 then
+            -- Highlight combo text based on multiplier level
+            if combo_multiplier >= 5 then
+                love.graphics.setColor(1, 0.3, 1)  -- Magenta for max combo (5x)
+            elseif combo_multiplier >= 3 then
+                love.graphics.setColor(1, 1, 0.3)  -- Yellow for high combo (3-4x)
+            else
+                love.graphics.setColor(0.3, 1, 1)  -- Cyan for active combo (1-2x)
+            end
+            love.graphics.print(string.format("COMBO: %dx (%dx multiplier)", combo_count, combo_multiplier), 10, 34)
+        end
     end
 
     -- Draw game over overlay
@@ -400,22 +417,6 @@ function GameState:draw()
     end
 end
 
--- Toggle pause state
-function GameState:togglePause()
-    if self.game_over or self.game_won then
-        return  -- Can't pause during game over/win
-    end
-
-    self.paused = not self.paused
-
-    if self.paused then
-        self.timer:pause()
-        print("[GameState] Game paused")
-    else
-        self.timer:resume()
-        print("[GameState] Game resumed")
-    end
-end
 
 -- Called when timer expires
 function GameState:onTimerExpired()
