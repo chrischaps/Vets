@@ -22,8 +22,29 @@ local ACTION_BINDINGS = {
             axis = {name = "leftx", direction = 1}  -- Left stick
         }
     },
+    up = {
+        keyboard = {"w", "up"},
+        gamepad = {
+            buttons = {"dpup"},  -- D-pad up
+            axis = {name = "lefty", direction = -1}  -- Left stick up
+        }
+    },
+    down = {
+        keyboard = {"s", "down"},
+        gamepad = {
+            buttons = {"dpdown"},  -- D-pad down
+            axis = {name = "lefty", direction = 1}  -- Left stick down
+        }
+    },
     jump = {
-        keyboard = {"space", "w", "up"},
+        keyboard = {"space"},
+        gamepad = {
+            buttons = {"a"},  -- A button
+            axis = nil
+        }
+    },
+    confirm = {
+        keyboard = {"return", "space"},  -- ENTER or SPACE
         gamepad = {
             buttons = {"a"},  -- A button
             axis = nil
@@ -37,14 +58,14 @@ local ACTION_BINDINGS = {
         }
     },
     deliver = {
-        keyboard = {"s", "down", "e"},
+        keyboard = {"e"},
         gamepad = {
             buttons = {"b", "y"},  -- B button or Y button
             axis = nil
         }
     },
     pause = {
-        keyboard = {"escape"},
+        keyboard = {"p", "escape"},
         gamepad = {
             buttons = {"start"},
             axis = nil

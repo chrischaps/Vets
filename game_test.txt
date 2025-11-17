@@ -1,0 +1,93 @@
+Courier Cat initialized!
+Virtual resolution: 320x180
+Window resolution: 1280x720
+
+Libraries loaded:
+  - bump.lua: OK
+  - anim8: OK
+  - camera: OK
+  - json: OK
+
+Time system initialized:
+  - Fixed timestep: 0.016666666666667s (60 FPS)
+
+Testing Entity-Component System:
+  - Entity created with ID: 1, type: test
+  - Component added: OK
+  - Component retrieval: OK
+  - Tags added: OK
+  - Deactivate: OK
+  - Activate: OK
+
+Entity-Component System: OK
+
+Testing Core Components:
+  - Transform created at (100, 50): OK
+  - Transform translate: OK
+  - Transform rotation: OK
+  - Physics created with velocity (0, 0): OK
+  - Physics velocity set: OK
+  - Physics impulse: OK
+  - Collision created (AABB 16x16): OK
+  - Collision layer/mask: OK
+
+  Testing integrated entity:
+  - Entity with all components: OK
+
+Core Components: OK
+
+Initializing Input System:
+Input system initialized:
+  - No gamepads connected
+  - Axis deadzone: 0.15
+  - Gamepads will be detected on hot-plug
+  - Input system: OK
+
+Initializing Collision System:
+  - Collision system created with 16px cell size: OK
+
+Creating test level:
+  - Ground platform: 160x30 at (10, 150)
+  - Platform 1: 50x8 at (40, 120) - Start
+  - Platform 2: 45x8 at (122, 110) - 32px gap
+  - Platform 3: 40x8 at (215, 95) - 48px gap
+  - Platform 4: 50x8 at (40, 70) - 64px gap
+  - Left wall: 8x90 at (5, 30)
+  - Right wall: 8x90 at (307, 30)
+  - Platform 5: 45x8 at (120, 50)
+  - Platform 6: 40x8 at (180, 35)
+  - Total platforms/walls: 9
+
+Creating player:
+  - Player created at (160, 100)
+  - Player hitbox: 10x14 pixels
+  - Run speed: 120 px/s
+  - Acceleration: 1200 px/s²
+  - Jump force: -300 px/s
+
+Player: OK
+
+Creating delivery zones:
+  - Zone 1 created at (100, 145)
+  - Zone 2 created at (200, 90)
+  - Zone 3 created at (150, 45)
+  - Total delivery zones: 3
+
+Delivery Zones: OK
+  - Player connected to delivery zones
+
+Initializing Camera System:
+  - Camera created and targeting player
+  - Camera smoothing: 0.1 (smooth following)
+  - Camera initial position: (160, 100)
+  - Player position: (160, 100)
+
+Camera System: OK
+
+=== Use arrow keys/WASD to move, Space to jump ===
+[DeliveryZone] Delivery completed at (150, 45)
+[Player] Delivery successful!
+[DeliveryZone] Delivery completed at (100, 145)
+[Player] Delivery successful!
+[DeliveryZone] Delivery completed at (200, 90)
+[Player] Delivery successful!

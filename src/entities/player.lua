@@ -5,8 +5,10 @@ local Entity = require("src.entities.entity")
 local Transform = require("src.components.transform")
 local Physics = require("src.components.physics")
 local Collision = require("src.components.collision")
+local Animation = require("src.components.animation")
 local Constants = require("src.core.constants")
 local Time = require("src.core.time")
+local Audio = require("src.systems.audio")  -- VETS-50
 
 local Player = {}
 Player.__index = Player
@@ -69,14 +71,45 @@ function Player.new(x, y, collision_system, input_system)
     self.iframe_timer = 0  -- Invulnerability timer during dash
     self.is_ground_dash = false  -- Was this dash started on ground? (for dash canceling)
 
+    -- Stun state (from hazards like laundry lines)
+    self.stunned = false  -- Is player currently stunned?
+    self.stun_timer = 0  -- Time remaining in stun
+
     -- Movement input
     self.input_x = 0  -- -1 for left, 1 for right, 0 for no input
     self.input_jump = false  -- Jump button pressed this frame
     self.input_jump_release = false  -- Jump button released this frame
     self.input_dash = false  -- Dash button pressed this frame
+    self.input_deliver = false  -- Deliver button pressed this frame
+
+    -- Delivery state
+    self.delivery_zones = {}  -- Reference to delivery zones (set externally)
+    self.deliver_held = false  -- Is deliver button currently held?
+    self.timer = nil  -- Reference to timer system (set externally)
+    self.moon_timer = nil  -- Reference to moon timer UI (set externally)
+    self.scoring = nil  -- Reference to scoring system (set externally)
+
+    -- Combo tracking (VETS-26)
+    self.combo_count = 0  -- Current combo streak (consecutive deliveries without ground touch)
+    self.combo_was_grounded = false  -- Track grounded state for combo reset detection
 
     -- Visual representation (placeholder rectangle)
     self.color = {0.9, 0.6, 0.3}  -- Orange color for the cat
+
+    -- Load PixelLab cat animation sprite sheet
+    -- Total frames: idle(2) + run(4) + jump(9) + dash(8) + wall-slide(6) = 29 frames
+    -- Layout: 29 frames horizontal, 48x48 pixels each = 1392x48 sprite sheet
+    self.sprite_sheet = self:loadCatAnimations()
+
+    -- Create Animation component with 48x48 frame size
+    self.animation = Animation.new(self.sprite_sheet, 48, 48)
+    self.entity:addComponent("animation", self.animation)
+
+    -- Define all animations
+    self:defineAnimations()
+
+    -- Start with idle animation
+    self.animation:play("idle")
 
     -- Dash visual effects
     self.dash_trail = {}  -- Array of trail positions {x, y, alpha, time}
@@ -96,6 +129,12 @@ function Player:handleInput()
     self.input_jump = false
     self.input_jump_release = false
     self.input_dash = false
+    self.input_deliver = false
+
+    -- Don't process input if stunned
+    if self.stunned then
+        return
+    end
 
     -- Use input system if available, otherwise fallback to direct keyboard input
     if self.input_system then
@@ -137,6 +176,17 @@ function Player:handleInput()
 
         -- Update dash held state (for edge detection)
         self.dash_held = dash_down
+
+        -- Check deliver input using input system
+        local deliver_down = self.input_system:is_down("deliver")
+
+        -- Detect deliver press (rising edge detection)
+        if deliver_down and not self.deliver_held then
+            self.input_deliver = true
+        end
+
+        -- Update deliver held state (for edge detection)
+        self.deliver_held = deliver_down
     else
         -- Fallback to direct keyboard input (for backwards compatibility)
         -- Check left/right arrow keys or WASD
@@ -178,6 +228,19 @@ function Player:handleInput()
 
         -- Update dash held state (for edge detection)
         self.dash_held = dash_down
+
+        -- Check deliver input (S, Down, or E key)
+        local deliver_down = love.keyboard.isDown("s") or
+                            love.keyboard.isDown("down") or
+                            love.keyboard.isDown("e")
+
+        -- Detect deliver press (rising edge detection)
+        if deliver_down and not self.deliver_held then
+            self.input_deliver = true
+        end
+
+        -- Update deliver held state (for edge detection)
+        self.deliver_held = deliver_down
     end
 end
 
@@ -227,6 +290,17 @@ function Player:updatePhysicsAndCollision(dt)
                 self.air_dash_charges = 1
                 -- Reset coyote time when grounded
                 self.coyote_frames = Constants.COYOTE_FRAMES
+
+                -- Reset combo when landing (VETS-28)
+                if self.combo_count > 0 and not self.combo_was_grounded then
+                    print("[Player] Combo reset on landing (was " .. self.combo_count .. "x)")
+                    self.combo_count = 0
+                    -- Reset combo in scoring system as well
+                    if self.scoring then
+                        self.scoring:resetCombo()
+                    end
+                end
+                self.combo_was_grounded = true
             end
 
             -- Check if collision is from above (player hitting head on ceiling)
@@ -363,6 +437,8 @@ function Player:handleJumping()
     -- Handle jumping
     -- Jump when on ground (or coyote time) and jump pressed or buffered
     if can_coyote_jump and (self.input_jump or (has_buffered_jump and self.grounded)) then
+        -- Play jump sound immediately for instant feedback
+        Audio:play_sfx("jump")
         self:jump()
         -- Consume buffered jump if input system is available
         if self.input_system then
@@ -372,6 +448,8 @@ function Player:handleJumping()
         self.coyote_frames = 0
     -- Wall-jump when wall-sliding and jump pressed (and actually on a wall)
     elseif self.wall_sliding and self.input_jump and self.wall_direction ~= 0 then
+        -- Play jump sound immediately for instant feedback
+        Audio:play_sfx("jump")
         self:wallJump()
         -- Consume buffered jump if input system is available
         if self.input_system then
@@ -465,12 +543,16 @@ function Player:updateDash(dt)
         -- Check for dash canceling with jump FIRST (before setting velocity)
         if self.input_jump then
             if self.is_ground_dash then
+                -- Play jump sound immediately for instant feedback
+                Audio:play_sfx("jump")
                 self:jump()
                 self.dashing = false
                 self.dash_cooldown_timer = Constants.DASH_COOLDOWN
                 -- Restore normal max velocity
                 self.physics:setMaxVelocity(Constants.RUN_SPEED, Constants.TERMINAL_VELOCITY)
             elseif self.wall_sliding and self.wall_direction ~= 0 then
+                -- Play jump sound immediately for instant feedback
+                Audio:play_sfx("jump")
                 self:wallJump()
                 self.dashing = false
                 self.dash_cooldown_timer = Constants.DASH_COOLDOWN
@@ -538,6 +620,15 @@ function Player:updateTimers(dt)
             self.dash_screen_shake_y = 0
         end
     end
+
+    -- Update stun timer
+    if self.stun_timer > 0 then
+        self.stun_timer = self.stun_timer - dt
+        if self.stun_timer <= 0 then
+            self.stunned = false
+            print("[Player] Stun ended")
+        end
+    end
 end
 
 -- Update dash trail effect
@@ -596,11 +687,13 @@ function Player:update(dt)
     self:updateDash(dt)
     self:applyMovement(dt)
     self:handleJumping()
+    self:handleDelivery()  -- Handle delivery action
     self:updateWallSliding(dt)
     self:applyGravity(dt)
     self:updatePhysicsAndCollision(dt)
     self:updateDashTrail(dt)
     self:updateScreenShake(dt)
+    self:updateAnimation(dt)  -- Update animation state machine
 end
 
 -- Perform jump
@@ -765,6 +858,10 @@ function Player:dash()
     self.dash_timer = Constants.DASH_DURATION
     self.iframe_timer = Constants.DASH_IFRAME_DURATION
 
+    -- Play dash sound effect - randomize between dash1 and dash2 (VETS-50)
+    local dash_sound = math.random(1, 2) == 1 and "dash1" or "dash2"
+    Audio:play_sfx("dash1")
+
     -- Trigger screen shake
     self.dash_screen_shake_timer = Constants.DASH_SCREEN_SHAKE_DURATION
 
@@ -780,6 +877,103 @@ function Player:dash()
     -- Clear other movement states
     self.wall_sliding = false
     self.control_lock_timer = 0
+end
+
+-- Apply stun effect to player (from hazards)
+-- @param duration: Stun duration in seconds
+function Player:applyStun(duration)
+    -- Don't apply stun if already stunned or if player has iframes
+    if self.stunned or self.iframe_timer > 0 then
+        return
+    end
+
+    self.stunned = true
+    self.stun_timer = duration
+
+    -- Stop player movement
+    self.physics:setVelocity(0, self.physics.velocity_y * 0.5)
+
+    -- Cancel dash if active
+    if self.dashing then
+        self.dashing = false
+        self.dash_timer = 0
+    end
+
+    print(string.format("[Player] Stunned for %.1fs", duration))
+end
+
+-- Handle delivery input
+function Player:handleDelivery()
+    if self.input_deliver then
+        self:attemptDelivery()
+    end
+end
+
+-- Attempt to deliver to a nearby delivery zone
+function Player:attemptDelivery()
+    -- Check if we have delivery zones reference
+    if not self.delivery_zones or #self.delivery_zones == 0 then
+        return false
+    end
+
+    -- Try to deliver to each zone
+    for _, zone in ipairs(self.delivery_zones) do
+        if zone:canDeliver() then
+            -- Perform delivery
+            if zone:deliver() then
+                -- Increment combo if in air (VETS-28)
+                if not self.grounded then
+                    self.combo_count = self.combo_count + 1
+                    self.combo_was_grounded = false  -- Mark that combo is active
+                else
+                    -- Reset combo if delivering on ground
+                    self.combo_count = 0
+                    self.combo_was_grounded = true
+                end
+
+                -- Calculate combo multiplier using VETS-28 formula
+                -- floor(consecutive_deliveries / 2) + 1, capped at 5x
+                -- Examples: 1→1x, 2-3→2x, 4-5→3x, 6-7→4x, 8+→5x
+                local combo_multiplier = math.floor(self.combo_count / 2) + 1
+                combo_multiplier = math.min(combo_multiplier, 5)
+
+                -- Calculate time bonus based on combo level (VETS-26)
+                -- Standard: +8s, 2x: +10s, 3x: +12s, 4x: +14s, 5x: +16s
+                local time_bonus = 8 + (combo_multiplier - 1) * 2
+
+                -- Extend timer if available
+                if self.timer then
+                    local actual_added = self.timer:extend(time_bonus)
+                    print(string.format("[Player] Delivery successful! Combo: %dx | Time bonus: +%ds",
+                        combo_multiplier, actual_added))
+
+                    -- Trigger moon pulse visual feedback (VETS-26)
+                    if self.moon_timer then
+                        self.moon_timer:triggerPulse()
+                    end
+                else
+                    print(string.format("[Player] Delivery successful! Combo: %dx (timer not connected)",
+                        combo_multiplier))
+                end
+
+                -- Add score for delivery with combo (VETS-28)
+                if self.scoring then
+                    local points = self.scoring:addDelivery(self.combo_count)
+                    print(string.format("[Scoring] Delivery scored! Combo: %dx | +%d points | Total: %d",
+                        combo_multiplier, points, self.scoring:getTotal()))
+
+                    -- Show bonus in score display (VETS-46)
+                    if self.score_display then
+                        self.score_display:showBonus(points, combo_multiplier)
+                    end
+                end
+
+                return true
+            end
+        end
+    end
+
+    return false
 end
 
 -- Draw player
@@ -816,56 +1010,77 @@ function Player:draw()
         draw_y = y + (h - draw_h) / 2  -- Offset to keep bottom aligned
     end
 
-    -- Draw player as colored rectangle (placeholder)
-    -- Change color based on state
-    if self.dashing then
-        -- Dashing - bright white/cyan glow (distinct from magenta trail)
-        love.graphics.setColor(0.3, 1, 1)  -- Cyan glow when dashing
-    elseif self.dash_crouch_timer > 0 then
-        -- Crouching before dash - yellow anticipation glow
-        love.graphics.setColor(1, 1, 0.3)  -- Yellow glow when crouching
-    elseif self.control_lock_timer > 0 then
-        -- Control-locked after wall-jump - bright cyan/white glow
-        love.graphics.setColor(0.7, 1, 1)  -- Cyan glow when wall-jumping
-    elseif self.wall_sliding then
-        -- Wall-sliding - brighter orange/yellow glow
-        love.graphics.setColor(1, 0.8, 0.5)
-    else
-        -- Normal state
-        love.graphics.setColor(self.color)
-    end
-    love.graphics.rectangle("fill", x - w/2, draw_y - draw_h/2, w, draw_h)
+    -- Draw player animation sprite
+    -- Center the sprite on the player's position
+    -- Calculate scale factor to match desired size (sprite is 48x48, player hitbox is 10x14)
+    -- Scale down to fit hitbox: sprite ~28px tall, hitbox 14px = ~0.5 scale
+    local scale_x = w / 21  -- Scale width based on character width (~21px in 48px canvas)
+    local scale_y = draw_h / 28  -- Scale height based on character height (~28px in 48px canvas)
 
-    -- Draw dash direction indicator when dashing
+    -- Flip sprite horizontally based on facing direction
+    -- West sprites face left, so flip when facing right
+    if self.facing_right then
+        scale_x = -scale_x  -- Negative scale flips horizontally
+    end
+
+    -- Origin offset (center of 48x48 sprite)
+    local origin_x = 24
+    local origin_y = 24
+
+    -- Apply color tint based on state
     if self.dashing then
-        love.graphics.setColor(1, 1, 1)  -- White line
-        local line_length = 8
+        -- Dashing - cyan tint
+        love.graphics.setColor(0.3, 1, 1, 1)
+    elseif self.dash_crouch_timer > 0 then
+        -- Crouching before dash - yellow tint
+        love.graphics.setColor(1, 1, 0.3, 1)
+    elseif self.control_lock_timer > 0 then
+        -- Control-locked after wall-jump - bright cyan tint
+        love.graphics.setColor(0.7, 1, 1, 1)
+    elseif self.wall_sliding then
+        -- Wall-sliding - brighter orange tint
+        love.graphics.setColor(1, 0.8, 0.5, 1)
+    else
+        -- Normal state - no tint
+        love.graphics.setColor(1, 1, 1, 1)
+    end
+
+    -- Draw the animation
+    self.animation:draw(x, draw_y, 0, scale_x, scale_y, origin_x, origin_y)
+
+    -- Debug visualizations (toggle with F3)
+    if DEBUG_DRAW then
+        -- Draw dash direction indicator when dashing
+        if self.dashing then
+            love.graphics.setColor(1, 1, 1)  -- White line
+            local line_length = 8
+            love.graphics.line(
+                x, y,
+                x + self.dash_direction_x * line_length,
+                y + self.dash_direction_y * line_length
+            )
+        end
+
+        -- Draw wall contact indicator (line on the wall side)
+        if self.wall_sliding then
+            love.graphics.setColor(1, 1, 0)  -- Yellow indicator
+            local wall_x = self.wall_direction < 0 and (x - w/2) or (x + w/2)
+            love.graphics.line(wall_x, y - h/2, wall_x, y + h/2)
+        end
+
+        -- Draw facing direction indicator (small line)
+        love.graphics.setColor(1, 1, 1)
+        local indicator_x = self.facing_right and (x + w/2) or (x - w/2)
+        love.graphics.line(x, y, indicator_x, y)
+
+        -- Debug: Draw velocity vector
+        love.graphics.setColor(0, 1, 0)
         love.graphics.line(
             x, y,
-            x + self.dash_direction_x * line_length,
-            y + self.dash_direction_y * line_length
+            x + self.physics.velocity_x * 0.1,
+            y + self.physics.velocity_y * 0.1
         )
     end
-
-    -- Draw wall contact indicator (line on the wall side)
-    if self.wall_sliding then
-        love.graphics.setColor(1, 1, 0)  -- Yellow indicator
-        local wall_x = self.wall_direction < 0 and (x - w/2) or (x + w/2)
-        love.graphics.line(wall_x, y - h/2, wall_x, y + h/2)
-    end
-
-    -- Draw facing direction indicator (small line)
-    love.graphics.setColor(1, 1, 1)
-    local indicator_x = self.facing_right and (x + w/2) or (x - w/2)
-    love.graphics.line(x, y, indicator_x, y)
-
-    -- Debug: Draw velocity vector
-    love.graphics.setColor(0, 1, 0)
-    love.graphics.line(
-        x, y,
-        x + self.physics.velocity_x * 0.1,
-        y + self.physics.velocity_y * 0.1
-    )
 end
 
 -- Get entity
@@ -876,6 +1091,147 @@ end
 -- Get screen shake offset (for camera)
 function Player:getScreenShakeOffset()
     return self.dash_screen_shake_x, self.dash_screen_shake_y
+end
+
+-- Load cat animations from PixelLab sprite sheets
+-- Creates a combined sprite sheet with all animations in one row
+-- Layout: idle(4) + run(4) + jump(9) + dash(8) + wall-slide(6) = 31 frames @ 48x48px
+function Player:loadCatAnimations()
+    local frame_width = 48
+    local frame_height = 48
+
+    -- Define animation paths (using west direction, can be flipped for east)
+    local anim_dir = "assets/graphics/characters/cat/animations/animations/"
+
+    -- Animation frame counts
+    local animations = {
+        {name = "idle", path = anim_dir .. "breathing-idle/west/", frames = 4},  -- Breathing idle animation
+        {name = "run", path = anim_dir .. "running-4-frames/west/", frames = 4},
+        {name = "jump", path = anim_dir .. "jumping-1/west/", frames = 9},
+        {name = "dash", path = anim_dir .. "running-8-frames/west/", frames = 8},
+        {name = "wall-slide", path = anim_dir .. "crouched-walking/west/", frames = 6}
+    }
+
+    -- Calculate total frames
+    local total_frames = 0
+    for _, anim in ipairs(animations) do
+        total_frames = total_frames + anim.frames
+    end
+
+    local sheet_width = frame_width * total_frames
+    local sheet_height = frame_height
+
+    -- Create canvas for combined sprite sheet
+    local canvas = love.graphics.newCanvas(sheet_width, sheet_height)
+    love.graphics.setCanvas(canvas)
+    love.graphics.clear(0, 0, 0, 0)  -- Transparent background
+
+    -- Load and draw each animation's frames to the canvas
+    local current_x = 0
+
+    for _, anim in ipairs(animations) do
+        for i = 0, anim.frames - 1 do
+            local frame_path = anim.path .. string.format("frame_%03d.png", i)
+
+            -- Check if file exists before loading
+            local file_info = love.filesystem.getInfo(frame_path)
+            if file_info then
+                local frame = love.graphics.newImage(frame_path)
+                love.graphics.draw(frame, current_x, 0)
+                current_x = current_x + frame_width
+            else
+                print("[Player] Warning: Animation frame not found: " .. frame_path)
+                -- Draw a placeholder (magenta square) if frame is missing
+                love.graphics.setColor(1, 0, 1, 1)
+                love.graphics.rectangle("fill", current_x, 0, frame_width, frame_height)
+                love.graphics.setColor(1, 1, 1, 1)
+                current_x = current_x + frame_width
+            end
+        end
+    end
+
+    love.graphics.setCanvas()
+    love.graphics.setColor(1, 1, 1, 1)  -- Reset color
+
+    -- Get image data from canvas and create image
+    local image_data = canvas:newImageData()
+    local sprite_sheet = love.graphics.newImage(image_data)
+
+    print(string.format("[Player] Loaded cat animations sprite sheet: %dx%d (%d frames)",
+        sheet_width, sheet_height, total_frames))
+
+    return sprite_sheet
+end
+
+-- Define all player animations using the PixelLab sprite sheet
+-- Frame layout: idle(1-4) + run(5-8) + jump(9-17) + dash(18-25) + wall-slide(26-31)
+function Player:defineAnimations()
+    -- idle: frames 1-4, 6 FPS, loops (breathing idle animation)
+    self.animation:define("idle", "1-4", 1/6, {
+        loop = true
+    })
+
+    -- run: frames 5-8, 12 FPS (as specified in ANIMATIONS.md), loops
+    self.animation:define("run", "5-8", 1/12, {
+        loop = true
+    })
+
+    -- jump: frames 9-17 (9 frames), uses default FPS from ANIMATIONS.md
+    -- Frame timing varies: slower at apex, faster at start/end
+    self.animation:define("jump", "9-17", 0.08, {
+        loop = false
+    })
+
+    -- dash: frames 18-25 (8 frames), 16-20 FPS recommended (using 18 FPS)
+    self.animation:define("dash", "18-25", 1/18, {
+        loop = true
+    })
+
+    -- wall-slide: frames 26-31 (6 frames), 8-10 FPS (using 9 FPS)
+    self.animation:define("wall-slide", "26-31", 1/9, {
+        loop = true
+    })
+end
+
+-- Update animation based on player state
+-- Animation priority:
+--   1. Dash (highest priority)
+--   2. Wall-slide
+--   3. Jump (airborne with upward velocity)
+--   4. Fall (airborne with downward velocity) - uses jump animation frame 3
+--   5. Run (grounded with movement)
+--   6. Idle (grounded, no movement)
+function Player:updateAnimation(dt)
+    -- Update the animation component
+    self.animation:update(dt)
+
+    -- Determine which animation should be playing based on state
+    local desired_animation = "idle"  -- Default to idle
+
+    if self.dashing then
+        desired_animation = "dash"
+    elseif self.wall_sliding then
+        desired_animation = "wall-slide"
+    elseif not self.grounded then
+        -- Airborne - use jump animation
+        desired_animation = "jump"
+        -- If falling (velocity_y > 0), lock to last frame of jump animation (fall pose)
+        if self.physics.velocity_y > 0 and self.animation:getCurrentAnimation() == "jump" then
+            -- Let the jump animation play through naturally, it will stay on frame 3 (fall)
+            -- since it's a non-looping animation
+        end
+    elseif math.abs(self.physics.velocity_x) > 5 then
+        -- Grounded and moving - run animation
+        desired_animation = "run"
+    else
+        -- Grounded and stationary - idle animation
+        desired_animation = "idle"
+    end
+
+    -- Only switch animations if different from current
+    if self.animation:getCurrentAnimation() ~= desired_animation then
+        self.animation:play(desired_animation)
+    end
 end
 
 return Player

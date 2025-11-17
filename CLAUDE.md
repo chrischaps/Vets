@@ -41,6 +41,22 @@ lovec . --test    # Use lovec to see test output
 busted tests/
 ```
 
+**Creating test apps:**
+```bash
+# Test apps MUST live in subdirectories (not root)
+# Structure: test_feature_name/main.lua
+mkdir test_steam_vent
+# Create main.lua in test_steam_vent/
+cd test_steam_vent && lovec .
+```
+
+**IMPORTANT: Package paths for test apps:**
+```lua
+-- At the top of test_feature_name/main.lua:
+-- Add parent directory's src to package path
+package.path = package.path .. ";../src/?.lua;../?.lua"
+```
+
 **Note on Windows Artifacts:**
 - When running commands that redirect to `NUL` on Windows (e.g., `2>NUL`), a file named `NUL` may be created as an artifact
 - This file and `test_output.txt` are ignored in `.gitignore` and can be safely ignored or deleted
@@ -50,6 +66,15 @@ busted tests/
 This project uses JIRA for task management and follows a structured git workflow for feature development.
 
 ### Working on JIRA Tickets
+
+**IMPORTANT: JIRA MCP Authentication:**
+- The JIRA MCP integration occasionally loses authentication permissions
+- If you encounter authentication errors (e.g., "Unauthorized", "Authentication failed", "accessibleResources.filter is not a function"), you should:
+  1. **PAUSE your current work immediately**
+  2. **Inform the user** that JIRA MCP authentication has been lost
+  3. **Request that the user re-authenticate** the MCP before continuing
+  4. **Do NOT attempt to continue** working on JIRA tickets without authentication
+- Once the user has re-authenticated, you can resume the ticket workflow
 
 **JIRA Status Flow:**
 - **To Do** → **In Progress** → **In Review** → **Done**

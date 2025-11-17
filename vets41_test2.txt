@@ -1,0 +1,13 @@
+AL lib: (EE) alc_cleanup: 1 device not closed
+Error: ../libraries\anim8.lua:59: There is no frame for x=3, y=1
+stack traceback:
+	[love "boot.lua"]:352: in function <[love "boot.lua"]:348>
+	[C]: in function 'error'
+	../libraries\anim8.lua:59: in function 'getOrCreateFrame'
+	../libraries\anim8.lua:87: in function 'grid'
+	../src/components\animation.lua:81: in function 'define'
+	main.lua:58: in function 'load'
+	[love "callbacks.lua"]:136: in function <[love "callbacks.lua"]:135>
+	[C]: in function 'xpcall'
+	[love "boot.lua"]:368: in function <[love "boot.lua"]:355>
+	[C]: in function 'xpcall'
