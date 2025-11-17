@@ -3,6 +3,7 @@
 -- VETS-35: Create level loading system
 
 local LevelLoader = require("src.systems.level_loader")
+local Tilemap = require("src.systems.tilemap")
 local Platform = require("src.entities.platform")
 local Wall = require("src.entities.wall")
 local DeliveryZone = require("src.entities.delivery_zone")
@@ -37,6 +38,15 @@ function Level.load(night_number, collision_system)
         return nil, string.format("Failed to load level data: %s", err)
     end
 
+    -- Load rooftop tileset for platforms and walls
+    local rooftop_tileset, tileset_err = Tilemap.load("assets/graphics/tilesets/rooftop")
+    if not rooftop_tileset then
+        print(string.format("[Level] Warning: Failed to load rooftop tileset: %s", tileset_err))
+        print("[Level] Platforms and walls will use fallback rendering")
+    else
+        print("[Level] Rooftop tileset loaded successfully")
+    end
+
     -- Create level instance
     local level_instance = {
         night = level_data.night,
@@ -66,7 +76,8 @@ function Level.load(night_number, collision_system)
             platform_data.x,
             platform_data.y,
             platform_data.width,
-            platform_data.height
+            platform_data.height,
+            rooftop_tileset  -- Pass tileset for rendering
         )
 
         -- Store platform type and properties
@@ -89,7 +100,13 @@ function Level.load(night_number, collision_system)
     if #level_data.walls > 0 then
         print(string.format("Loading %d wall(s)...", #level_data.walls))
         for i, wall_data in ipairs(level_data.walls) do
-            local wall = Wall.new(wall_data.x, wall_data.y, wall_data.width, wall_data.height)
+            local wall = Wall.new(
+                wall_data.x,
+                wall_data.y,
+                wall_data.width,
+                wall_data.height,
+                rooftop_tileset  -- Pass tileset for rendering
+            )
 
             -- Store wall type and properties from JSON
             wall.wall_type = wall_data.type or "building_wall"

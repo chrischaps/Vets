@@ -9,7 +9,10 @@ local Wall = {}
 Wall.__index = Wall
 
 -- Create a new wall entity
-function Wall.new(x, y, width, height)
+-- @param x, y: Position
+-- @param width, height: Dimensions
+-- @param tileset: Optional Tilemap tileset for rendering (if nil, uses gray rectangles)
+function Wall.new(x, y, width, height, tileset)
     local self = setmetatable({}, Wall)
 
     -- Create base entity
@@ -37,9 +40,46 @@ function Wall.new(x, y, width, height)
     }
 
     -- Visual representation (darker color than platforms for distinction)
-    self.color = {0.2, 0.25, 0.3}  -- Dark gray-blue color for walls
+    self.color = {0.2, 0.25, 0.3}  -- Dark gray-blue color for walls (fallback)
+
+    -- Tileset for rendering
+    self.tileset = tileset
+
+    -- Generate terrain grid if tileset is provided
+    if self.tileset and self.tileset.is_wang then
+        self:generateTerrainGrid()
+    end
 
     return self
+end
+
+-- Generate terrain grid for Wang tiling
+-- Creates a grid filled with wall (upper) terrain
+function Wall:generateTerrainGrid()
+    if not self.tileset or not self.tileset.tile_size then
+        return
+    end
+
+    local tile_w = self.tileset.tile_size.width
+    local tile_h = self.tileset.tile_size.height
+
+    -- Calculate grid dimensions
+    local grid_width = math.ceil(self.width / tile_w)
+    local grid_height = math.ceil(self.height / tile_h)
+
+    -- Create terrain grid filled with "upper" (wall) terrain
+    self.terrain_grid = {}
+    for row = 1, grid_height do
+        self.terrain_grid[row] = {}
+        for col = 1, grid_width do
+            -- All walls are "upper" terrain (brick wall)
+            self.terrain_grid[row][col] = "upper"
+        end
+    end
+
+    -- Store grid dimensions for reference
+    self.grid_width = grid_width
+    self.grid_height = grid_height
 end
 
 -- Draw wall
@@ -49,13 +89,19 @@ function Wall:draw()
     local w = self.width
     local h = self.height
 
-    -- Draw wall as colored rectangle
-    love.graphics.setColor(self.color)
-    love.graphics.rectangle("fill", x, y, w, h)
+    -- If tileset is available, use Wang tiling
+    if self.tileset and self.tileset.is_wang and self.terrain_grid then
+        -- Draw using Wang tileset
+        self.tileset:drawWangLayer(self.terrain_grid, x, y, 0, 0)
+    else
+        -- Fallback: Draw wall as colored rectangle
+        love.graphics.setColor(self.color)
+        love.graphics.rectangle("fill", x, y, w, h)
 
-    -- Draw border
-    love.graphics.setColor(0.3, 0.35, 0.4)
-    love.graphics.rectangle("line", x, y, w, h)
+        -- Draw border
+        love.graphics.setColor(0.3, 0.35, 0.4)
+        love.graphics.rectangle("line", x, y, w, h)
+    end
 
     -- Debug info when F2 is held
     if love.keyboard.isDown("f2") then
@@ -66,6 +112,9 @@ function Wall:draw()
             y + 2
         )
     end
+
+    -- Reset color
+    love.graphics.setColor(1, 1, 1)
 end
 
 -- Get entity
