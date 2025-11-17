@@ -1,4 +1,3 @@
-AL lib: (EE) alc_cleanup: 1 device not closed
 === Courier Cat ===
 Virtual resolution: 320x180
 Window resolution: 1280x720
@@ -98,6 +97,19 @@ Audio: Playing music 'gameplay_music1' with 1.5s fade in
   - Timer: 3:00
 [StateManager] Switched to state: game
 [DeliveryZone] Delivery completed at (64, 144)
-[Timer] Extended by 2.6833333333355s (+8s requested)
+[Timer] Extended by 2.1166666666684s (+8s requested)
 [Player] Delivery successful! Combo: 1x | Time bonus: +2s
 [Scoring] Delivery scored! Combo: 1x | +100 points | Total: 100
+[Timer] State changed: calm → warning (1:29 remaining)
+[DeliveryZone] Delivery completed at (168, 144)
+[Timer] Extended by 8s (+8s requested)
+[Timer] State changed: warning → calm (1:33 remaining)
+[Player] Delivery successful! Combo: 1x | Time bonus: +8s
+[Scoring] Delivery scored! Combo: 1x | +100 points | Total: 200
+[DeliveryZone] Delivery completed at (288, 128)
+[Timer] Extended by 8s (+8s requested)
+[Player] Delivery successful! Combo: 1x | Time bonus: +8s
+[Scoring] Delivery scored! Combo: 1x | +100 points | Total: 300
+[Timer] State changed: calm → warning (1:29 remaining)
+Audio: Cleanup complete
+Audio cleaned up

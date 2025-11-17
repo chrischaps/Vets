@@ -57,29 +57,42 @@ function Platform:generateTerrainGrid()
     local tile_h = self.tileset.tile_size.height
 
     -- Calculate grid dimensions
-    -- Grid width: number of tiles horizontally
-    local grid_width = math.ceil(self.width / tile_w)
+    -- Grid width: number of tiles horizontally (with +1 padding for Wang tiling edge coverage)
+    local grid_width = math.ceil(self.width / tile_w) + 1
 
-    -- Grid height: 1 row for platform top + rows extending down to bottom of screen
+    -- Grid height: 1 row padding above + 1 row for platform surface + rows extending down
     -- Virtual resolution is 320x180, so calculate rows needed to reach y=180
     local screen_bottom = 180
     local platform_bottom = self.transform.y + self.height
     local pixels_below = math.max(0, screen_bottom - platform_bottom)
     local rows_below = math.ceil(pixels_below / tile_h) + 2  -- +2 for extra coverage
-    local grid_height = 1 + rows_below
+    local grid_height = 1 + 1 + rows_below  -- +1 padding above, +1 surface, + rows below
 
     -- Create terrain grid
     self.terrain_grid = {}
-    for row = 1, grid_height do
+
+    -- Row 1: Padding row above platform (provides corner context for Wang tiling)
+    -- Corners are "lower" (empty/air), middle vertices are "upper" (rooftop edge)
+    self.terrain_grid[1] = {}
+    for col = 1, grid_width do
+        if col == 1 or col == grid_width then
+            self.terrain_grid[1][col] = "lower"  -- Left and right corners
+        else
+            self.terrain_grid[1][col] = "upper"  -- Middle edge vertices
+        end
+    end
+
+    -- Row 2: Platform surface (all "upper" for rooftop)
+    self.terrain_grid[2] = {}
+    for col = 1, grid_width do
+        self.terrain_grid[2][col] = "upper"
+    end
+
+    -- Rows 3+: Building facade extending down (all "lower")
+    for row = 3, grid_height do
         self.terrain_grid[row] = {}
         for col = 1, grid_width do
-            if row == 1 then
-                -- First row: rooftop (lower terrain)
-                self.terrain_grid[row][col] = "lower"
-            else
-                -- Rows below: wall/building (upper terrain)
-                self.terrain_grid[row][col] = "upper"
-            end
+            self.terrain_grid[row][col] = "lower"
         end
     end
 
@@ -103,8 +116,11 @@ function Platform:draw()
     -- If tileset is available, use Wang tiling
     if self.tileset and self.tileset.is_wang and self.terrain_grid then
         -- Draw using Wang tileset
-        -- Offset to align with platform position
-        self.tileset:drawWangLayer(self.terrain_grid, x, y, 0, 0)
+        -- Offset upward by full tile height (like walls offset horizontally)
+        -- This shifts row 1 (padding) above the collision box and row 2 (surface) to the top
+        local tile_w = self.tileset.tile_size and self.tileset.tile_size.width or 16
+        local tile_h = self.tileset.tile_size and self.tileset.tile_size.height or 16
+        self.tileset:drawWangLayer(self.terrain_grid, x, y - tile_h, 0, 0)
     else
         -- Fallback: Draw platform as colored rectangle
         love.graphics.setColor(self.color)

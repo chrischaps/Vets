@@ -63,17 +63,23 @@ function Wall:generateTerrainGrid()
     local tile_w = self.tileset.tile_size.width
     local tile_h = self.tileset.tile_size.height
 
-    -- Calculate grid dimensions
-    local grid_width = math.ceil(self.width / tile_w)
+    -- Calculate grid dimensions with padding for Wang tiling coverage
+    -- Add 1 extra column to ensure full visual coverage (prevents gaps on edges)
+    local grid_width = math.ceil(self.width / tile_w) + 1
     local grid_height = math.ceil(self.height / tile_h)
 
-    -- Create terrain grid filled with "upper" (wall) terrain
+    -- Create terrain grid with edge columns for visual distinction
     self.terrain_grid = {}
     for row = 1, grid_height do
         self.terrain_grid[row] = {}
         for col = 1, grid_width do
-            -- All walls are "upper" terrain (brick wall)
-            self.terrain_grid[row][col] = "upper"
+            -- Use "upper" terrain for left and right edges to create visual distinction
+            -- This helps players identify climbable walls
+            if col == 1 or col == grid_width then
+                self.terrain_grid[row][col] = "upper"  -- Edge columns use rooftop/edge terrain
+            else
+                self.terrain_grid[row][col] = "lower"  -- Interior uses building facade
+            end
         end
     end
 
@@ -92,7 +98,9 @@ function Wall:draw()
     -- If tileset is available, use Wang tiling
     if self.tileset and self.tileset.is_wang and self.terrain_grid then
         -- Draw using Wang tileset
-        self.tileset:drawWangLayer(self.terrain_grid, x, y, 0, 0)
+        -- Offset left by one tile width to account for +1 grid padding
+        local tile_w = self.tileset.tile_size and self.tileset.tile_size.width or 16
+        self.tileset:drawWangLayer(self.terrain_grid, x - tile_w, y, 0, 0)
     else
         -- Fallback: Draw wall as colored rectangle
         love.graphics.setColor(self.color)
