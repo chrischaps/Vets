@@ -1092,7 +1092,7 @@ end
 
 -- Load cat animations from PixelLab sprite sheets
 -- Creates a combined sprite sheet with all animations in one row
--- Layout: idle(2) + run(4) + jump(9) + dash(8) + wall-slide(6) = 29 frames @ 48x48px
+-- Layout: idle(4) + run(4) + jump(9) + dash(8) + wall-slide(6) = 31 frames @ 48x48px
 function Player:loadCatAnimations()
     local frame_width = 48
     local frame_height = 48
@@ -1102,7 +1102,7 @@ function Player:loadCatAnimations()
 
     -- Animation frame counts
     local animations = {
-        {name = "idle", path = anim_dir .. "running-4-frames/west/", frames = 2},  -- Use first 2 run frames for idle
+        {name = "idle", path = anim_dir .. "breathing-idle/west/", frames = 4},  -- Breathing idle animation
         {name = "run", path = anim_dir .. "running-4-frames/west/", frames = 4},
         {name = "jump", path = anim_dir .. "jumping-1/west/", frames = 9},
         {name = "dash", path = anim_dir .. "running-8-frames/west/", frames = 8},
@@ -1127,13 +1127,7 @@ function Player:loadCatAnimations()
     local current_x = 0
 
     for _, anim in ipairs(animations) do
-        -- For idle, only use first 2 frames of run animation
-        local frame_count = anim.frames
-        if anim.name == "idle" then
-            frame_count = 2  -- Only load first 2 frames
-        end
-
-        for i = 0, frame_count - 1 do
+        for i = 0, anim.frames - 1 do
             local frame_path = anim.path .. string.format("frame_%03d.png", i)
 
             -- Check if file exists before loading
@@ -1167,31 +1161,31 @@ function Player:loadCatAnimations()
 end
 
 -- Define all player animations using the PixelLab sprite sheet
--- Frame layout: idle(1-2) + run(3-6) + jump(7-15) + dash(16-23) + wall-slide(24-29)
+-- Frame layout: idle(1-4) + run(5-8) + jump(9-17) + dash(18-25) + wall-slide(26-31)
 function Player:defineAnimations()
-    -- idle: frames 1-2, 6 FPS, loops (slow idle animation)
-    self.animation:define("idle", "1-2", 1/6, {
+    -- idle: frames 1-4, 6 FPS, loops (breathing idle animation)
+    self.animation:define("idle", "1-4", 1/6, {
         loop = true
     })
 
-    -- run: frames 3-6, 12 FPS (as specified in ANIMATIONS.md), loops
-    self.animation:define("run", "3-6", 1/12, {
+    -- run: frames 5-8, 12 FPS (as specified in ANIMATIONS.md), loops
+    self.animation:define("run", "5-8", 1/12, {
         loop = true
     })
 
-    -- jump: frames 7-15 (9 frames), uses default FPS from ANIMATIONS.md
+    -- jump: frames 9-17 (9 frames), uses default FPS from ANIMATIONS.md
     -- Frame timing varies: slower at apex, faster at start/end
-    self.animation:define("jump", "7-15", 0.08, {
+    self.animation:define("jump", "9-17", 0.08, {
         loop = false
     })
 
-    -- dash: frames 16-23 (8 frames), 16-20 FPS recommended (using 18 FPS)
-    self.animation:define("dash", "16-23", 1/18, {
+    -- dash: frames 18-25 (8 frames), 16-20 FPS recommended (using 18 FPS)
+    self.animation:define("dash", "18-25", 1/18, {
         loop = true
     })
 
-    -- wall-slide: frames 24-29 (6 frames), 8-10 FPS (using 9 FPS)
-    self.animation:define("wall-slide", "24-29", 1/9, {
+    -- wall-slide: frames 26-31 (6 frames), 8-10 FPS (using 9 FPS)
+    self.animation:define("wall-slide", "26-31", 1/9, {
         loop = true
     })
 end
