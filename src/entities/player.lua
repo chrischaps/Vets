@@ -1018,7 +1018,8 @@ function Player:draw()
     local scale_y = draw_h / 28  -- Scale height based on character height (~28px in 48px canvas)
 
     -- Flip sprite horizontally based on facing direction
-    if not self.facing_right then
+    -- West sprites face left, so flip when facing right
+    if self.facing_right then
         scale_x = -scale_x  -- Negative scale flips horizontally
     end
 
