@@ -1048,36 +1048,39 @@ function Player:draw()
     -- Draw the animation
     self.animation:draw(x, draw_y, 0, scale_x, scale_y, origin_x, origin_y)
 
-    -- Draw dash direction indicator when dashing
-    if self.dashing then
-        love.graphics.setColor(1, 1, 1)  -- White line
-        local line_length = 8
+    -- Debug visualizations (toggle with F3)
+    if DEBUG_DRAW then
+        -- Draw dash direction indicator when dashing
+        if self.dashing then
+            love.graphics.setColor(1, 1, 1)  -- White line
+            local line_length = 8
+            love.graphics.line(
+                x, y,
+                x + self.dash_direction_x * line_length,
+                y + self.dash_direction_y * line_length
+            )
+        end
+
+        -- Draw wall contact indicator (line on the wall side)
+        if self.wall_sliding then
+            love.graphics.setColor(1, 1, 0)  -- Yellow indicator
+            local wall_x = self.wall_direction < 0 and (x - w/2) or (x + w/2)
+            love.graphics.line(wall_x, y - h/2, wall_x, y + h/2)
+        end
+
+        -- Draw facing direction indicator (small line)
+        love.graphics.setColor(1, 1, 1)
+        local indicator_x = self.facing_right and (x + w/2) or (x - w/2)
+        love.graphics.line(x, y, indicator_x, y)
+
+        -- Debug: Draw velocity vector
+        love.graphics.setColor(0, 1, 0)
         love.graphics.line(
             x, y,
-            x + self.dash_direction_x * line_length,
-            y + self.dash_direction_y * line_length
+            x + self.physics.velocity_x * 0.1,
+            y + self.physics.velocity_y * 0.1
         )
     end
-
-    -- Draw wall contact indicator (line on the wall side)
-    if self.wall_sliding then
-        love.graphics.setColor(1, 1, 0)  -- Yellow indicator
-        local wall_x = self.wall_direction < 0 and (x - w/2) or (x + w/2)
-        love.graphics.line(wall_x, y - h/2, wall_x, y + h/2)
-    end
-
-    -- Draw facing direction indicator (small line)
-    love.graphics.setColor(1, 1, 1)
-    local indicator_x = self.facing_right and (x + w/2) or (x - w/2)
-    love.graphics.line(x, y, indicator_x, y)
-
-    -- Debug: Draw velocity vector
-    love.graphics.setColor(0, 1, 0)
-    love.graphics.line(
-        x, y,
-        x + self.physics.velocity_x * 0.1,
-        y + self.physics.velocity_y * 0.1
-    )
 end
 
 -- Get entity

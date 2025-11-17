@@ -22,6 +22,9 @@ local PauseState = require("src.states.pause_state")  -- VETS-47
 VIRTUAL_WIDTH = 320
 VIRTUAL_HEIGHT = 180
 
+-- Global debug flag - toggle with F3
+DEBUG_DRAW = false
+
 -- Game state management
 local state_manager = nil
 
@@ -166,6 +169,10 @@ function love.keypressed(key)
     -- Handle global keypresses
     if key == "escape" then
         love.event.quit()
+    elseif key == "f3" then
+        -- Toggle debug visualization
+        DEBUG_DRAW = not DEBUG_DRAW
+        print("[DEBUG] Debug drawing: " .. (DEBUG_DRAW and "ON" or "OFF"))
     end
 
     -- State-specific input is now handled internally by each state using the Input system
