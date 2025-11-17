@@ -1,0 +1,68 @@
+AL lib: (EE) alc_cleanup: 1 device not closed
+=== SaveSystem Test ===
+
+Test 1: Initialize SaveSystem
+[SaveSystem] Initializing...
+[SaveSystem] Save directory: C:/Users/chris/AppData/Roaming/LOVE/test_save_system
+[SaveSystem] No save file found
+[SaveSystem] Save file written successfully
+[SaveSystem] Created new save file
+Save directory: C:/Users/chris/AppData/Roaming/LOVE/test_save_system
+Initial data nights_unlocked: 1
+
+Test 2: Get current data
+Nights unlocked: 1
+Night 1 completed: false
+
+Test 3: Check night unlock status
+Night 1 unlocked: true
+Night 2 unlocked: false
+Night 3 unlocked: false
+
+Test 4: Update night 1 progress (score: 5000, rank: A)
+[SaveSystem] New high score for night1: 5000
+[SaveSystem] New best rank for night1: A
+[SaveSystem] Unlocked night 2
+[SaveSystem] Save file written successfully
+Night 1 completed: true
+Best score: 5000
+Best rank: A
+Nights unlocked (should be 2): 2
+
+Test 5: Update night 1 with better score (score: 7500, rank: S)
+[SaveSystem] New high score for night1: 7500
+[SaveSystem] New best rank for night1: S
+[SaveSystem] Save file written successfully
+Best score (should be 7500): 7500
+Best rank (should be S): S
+
+Test 6: Update night 1 with worse score (score: 3000, rank: B)
+[SaveSystem] Save file written successfully
+Best score (should still be 7500): 7500
+Best rank (should still be S): S
+
+Test 7: Check night 2 unlock status
+Night 2 unlocked: true
+
+Test 8: Complete night 2 (score: 6000, rank: A)
+[SaveSystem] New high score for night2: 6000
+[SaveSystem] New best rank for night2: A
+[SaveSystem] Unlocked night 3
+[SaveSystem] Save file written successfully
+Night 2 completed: true
+Nights unlocked (should be 3): 3
+Night 3 unlocked: true
+
+Test 9: Test manual unlock (shouldn't change anything since night 3 already unlocked)
+Nights unlocked (should still be 3): 3
+
+Test 10: Final save state
+Nights unlocked: 3
+Night 1 - Score: 7500, Rank: S, Completed: true
+Night 2 - Score: 6000, Rank: A, Completed: true
+Night 3 - Score: 0, Rank: nil, Completed: false
+
+=== All Tests Complete ===
+Check the save file at: C:/Users/chris/AppData/Roaming/LOVE/test_save_system/save.json
+
+Press ESC to test reset, or close window to keep save file

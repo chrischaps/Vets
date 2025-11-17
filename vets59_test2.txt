@@ -1,0 +1,441 @@
+=== Courier Cat ===
+Virtual resolution: 320x180
+Window resolution: 1280x720
+
+Libraries loaded:
+  - bump.lua: OK
+  - anim8: OK
+  - camera: OK
+  - json: OK
+
+Time system initialized:
+  - Fixed timestep: 0.016666666666667s (60 FPS)
+
+Initializing SaveSystem...
+[SaveSystem] Initializing...
+[SaveSystem] Save directory: C:/Users/chris/AppData/Roaming/LOVE/courier-cat
+[SaveSystem] Loaded existing save file
+
+Initializing StateManager...
+[StateManager] Initialized
+[StateManager] Registered state: menu
+[StateManager] Registered state: night_select
+[StateManager] Registered state: game
+[StateManager] Registered state: results
+[StateManager] Registered state: pause
+
+Loading audio...
+Audio: Loaded music 'gameplay_music1' from assets/audio/music/music1.ogg
+Audio: Loaded music 'gameplay_music2' from assets/audio/music/music2.ogg
+Audio: Loaded SFX 'jump' from assets/audio/sfx/jump1.ogg
+Audio: Loaded SFX 'dash1' from assets/audio/sfx/dash1.ogg
+Audio: Loaded SFX 'dash2' from assets/audio/sfx/dash2.wav
+Audio: Loaded SFX 'delivery1' from assets/audio/sfx/delivery1.wav
+Audio: Loaded SFX 'delivery2' from assets/audio/sfx/delivery2.wav
+Audio loaded successfully
+
+Starting game...
+[MenuState] Entered menu state: Welcome to Courier Cat!
+Input system initialized:
+  - 1 gamepad(s) connected
+    1: Controller (Xbox One For Windows)
+      Type: Gamepad (supports standard mapping)
+  - Axis deadzone: 0.15
+[StateManager] Switched to state: menu
+
+=== Game started! Navigate menu with arrow keys or gamepad ===
+Input: Gamepad connected - Controller (Xbox One For Windows)
+[MenuState] Confirmed: SELECT NIGHT
+[MenuState] Transitioning to Night Select
+[MenuState] Exiting menu state
+[NightSelectState] Entered night selection
+Input system initialized:
+  - 1 gamepad(s) connected
+    1: Controller (Xbox One For Windows)
+      Type: Gamepad (supports standard mapping)
+  - Axis deadzone: 0.15
+[NightSelectState] Night 1: unlocked=true, completed=false, score=0, rank=nil
+[NightSelectState] Night 2: unlocked=false, completed=false, score=0, rank=nil
+[NightSelectState] Night 3: unlocked=false, completed=false, score=0, rank=nil
+[StateManager] Switched to state: night_select
+[NightSelectState] Starting Night 1
+[NightSelectState] Exiting night selection
+[GameState] Entering game state for Night 1
+[GameState] Initializing systems...
+Input system initialized:
+  - 1 gamepad(s) connected
+    1: Controller (Xbox One For Windows)
+      Type: Gamepad (supports standard mapping)
+  - Axis deadzone: 0.15
+[Timer] Initialized with 180s (3:00)
+[GameState] Systems initialized
+[GameState] Loading level for Night 1
+Loading 7 platform(s)...
+Loading 2 wall(s)...
+Loading 5 delivery zone(s)...
+Loading 1 powerup(s)...
+Level 'First Flight' (Night 1) loaded successfully!
+[Timer] Reset to 3:00
+[GameState] Timer set to 180 seconds from level data
+[GameState] Level loaded:
+  - Level: First Flight
+  - Platforms: 7
+  - Delivery zones: 5
+  - Hazards: 0
+  - Powerups: 1
+  - Player spawn: (40, 128)
+Audio: Playing music 'gameplay_music1' with 1.5s fade in
+[GameState] Game initialized:
+  - Night: 1
+  - Total deliveries: 5
+  - Timer: 3:00
+[StateManager] Switched to state: game
+[DeliveryZone] Delivery completed at (64, 144)
+[Timer] Extended by 0.88333333333404s (+8s requested)
+[Player] Delivery successful! Combo: 1x | Time bonus: +0s
+[Scoring] Delivery scored! Combo: 1x | +100 points | Total: 100
+[DeliveryZone] Delivery completed at (168, 144)
+[Timer] Extended by 1.0666666666675s (+8s requested)
+[Player] Delivery successful! Combo: 1x | Time bonus: +1s
+[Scoring] Delivery scored! Combo: 1x | +100 points | Total: 200
+[DeliveryZone] Delivery completed at (288, 128)
+[Timer] Extended by 2.1666666666684s (+8s requested)
+[Player] Delivery successful! Combo: 1x | Time bonus: +2s
+[Scoring] Delivery scored! Combo: 1x | +100 points | Total: 300
+[DeliveryZone] Delivery completed at (536, 96)
+[Timer] Extended by 2.5833333333354s (+8s requested)
+[Player] Delivery successful! Combo: 1x | Time bonus: +2s
+[Scoring] Delivery scored! Combo: 1x | +100 points | Total: 400
+[Coffee] Speed boost applied! Run speed: 120.0 → 180.0 px/s
+[PowerUp] Player collected coffee power-up!
+[PowerUp] coffee effect active for 15.0s
+[DeliveryZone] Delivery completed at (824, 112)
+[Timer] Extended by 3.0833333333358s (+8s requested)
+[Player] Delivery successful! Combo: 1x | Time bonus: +3s
+[Scoring] Delivery scored! Combo: 1x | +100 points | Total: 500
+[GameState] All deliveries completed - You Win!
+[Timer] Paused at 2:59
+[GameState] Time Bonus: +1799 points
+[GameState] Completion Bonus: +500 points
+[GameState] Final Score: 2799
+[GameState] Transitioning to ResultsState...
+[GameState] Results data:
+  - Success: true
+  - Score: 2799
+  - Combo Peak: x0
+[GameState] Exiting game state
+Audio: Stopping music with 1s fade out
+Unloading level 'First Flight' (Night 1)...
+Level unloaded successfully
+[ResultsState] Entering results state
+Input system initialized:
+  - 1 gamepad(s) connected
+    1: Controller (Xbox One For Windows)
+      Type: Gamepad (supports standard mapping)
+  - Axis deadzone: 0.15
+[ResultsState] Updating save data for Night 1
+[SaveSystem] New high score for night1: 2799
+[SaveSystem] New best rank for night1: D
+[SaveSystem] Unlocked night 2
+[SaveSystem] Save file written successfully
+[ResultsState] Save data updated successfully
+[ResultsState] Results:
+  - Success: true
+  - Night: 1
+  - Score: 2799
+  - Time: 179.98333333333s
+  - Deliveries: 5/5
+  - Combo Peak: x0
+  - Rank: D
+[StateManager] Switched to state: results
+[ResultsState] Option 1 selected: Return to Night Select
+[ResultsState] Exiting results state
+[NightSelectState] Entered night selection
+Input system initialized:
+  - 1 gamepad(s) connected
+    1: Controller (Xbox One For Windows)
+      Type: Gamepad (supports standard mapping)
+  - Axis deadzone: 0.15
+[NightSelectState] Night 1: unlocked=true, completed=true, score=2799, rank=D
+[NightSelectState] Night 2: unlocked=true, completed=false, score=0, rank=nil
+[NightSelectState] Night 3: unlocked=false, completed=false, score=0, rank=nil
+[StateManager] Switched to state: night_select
+[NightSelectState] Selected Night 2
+[NightSelectState] Starting Night 2
+[NightSelectState] Exiting night selection
+[GameState] Entering game state for Night 2
+[GameState] Initializing systems...
+Input system initialized:
+  - 1 gamepad(s) connected
+    1: Controller (Xbox One For Windows)
+      Type: Gamepad (supports standard mapping)
+  - Axis deadzone: 0.15
+[Timer] Initialized with 180s (3:00)
+[GameState] Systems initialized
+[GameState] Loading level for Night 2
+Loading 10 platform(s)...
+Loading 3 wall(s)...
+Loading 7 delivery zone(s)...
+Loading 3 hazard(s)...
+Loading 2 powerup(s)...
+Level 'Climbing Higher' (Night 2) loaded successfully!
+[Timer] Reset to 3:00
+[GameState] Timer set to 210 seconds from level data
+[GameState] Level loaded:
+  - Level: Climbing Higher
+  - Platforms: 10
+  - Delivery zones: 7
+  - Hazards: 3
+  - Powerups: 2
+  - Player spawn: (40, 144)
+Audio: Playing music 'gameplay_music1' with 1.5s fade in
+[GameState] Game initialized:
+  - Night: 2
+  - Total deliveries: 7
+  - Timer: 3:00
+[StateManager] Switched to state: game
+[SteamVent] Vent at (368.0, 152.0) entering WARNING state
+[SteamVent] Vent at (1024.0, 112.0) entering WARNING state
+[GameState] Player fell to their doom - Game Over!
+[Timer] Paused at 2:58
+[GameState] Transitioning to ResultsState...
+[GameState] Results data:
+  - Success: false
+  - Score: 0
+  - Combo Peak: x0
+[GameState] Exiting game state
+Audio: Stopping music with 1s fade out
+Unloading level 'Climbing Higher' (Night 2)...
+Level unloaded successfully
+[ResultsState] Entering results state
+Input system initialized:
+  - 1 gamepad(s) connected
+    1: Controller (Xbox One For Windows)
+      Type: Gamepad (supports standard mapping)
+  - Axis deadzone: 0.15
+[ResultsState] Results:
+  - Success: false
+  - Night: 2
+  - Score: 0
+  - Time: 178.41666666667s
+  - Deliveries: 0/7
+  - Combo Peak: x0
+  - Rank: E
+[StateManager] Switched to state: results
+[ResultsState] Option 1 selected: Return to Night Select
+[ResultsState] Exiting results state
+[NightSelectState] Entered night selection
+Input system initialized:
+  - 1 gamepad(s) connected
+    1: Controller (Xbox One For Windows)
+      Type: Gamepad (supports standard mapping)
+  - Axis deadzone: 0.15
+[NightSelectState] Night 1: unlocked=true, completed=true, score=2799, rank=D
+[NightSelectState] Night 2: unlocked=true, completed=false, score=0, rank=nil
+[NightSelectState] Night 3: unlocked=false, completed=false, score=0, rank=nil
+[StateManager] Switched to state: night_select
+[NightSelectState] Selected Night 2
+[NightSelectState] Selected Night 1
+[NightSelectState] Selected Night 2
+[NightSelectState] Selected Night 1
+[NightSelectState] Selected Night 2
+[NightSelectState] Selected Night 3
+[NightSelectState] Selected Night 2
+[NightSelectState] Starting Night 2
+[NightSelectState] Exiting night selection
+[GameState] Entering game state for Night 2
+[GameState] Initializing systems...
+Input system initialized:
+  - 1 gamepad(s) connected
+    1: Controller (Xbox One For Windows)
+      Type: Gamepad (supports standard mapping)
+  - Axis deadzone: 0.15
+[Timer] Initialized with 180s (3:00)
+[GameState] Systems initialized
+[GameState] Loading level for Night 2
+Loading 10 platform(s)...
+Loading 3 wall(s)...
+Loading 7 delivery zone(s)...
+Loading 3 hazard(s)...
+Loading 2 powerup(s)...
+Level 'Climbing Higher' (Night 2) loaded successfully!
+[Timer] Reset to 3:00
+[GameState] Timer set to 210 seconds from level data
+[GameState] Level loaded:
+  - Level: Climbing Higher
+  - Platforms: 10
+  - Delivery zones: 7
+  - Hazards: 3
+  - Powerups: 2
+  - Player spawn: (40, 144)
+Audio: Playing music 'gameplay_music1' with 1.5s fade in
+[GameState] Game initialized:
+  - Night: 2
+  - Total deliveries: 7
+  - Timer: 3:00
+[StateManager] Switched to state: game
+[DeliveryZone] Delivery completed at (56, 160)
+[Timer] Extended by 0.73333333333392s (+8s requested)
+[Player] Delivery successful! Combo: 1x | Time bonus: +0s
+[Scoring] Delivery scored! Combo: 1x | +100 points | Total: 100
+[SteamVent] Vent at (368.0, 152.0) entering WARNING state
+[SteamVent] Vent at (1024.0, 112.0) entering WARNING state
+[SteamVent] Vent at (368.0, 152.0) entering ACTIVE state - steam puff!
+[SteamVent] Vent at (1024.0, 112.0) entering ACTIVE state - steam puff!
+[DeliveryZone] Delivery completed at (184, 160)
+[Timer] Extended by 1.6000000000013s (+8s requested)
+[Player] Delivery successful! Combo: 1x | Time bonus: +1s
+[Scoring] Delivery scored! Combo: 1x | +100 points | Total: 200
+[SteamVent] Vent at (368.0, 152.0) entering COOLDOWN state
+[SteamVent] Vent at (1024.0, 112.0) entering COOLDOWN state
+[DeliveryZone] Delivery completed at (320, 112)
+[Timer] Extended by 1.9666666666682s (+8s requested)
+[Player] Delivery successful! Combo: 1x | Time bonus: +1s
+[Scoring] Delivery scored! Combo: 1x | +100 points | Total: 300
+[SteamVent] Vent at (368.0, 152.0) entering WARNING state
+[SteamVent] Vent at (1024.0, 112.0) entering WARNING state
+[SteamVent] Vent at (368.0, 152.0) entering ACTIVE state - steam puff!
+[SteamVent] Vent at (1024.0, 112.0) entering ACTIVE state - steam puff!
+[SteamVent] Vent at (368.0, 152.0) entering COOLDOWN state
+[SteamVent] Vent at (1024.0, 112.0) entering COOLDOWN state
+[DeliveryZone] Delivery completed at (488, 128)
+[Timer] Extended by 1.7666666666681s (+8s requested)
+[Player] Delivery successful! Combo: 1x | Time bonus: +1s
+[Scoring] Delivery scored! Combo: 1x | +100 points | Total: 400
+[Coffee] Speed boost applied! Run speed: 120.0 → 180.0 px/s
+[PowerUp] Player collected coffee power-up!
+[PowerUp] coffee effect active for 15.0s
+[SteamVent] Vent at (368.0, 152.0) entering WARNING state
+[SteamVent] Vent at (1024.0, 112.0) entering WARNING state
+[SteamVent] Vent at (368.0, 152.0) entering ACTIVE state - steam puff!
+[SteamVent] Vent at (1024.0, 112.0) entering ACTIVE state - steam puff!
+[DeliveryZone] Delivery completed at (656, 104)
+[Timer] Extended by 2.7333333333355s (+8s requested)
+[Player] Delivery successful! Combo: 1x | Time bonus: +2s
+[Scoring] Delivery scored! Combo: 1x | +100 points | Total: 500
+[SteamVent] Vent at (368.0, 152.0) entering COOLDOWN state
+[SteamVent] Vent at (1024.0, 112.0) entering COOLDOWN state
+[DeliveryZone] Delivery completed at (808, 136)
+[Timer] Extended by 1.4833333333345s (+8s requested)
+[Player] Delivery successful! Combo: 1x | Time bonus: +1s
+[Scoring] Delivery scored! Combo: 1x | +100 points | Total: 600
+[SteamVent] Vent at (368.0, 152.0) entering WARNING state
+[SteamVent] Vent at (1024.0, 112.0) entering WARNING state
+[SteamVent] Vent at (368.0, 152.0) entering ACTIVE state - steam puff!
+[SteamVent] Vent at (1024.0, 112.0) entering ACTIVE state - steam puff!
+[SteamVent] Vent at (368.0, 152.0) entering COOLDOWN state
+[SteamVent] Vent at (1024.0, 112.0) entering COOLDOWN state
+[GameState] Player fell to their doom - Game Over!
+[Timer] Paused at 2:57
+[GameState] Transitioning to ResultsState...
+[GameState] Results data:
+  - Success: false
+  - Score: 600
+  - Combo Peak: x0
+[GameState] Exiting game state
+Audio: Stopping music with 1s fade out
+Unloading level 'Climbing Higher' (Night 2)...
+Level unloaded successfully
+[ResultsState] Entering results state
+Input system initialized:
+  - 1 gamepad(s) connected
+    1: Controller (Xbox One For Windows)
+      Type: Gamepad (supports standard mapping)
+  - Axis deadzone: 0.15
+[ResultsState] Results:
+  - Success: false
+  - Night: 2
+  - Score: 600
+  - Time: 177.86666666666s
+  - Deliveries: 6/7
+  - Combo Peak: x0
+  - Rank: E
+[StateManager] Switched to state: results
+[ResultsState] Option 1 selected: Return to Night Select
+[ResultsState] Exiting results state
+[NightSelectState] Entered night selection
+Input system initialized:
+  - 1 gamepad(s) connected
+    1: Controller (Xbox One For Windows)
+      Type: Gamepad (supports standard mapping)
+  - Axis deadzone: 0.15
+[NightSelectState] Night 1: unlocked=true, completed=true, score=2799, rank=D
+[NightSelectState] Night 2: unlocked=true, completed=false, score=0, rank=nil
+[NightSelectState] Night 3: unlocked=false, completed=false, score=0, rank=nil
+[StateManager] Switched to state: night_select
+[NightSelectState] Selected Night 2
+[NightSelectState] Starting Night 2
+[NightSelectState] Exiting night selection
+[GameState] Entering game state for Night 2
+[GameState] Initializing systems...
+Input system initialized:
+  - 1 gamepad(s) connected
+    1: Controller (Xbox One For Windows)
+      Type: Gamepad (supports standard mapping)
+  - Axis deadzone: 0.15
+[Timer] Initialized with 180s (3:00)
+[GameState] Systems initialized
+[GameState] Loading level for Night 2
+Loading 10 platform(s)...
+Loading 3 wall(s)...
+Loading 7 delivery zone(s)...
+Loading 3 hazard(s)...
+Loading 2 powerup(s)...
+Level 'Climbing Higher' (Night 2) loaded successfully!
+[Timer] Reset to 3:00
+[GameState] Timer set to 210 seconds from level data
+[GameState] Level loaded:
+  - Level: Climbing Higher
+  - Platforms: 10
+  - Delivery zones: 7
+  - Hazards: 3
+  - Powerups: 2
+  - Player spawn: (40, 144)
+Audio: Playing music 'gameplay_music1' with 1.5s fade in
+[GameState] Game initialized:
+  - Night: 2
+  - Total deliveries: 7
+  - Timer: 3:00
+[StateManager] Switched to state: game
+[DeliveryZone] Delivery completed at (56, 160)
+[Timer] Extended by 0.53333333333376s (+8s requested)
+[Player] Delivery successful! Combo: 1x | Time bonus: +0s
+[Scoring] Delivery scored! Combo: 1x | +100 points | Total: 100
+[SteamVent] Vent at (368.0, 152.0) entering WARNING state
+[SteamVent] Vent at (1024.0, 112.0) entering WARNING state
+[DeliveryZone] Delivery completed at (184, 160)
+[Timer] Extended by 1.1833333333343s (+8s requested)
+[Player] Delivery successful! Combo: 1x | Time bonus: +1s
+[Scoring] Delivery scored! Combo: 1x | +100 points | Total: 200
+[SteamVent] Vent at (368.0, 152.0) entering ACTIVE state - steam puff!
+[SteamVent] Vent at (1024.0, 112.0) entering ACTIVE state - steam puff!
+[SteamVent] Vent at (368.0, 152.0) entering COOLDOWN state
+[SteamVent] Vent at (1024.0, 112.0) entering COOLDOWN state
+[DeliveryZone] Delivery completed at (320, 112)
+[Timer] Extended by 1.9000000000015s (+8s requested)
+[Player] Delivery successful! Combo: 1x | Time bonus: +1s
+[Scoring] Delivery scored! Combo: 1x | +100 points | Total: 300
+[SteamVent] Vent at (368.0, 152.0) entering WARNING state
+[SteamVent] Vent at (1024.0, 112.0) entering WARNING stateAL lib: (EE) alc_cleanup: 1 device not closed
+
+[SteamVent] Vent at (368.0, 152.0) entering ACTIVE state - steam puff!
+[SteamVent] Vent at (1024.0, 112.0) entering ACTIVE state - steam puff!
+[DeliveryZone] Delivery completed at (488, 128)
+[Timer] Extended by 1.616666666668s (+8s requested)
+[Player] Delivery successful! Combo: 1x | Time bonus: +1s
+[Scoring] Delivery scored! Combo: 1x | +100 points | Total: 400
+[SteamVent] Vent at (368.0, 152.0) entering COOLDOWN state
+[SteamVent] Vent at (1024.0, 112.0) entering COOLDOWN state
+[Coffee] Speed boost applied! Run speed: 120.0 → 180.0 px/s
+[PowerUp] Player collected coffee power-up!
+[PowerUp] coffee effect active for 15.0s
+[SteamVent] Vent at (368.0, 152.0) entering WARNING state
+[SteamVent] Vent at (1024.0, 112.0) entering WARNING state
+[DeliveryZone] Delivery completed at (656, 104)
+[Timer] Extended by 2.7000000000021s (+8s requested)
+[Player] Delivery successful! Combo: 1x | Time bonus: +2s
+[Scoring] Delivery scored! Combo: 1x | +100 points | Total: 500
+[SteamVent] Vent at (368.0, 152.0) entering ACTIVE state - steam puff!
+[SteamVent] Vent at (1024.0, 112.0) entering ACTIVE state - steam puff!
+[SteamVent] Vent at (368.0, 152.0) entering COOLDOWN state
+[SteamVent] Vent at (1024.0, 112.0) entering COOLDOWN state
