@@ -1451,6 +1451,128 @@ function Level:load_from_tiled(night_number)
 end
 ```
 
+### Wang Tileset System
+
+**Implementation:** Corner-based autotiling for seamless platformer terrain rendering.
+
+**Overview:**
+
+Wang tiling provides automatic tile selection based on neighboring terrain, eliminating manual tile placement. The system uses corner-based pattern matching where each tile is defined by its four corner values (upper/lower terrain).
+
+**How It Works:**
+
+```lua
+-- systems/tilemap.lua
+
+-- 1. Define terrain as a vertex grid
+terrain_grid = {
+    {"lower", "lower", "lower", "lower"},  -- Air
+    {"upper", "upper", "upper", "upper"},  -- Platform top
+    {"upper", "upper", "upper", "upper"},  -- Platform bottom
+}
+
+-- 2. Load tileset with Wang metadata
+local tileset = Tilemap.load("assets/graphics/tilesets/rooftop")
+
+-- 3. Render automatically selects correct tiles
+tileset:drawWangLayer(terrain_grid, offset_x, offset_y, camera_x, camera_y)
+```
+
+**Core Concepts:**
+
+```
+Vertex Grid (3×4) → Cell Grid (2×3)
+
+Vertices (terrain):          Cells (tiles):
+  L   L   L   L                 ┌───┬───┬───┐
+  U   U   U   U      →          │   │   │   │
+  U   U   U   U                 └───┴───┴───┘
+
+Corner Sampling:
+  For cell at (1,1):
+    NW = grid[1][1]  (lower)
+    NE = grid[1][2]  (lower)
+    SW = grid[2][1]  (upper)
+    SE = grid[2][2]  (upper)
+  → Selects "top edge" tile
+```
+
+**Tile Lookup:**
+
+```lua
+-- O(1) lookup via hash table
+wang_lookup = {
+    ["lower_lower_lower_lower"] = "tile_air",
+    ["upper_upper_upper_upper"] = "tile_solid",
+    ["lower_lower_upper_upper"] = "tile_top_edge",
+    ["lower_upper_lower_lower"] = "tile_top_right_corner",
+    -- ... 16 total combinations for 2-terrain system
+}
+```
+
+**Tileset Metadata Format:**
+
+```json
+{
+    "tile_size": {"width": 16, "height": 16},
+    "tileset_data": {
+        "tiles": [
+            {
+                "id": "tile_0_LLLL",
+                "bounding_box": {"x": 0, "y": 0, "width": 16, "height": 16},
+                "corners": {
+                    "NW": "lower",
+                    "NE": "lower",
+                    "SW": "lower",
+                    "SE": "lower"
+                }
+            }
+        ]
+    }
+}
+```
+
+**Rendering Pipeline:**
+
+1. **Load Phase:**
+   - Parse tileset metadata
+   - Build Wang lookup table (pattern → tile_id)
+   - Create quads for fast rendering
+
+2. **Render Phase:**
+   - Iterate cells in terrain grid
+   - Sample 4 corners for each cell
+   - Lookup matching tile
+   - Draw tile at calculated world position
+
+**Debug Mode:**
+
+```lua
+-- Enable debug visualization
+Tilemap.debug_wang_tiles = true
+
+-- Shows corner pattern labels on each tile:
+--   . = LLLL (air)
+--   # = UUUU (solid)
+--   T = UULL (top edge)
+--   1 = ULLL (top-left outer corner)
+--   etc.
+```
+
+**Performance:**
+
+- Tile lookup: O(1) via hash table
+- Quads cached at load time
+- Target: 500+ tiles at 60 FPS
+
+**Use Cases:**
+
+- Rooftop platforms with automatic edges/corners
+- Wall tiles with seamless transitions
+- Any tile-based terrain requiring autotiling
+
+**For detailed implementation guide, see:** `WANG_TILING_GUIDE.md`
+
 ---
 
 ## 11. Data Structures
