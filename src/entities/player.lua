@@ -96,13 +96,13 @@ function Player.new(x, y, collision_system, input_system)
     -- Visual representation (placeholder rectangle)
     self.color = {0.9, 0.6, 0.3}  -- Orange color for the cat
 
-    -- Create placeholder sprite sheet
-    -- Total frames: idle(2) + run(4) + jump(3) + dash(2) + wall-slide(1) = 12 frames
-    -- Layout: 12 frames horizontal, 16x16 pixels each = 192x16 sprite sheet
-    self.sprite_sheet = self:createPlaceholderSpriteSheet()
+    -- Load PixelLab cat animation sprite sheet
+    -- Total frames: idle(2) + run(4) + jump(9) + dash(8) + wall-slide(6) = 29 frames
+    -- Layout: 29 frames horizontal, 48x48 pixels each = 1392x48 sprite sheet
+    self.sprite_sheet = self:loadCatAnimations()
 
-    -- Create Animation component
-    self.animation = Animation.new(self.sprite_sheet, 16, 16)
+    -- Create Animation component with 48x48 frame size
+    self.animation = Animation.new(self.sprite_sheet, 48, 48)
     self.entity:addComponent("animation", self.animation)
 
     -- Define all animations
@@ -1012,18 +1012,20 @@ function Player:draw()
 
     -- Draw player animation sprite
     -- Center the sprite on the player's position
-    -- Calculate scale factor to match desired size (sprite is 16x16, player hitbox is 10x14)
-    local scale_x = w / 16  -- Scale width to match hitbox
-    local scale_y = draw_h / 16  -- Scale height to match hitbox (can be squashed during dash crouch)
+    -- Calculate scale factor to match desired size (sprite is 48x48, player hitbox is 10x14)
+    -- Scale down to fit hitbox: sprite ~28px tall, hitbox 14px = ~0.5 scale
+    local scale_x = w / 21  -- Scale width based on character width (~21px in 48px canvas)
+    local scale_y = draw_h / 28  -- Scale height based on character height (~28px in 48px canvas)
 
     -- Flip sprite horizontally based on facing direction
-    if not self.facing_right then
+    -- West sprites face left, so flip when facing right
+    if self.facing_right then
         scale_x = -scale_x  -- Negative scale flips horizontally
     end
 
-    -- Origin offset (center of 16x16 sprite)
-    local origin_x = 8
-    local origin_y = 8
+    -- Origin offset (center of 48x48 sprite)
+    local origin_x = 24
+    local origin_y = 24
 
     -- Apply color tint based on state
     if self.dashing then
@@ -1088,61 +1090,62 @@ function Player:getScreenShakeOffset()
     return self.dash_screen_shake_x, self.dash_screen_shake_y
 end
 
--- Create placeholder sprite sheet for player animations
--- Layout: 12 frames horizontal (idle, run, jump, dash, wall-slide)
--- Frame breakdown:
---   Frames 1-2: idle (orange)
---   Frames 3-6: run (yellow-orange gradient for motion)
---   Frames 7-9: jump (green shades: squat, rise, fall)
---   Frames 10-11: dash (cyan)
---   Frame 12: wall-slide (magenta)
-function Player:createPlaceholderSpriteSheet()
-    local frame_width = 16
-    local frame_height = 16
-    local num_frames = 12
-    local sheet_width = frame_width * num_frames
+-- Load cat animations from PixelLab sprite sheets
+-- Creates a combined sprite sheet with all animations in one row
+-- Layout: idle(4) + run(4) + jump(9) + dash(8) + wall-slide(6) = 31 frames @ 48x48px
+function Player:loadCatAnimations()
+    local frame_width = 48
+    local frame_height = 48
+
+    -- Define animation paths (using west direction, can be flipped for east)
+    local anim_dir = "assets/graphics/characters/cat/animations/animations/"
+
+    -- Animation frame counts
+    local animations = {
+        {name = "idle", path = anim_dir .. "breathing-idle/west/", frames = 4},  -- Breathing idle animation
+        {name = "run", path = anim_dir .. "running-4-frames/west/", frames = 4},
+        {name = "jump", path = anim_dir .. "jumping-1/west/", frames = 9},
+        {name = "dash", path = anim_dir .. "running-8-frames/west/", frames = 8},
+        {name = "wall-slide", path = anim_dir .. "crouched-walking/west/", frames = 6}
+    }
+
+    -- Calculate total frames
+    local total_frames = 0
+    for _, anim in ipairs(animations) do
+        total_frames = total_frames + anim.frames
+    end
+
+    local sheet_width = frame_width * total_frames
     local sheet_height = frame_height
 
-    -- Create canvas for sprite sheet
+    -- Create canvas for combined sprite sheet
     local canvas = love.graphics.newCanvas(sheet_width, sheet_height)
     love.graphics.setCanvas(canvas)
     love.graphics.clear(0, 0, 0, 0)  -- Transparent background
 
-    -- Helper function to draw a simple cat sprite (rectangle with ears)
-    local function drawCatSprite(x, y, r, g, b)
-        -- Body
-        love.graphics.setColor(r, g, b, 1)
-        love.graphics.rectangle("fill", x + 3, y + 4, 10, 10)
+    -- Load and draw each animation's frames to the canvas
+    local current_x = 0
 
-        -- Ears (triangular shapes approximated with rectangles)
-        love.graphics.rectangle("fill", x + 3, y + 2, 3, 3)  -- Left ear
-        love.graphics.rectangle("fill", x + 10, y + 2, 3, 3)  -- Right ear
+    for _, anim in ipairs(animations) do
+        for i = 0, anim.frames - 1 do
+            local frame_path = anim.path .. string.format("frame_%03d.png", i)
 
-        -- Tail (small rectangle extending from body)
-        love.graphics.rectangle("fill", x + 11, y + 11, 4, 2)
+            -- Check if file exists before loading
+            local file_info = love.filesystem.getInfo(frame_path)
+            if file_info then
+                local frame = love.graphics.newImage(frame_path)
+                love.graphics.draw(frame, current_x, 0)
+                current_x = current_x + frame_width
+            else
+                print("[Player] Warning: Animation frame not found: " .. frame_path)
+                -- Draw a placeholder (magenta square) if frame is missing
+                love.graphics.setColor(1, 0, 1, 1)
+                love.graphics.rectangle("fill", current_x, 0, frame_width, frame_height)
+                love.graphics.setColor(1, 1, 1, 1)
+                current_x = current_x + frame_width
+            end
+        end
     end
-
-    -- Frames 1-2: idle (orange cat)
-    drawCatSprite(0, 0, 0.9, 0.6, 0.3)    -- Frame 1
-    drawCatSprite(16, 0, 0.95, 0.65, 0.35)  -- Frame 2 (slightly brighter)
-
-    -- Frames 3-6: run (yellow-orange gradient)
-    drawCatSprite(32, 0, 1.0, 0.7, 0.2)    -- Frame 3
-    drawCatSprite(48, 0, 1.0, 0.75, 0.25)  -- Frame 4
-    drawCatSprite(64, 0, 1.0, 0.7, 0.2)    -- Frame 5
-    drawCatSprite(80, 0, 1.0, 0.65, 0.15)  -- Frame 6
-
-    -- Frames 7-9: jump (green shades: squat, rise, fall)
-    drawCatSprite(96, 0, 0.4, 0.9, 0.4)    -- Frame 7 (squat - bright green)
-    drawCatSprite(112, 0, 0.3, 0.8, 0.3)   -- Frame 8 (rise - medium green)
-    drawCatSprite(128, 0, 0.2, 0.7, 0.2)   -- Frame 9 (fall - darker green)
-
-    -- Frames 10-11: dash (cyan)
-    drawCatSprite(144, 0, 0.3, 1.0, 1.0)   -- Frame 10
-    drawCatSprite(160, 0, 0.4, 0.95, 0.95) -- Frame 11
-
-    -- Frame 12: wall-slide (magenta)
-    drawCatSprite(176, 0, 1.0, 0.3, 1.0)   -- Frame 12
 
     love.graphics.setCanvas()
     love.graphics.setColor(1, 1, 1, 1)  -- Reset color
@@ -1151,33 +1154,38 @@ function Player:createPlaceholderSpriteSheet()
     local image_data = canvas:newImageData()
     local sprite_sheet = love.graphics.newImage(image_data)
 
+    print(string.format("[Player] Loaded cat animations sprite sheet: %dx%d (%d frames)",
+        sheet_width, sheet_height, total_frames))
+
     return sprite_sheet
 end
 
--- Define all player animations using the sprite sheet
+-- Define all player animations using the PixelLab sprite sheet
+-- Frame layout: idle(1-4) + run(5-8) + jump(9-17) + dash(18-25) + wall-slide(26-31)
 function Player:defineAnimations()
-    -- idle: frames 1-2, 1 FPS (1 second per frame), loops
-    self.animation:define("idle", "1-2", 1.0, {
+    -- idle: frames 1-4, 6 FPS, loops (breathing idle animation)
+    self.animation:define("idle", "1-4", 1/6, {
         loop = true
     })
 
-    -- run: frames 3-6, 12 FPS (~0.083 seconds per frame), loops
-    self.animation:define("run", "3-6", 1/12, {
+    -- run: frames 5-8, 12 FPS (as specified in ANIMATIONS.md), loops
+    self.animation:define("run", "5-8", 1/12, {
         loop = true
     })
 
-    -- jump: frames 7-9, 10 FPS (0.1 seconds per frame), no loop
-    self.animation:define("jump", "7-9", 0.1, {
+    -- jump: frames 9-17 (9 frames), uses default FPS from ANIMATIONS.md
+    -- Frame timing varies: slower at apex, faster at start/end
+    self.animation:define("jump", "9-17", 0.08, {
         loop = false
     })
 
-    -- dash: frames 10-11, 8 FPS (0.125 seconds per frame), loops
-    self.animation:define("dash", "10-11", 0.125, {
+    -- dash: frames 18-25 (8 frames), 16-20 FPS recommended (using 18 FPS)
+    self.animation:define("dash", "18-25", 1/18, {
         loop = true
     })
 
-    -- wall-slide: frame 12, static (no animation)
-    self.animation:define("wall-slide", "12-12", 1.0, {
+    -- wall-slide: frames 26-31 (6 frames), 8-10 FPS (using 9 FPS)
+    self.animation:define("wall-slide", "26-31", 1/9, {
         loop = true
     })
 end
