@@ -7,6 +7,9 @@ local json = require("libraries.json")
 local Tilemap = {}
 Tilemap.__index = Tilemap
 
+-- Debug mode flag
+Tilemap.debug_wang_tiles = false
+
 -- Load a tileset from disk
 -- @param tileset_path (string): Path to tileset directory (e.g., "assets/graphics/tilesets/rooftop")
 -- @return tileset instance or nil, error
@@ -147,8 +150,12 @@ function Tilemap:drawWangLayer(terrain_grid, offset_x, offset_y, camera_x, camer
     local tile_h = self.tile_size.height
 
     -- Iterate through each cell in the terrain grid
-    for y = 1, #terrain_grid do
-        for x = 1, #terrain_grid[y] do
+    -- For a vertex grid of size [height][width], there are [height-1][width-1] cells
+    local grid_height = #terrain_grid
+    local grid_width = terrain_grid[1] and #terrain_grid[1] or 0
+
+    for y = 1, math.max(0, grid_height - 1) do
+        for x = 1, math.max(0, grid_width - 1) do
             -- Sample terrain at the 4 corners of this cell
             -- In Wang tiling, corners are shared between adjacent cells
             -- Corner positions: (x, y) is NW, (x+1, y) is NE, (x, y+1) is SW, (x+1, y+1) is SE
@@ -166,6 +173,22 @@ function Tilemap:drawWangLayer(terrain_grid, offset_x, offset_y, camera_x, camer
                 local world_y = offset_y + (y - 1) * tile_h
 
                 self:drawTile(tile_id, world_x, world_y, camera_x, camera_y)
+
+                -- Draw debug label if enabled
+                if Tilemap.debug_wang_tiles then
+                    local label = self:getWangDebugLabel(nw, ne, sw, se)
+                    local screen_x = world_x - camera_x
+                    local screen_y = world_y - camera_y
+
+                    -- Draw semi-transparent background for text
+                    love.graphics.setColor(0, 0, 0, 0.6)
+                    love.graphics.rectangle("fill", screen_x, screen_y, tile_w, 8)
+
+                    -- Draw label text (larger scale for single-char labels)
+                    love.graphics.setColor(1, 1, 1, 1)
+                    love.graphics.print(label, screen_x + 4, screen_y + 1, 0, 0.8, 0.8)
+                    love.graphics.setColor(1, 1, 1, 1) -- Reset color
+                end
             end
         end
     end
@@ -185,6 +208,40 @@ function Tilemap:sampleTerrain(grid, x, y)
     end
 
     return grid[y][x] or "lower"
+end
+
+-- Generate a short debug label for a Wang tile based on corner pattern
+-- @param nw, ne, sw, se (string): Corner terrain types
+-- @return label (string): Short descriptive label
+function Tilemap:getWangDebugLabel(nw, ne, sw, se)
+    -- Convert corner pattern to a short label
+    -- U = upper, L = lower
+    local pattern = string.format("%s%s%s%s",
+        nw == "upper" and "U" or "L",
+        ne == "upper" and "U" or "L",
+        sw == "upper" and "U" or "L",
+        se == "upper" and "U" or "L"
+    )
+
+    -- Map common patterns to single-character labels
+    local labels = {
+        ["LLLL"] = ".",        -- All lower = air/background
+        ["UUUU"] = "#",        -- All upper = solid platform
+        ["UULL"] = "T",        -- Top edge
+        ["LLUU"] = "B",        -- Bottom edge (shouldn't appear in sidescroller)
+        ["ULUL"] = "L",        -- Left edge
+        ["LULU"] = "R",        -- Right edge
+        ["ULLL"] = "1",        -- Top-left corner (outer)
+        ["LULL"] = "2",        -- Top-right corner (outer)
+        ["LLUL"] = "3",        -- Bottom-left corner (outer)
+        ["LLLU"] = "4",        -- Bottom-right corner (outer)
+        ["LUUL"] = "5",        -- Top-left corner (inner)
+        ["ULUL"] = "6",        -- Top-right corner (inner)
+        ["UUUL"] = "7",        -- Bottom-left corner (inner)
+        ["UULU"] = "8",        -- Bottom-right corner (inner)
+    }
+
+    return labels[pattern] or pattern
 end
 
 -- Helper function to count table entries (since # doesn't work for non-array tables)

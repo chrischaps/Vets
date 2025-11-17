@@ -57,42 +57,29 @@ function Platform:generateTerrainGrid()
     local tile_h = self.tileset.tile_size.height
 
     -- Calculate grid dimensions
-    -- Grid width: number of tiles horizontally (with +1 padding for Wang tiling edge coverage)
-    local grid_width = math.ceil(self.width / tile_w) + 1
+    -- Grid width: number of vertex columns needed to span platform width
+    -- For N tiles, we need N+1 vertices (vertices at tile corners)
+    local num_tiles_horizontal = math.ceil(self.width / tile_w)
+    local grid_width = num_tiles_horizontal + 1  -- No padding - use out-of-bounds sampling
 
-    -- Grid height: 1 row padding above + 1 row for platform surface + rows extending down
-    -- Virtual resolution is 320x180, so calculate rows needed to reach y=180
-    local screen_bottom = 180
-    local platform_bottom = self.transform.y + self.height
-    local pixels_below = math.max(0, screen_bottom - platform_bottom)
-    local rows_below = math.ceil(pixels_below / tile_h) + 2  -- +2 for extra coverage
-    local grid_height = 1 + 1 + rows_below  -- +1 padding above, +1 surface, + rows below
+    -- Grid height: 1 row for platform top + rows extending down to fill collision box
+    -- Calculate rows needed to span the full height of the platform collision box
+    local rows_below = math.ceil(self.height / tile_h)
+    local grid_height = 1 + rows_below
 
-    -- Create terrain grid
+    -- Create terrain grid (vertex-based for Wang tiling)
+    -- No padding - rely on out-of-bounds sampling for edge context
     self.terrain_grid = {}
-
-    -- Row 1: Padding row above platform (provides corner context for Wang tiling)
-    -- Corners are "lower" (empty/air), middle vertices are "upper" (rooftop edge)
-    self.terrain_grid[1] = {}
-    for col = 1, grid_width do
-        if col == 1 or col == grid_width then
-            self.terrain_grid[1][col] = "lower"  -- Left and right corners
-        else
-            self.terrain_grid[1][col] = "upper"  -- Middle edge vertices
-        end
-    end
-
-    -- Row 2: Platform surface (all "upper" for rooftop)
-    self.terrain_grid[2] = {}
-    for col = 1, grid_width do
-        self.terrain_grid[2][col] = "upper"
-    end
-
-    -- Rows 3+: Building facade extending down (all "lower")
-    for row = 3, grid_height do
+    for row = 1, grid_height do
         self.terrain_grid[row] = {}
         for col = 1, grid_width do
-            self.terrain_grid[row][col] = "lower"
+            if row == 1 then
+                -- First row: all platform surface (upper)
+                self.terrain_grid[row][col] = "upper"
+            else
+                -- Rows below: air/facade (lower)
+                self.terrain_grid[row][col] = "lower"
+            end
         end
     end
 
@@ -108,6 +95,9 @@ function Platform:draw()
     local w = self.width
     local h = self.height
 
+    -- Reset color
+    love.graphics.setColor(1, 1, 1)
+
     -- Debug: Print first platform draw position when F2 is held
     if love.keyboard.isDown("f2") and self.width == 160 then  -- Ground platform
         print(string.format("[Platform] Ground at: (%.1f, %.1f) size: %dx%d", x, y, w, h))
@@ -116,11 +106,10 @@ function Platform:draw()
     -- If tileset is available, use Wang tiling
     if self.tileset and self.tileset.is_wang and self.terrain_grid then
         -- Draw using Wang tileset
-        -- Offset upward by full tile height (like walls offset horizontally)
-        -- This shifts row 1 (padding) above the collision box and row 2 (surface) to the top
+        -- Offset upward by half tile height so rooftop surface aligns with collision box top
         local tile_w = self.tileset.tile_size and self.tileset.tile_size.width or 16
         local tile_h = self.tileset.tile_size and self.tileset.tile_size.height or 16
-        self.tileset:drawWangLayer(self.terrain_grid, x, y - tile_h, 0, 0)
+        self.tileset:drawWangLayer(self.terrain_grid, x, y - tile_h/2, 0, 0)
     else
         -- Fallback: Draw platform as colored rectangle
         love.graphics.setColor(self.color)
@@ -131,8 +120,7 @@ function Platform:draw()
         love.graphics.rectangle("line", x, y, w, h)
     end
 
-    -- Reset color
-    love.graphics.setColor(1, 1, 1)
+    
 end
 
 -- Get entity

@@ -9,6 +9,7 @@ local libs = require("libraries.init")
 local Time = require("src.core.time")
 local Audio = require("src.systems.audio")  -- VETS-49
 local SaveSystem = require("src.systems.save_system")  -- VETS-55
+local Tilemap = require("src.systems.tilemap")  -- For Wang tileset debug toggle
 
 -- Load StateManager and states
 local StateManager = require("src.systems.state_manager")
@@ -173,6 +174,10 @@ function love.keypressed(key)
         -- Toggle debug visualization
         DEBUG_DRAW = not DEBUG_DRAW
         print("[DEBUG] Debug drawing: " .. (DEBUG_DRAW and "ON" or "OFF"))
+    elseif key == "d" then
+        -- Toggle Wang tileset debug labels
+        Tilemap.debug_wang_tiles = not Tilemap.debug_wang_tiles
+        print("[DEBUG] Wang tileset labels: " .. (Tilemap.debug_wang_tiles and "ON" or "OFF"))
     end
 
     -- State-specific input is now handled internally by each state using the Input system

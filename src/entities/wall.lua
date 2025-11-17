@@ -66,20 +66,18 @@ function Wall:generateTerrainGrid()
     -- Calculate grid dimensions with padding for Wang tiling coverage
     -- Add 1 extra column to ensure full visual coverage (prevents gaps on edges)
     local grid_width = math.ceil(self.width / tile_w) + 1
-    local grid_height = math.ceil(self.height / tile_h)
+    -- For Wang tiling, we need vertices (N+1) not tiles (N)
+    -- Example: 64px wall / 16px tiles = 4 tiles, requiring 5 vertices
+    local grid_height = math.ceil(self.height / tile_h) + 1
 
-    -- Create terrain grid with edge columns for visual distinction
+    -- Create terrain grid filled with brick facade (lower terrain)
+    -- Walls are vertical surfaces, so they use "lower" (brick facade) not "upper" (rooftop)
     self.terrain_grid = {}
     for row = 1, grid_height do
         self.terrain_grid[row] = {}
         for col = 1, grid_width do
-            -- Use "upper" terrain for left and right edges to create visual distinction
-            -- This helps players identify climbable walls
-            if col == 1 or col == grid_width then
-                self.terrain_grid[row][col] = "upper"  -- Edge columns use rooftop/edge terrain
-            else
-                self.terrain_grid[row][col] = "lower"  -- Interior uses building facade
-            end
+            -- All wall vertices use "lower" (brick facade) terrain
+            self.terrain_grid[row][col] = "lower"
         end
     end
 
@@ -97,10 +95,8 @@ function Wall:draw()
 
     -- If tileset is available, use Wang tiling
     if self.tileset and self.tileset.is_wang and self.terrain_grid then
-        -- Draw using Wang tileset
-        -- Offset left by one tile width to account for +1 grid padding
-        local tile_w = self.tileset.tile_size and self.tileset.tile_size.width or 16
-        self.tileset:drawWangLayer(self.terrain_grid, x - tile_w, y, 0, 0)
+        -- Draw using Wang tileset at the wall's position
+        self.tileset:drawWangLayer(self.terrain_grid, x, y, 0, 0)
     else
         -- Fallback: Draw wall as colored rectangle
         love.graphics.setColor(self.color)
