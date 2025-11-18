@@ -30,4 +30,9 @@ libraries.camera = require(path .. '.camera')
 -- License: MIT
 libraries.json = require(path .. '.json')
 
+-- Load STI - Simple Tiled Implementation (v1.2.3.0)
+-- Repository: https://github.com/karai17/Simple-Tiled-Implementation
+-- License: MIT/X11
+libraries.sti = require(path .. '.sti')
+
 return libraries

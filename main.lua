@@ -59,6 +59,7 @@ function love.load()
     print("  - anim8: " .. (libs.anim8 and "OK" or "FAILED"))
     print("  - camera: " .. (libs.camera and "OK" or "FAILED"))
     print("  - json: " .. (libs.json and "OK" or "FAILED"))
+    print("  - sti (v" .. (libs.sti and libs.sti._VERSION or "unknown") .. "): " .. (libs.sti and "OK" or "FAILED"))
 
     -- Initialize time system
     Time:init()
