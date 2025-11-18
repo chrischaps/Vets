@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Courier Cat - Example Level: Night 1 -->
+<!-- This demonstrates how to use custom object types for level creation -->
+<map version="1.10" tiledversion="1.11.0" orientation="orthogonal" renderorder="right-down"
+     width="60" height="30" tilewidth="16" tileheight="16" infinite="0" nextlayerid="3" nextobjectid="11">
+
+  <!-- Object Layer: Contains all game entities (platforms, delivery zones, hazards, powerups, spawn) -->
+  <objectgroup id="2" name="Entities">
+
+    <!-- Spawn Point: Player starting position (center of screen) -->
+    <object id="1" name="PlayerSpawn" type="SpawnPoint" x="160" y="240" width="16" height="16"/>
+
+    <!-- Platforms: Ground and walls for the level -->
+    <!-- Main ground platform -->
+    <object id="2" name="Ground1" type="Platform" x="32" y="256" width="256" height="16">
+      <properties>
+        <property name="type" value="rooftop"/>
+        <property name="climbable" type="bool" value="false"/>
+        <property name="semi_solid" type="bool" value="false"/>
+      </properties>
+    </object>
+
+    <!-- Upper platform (semi-solid, player can jump through from below) -->
+    <object id="3" name="Platform1" type="Platform" x="128" y="192" width="128" height="16">
+      <properties>
+        <property name="type" value="rooftop"/>
+        <property name="climbable" type="bool" value="false"/>
+        <property name="semi_solid" type="bool" value="true"/>
+      </properties>
+    </object>
+
+    <!-- Wall platform (climbable) -->
+    <object id="4" name="Wall1" type="Platform" x="320" y="192" width="16" height="64">
+      <properties>
+        <property name="type" value="brick"/>
+        <property name="climbable" type="bool" value="true"/>
+        <property name="semi_solid" type="bool" value="false"/>
+      </properties>
+    </object>
+
+    <!-- Delivery Zones: Windows where letters are delivered -->
+    <object id="5" name="Delivery1" type="DeliveryZone" x="96" y="240" width="16" height="16">
+      <properties>
+        <property name="type" value="standard"/>
+        <property name="letter_fragment_id" type="int" value="1"/>
+        <property name="chain_next" value=""/>
+      </properties>
+    </object>
+
+    <object id="6" name="Delivery2" type="DeliveryZone" x="192" y="176" width="16" height="16">
+      <properties>
+        <property name="type" value="priority"/>
+        <property name="letter_fragment_id" type="int" value="2"/>
+        <property name="chain_next" value=""/>
+      </properties>
+    </object>
+
+    <object id="7" name="Delivery3" type="DeliveryZone" x="352" y="240" width="16" height="16">
+      <properties>
+        <property name="type" value="standard"/>
+        <property name="letter_fragment_id" type="int" value="3"/>
+        <property name="chain_next" value=""/>
+      </properties>
+    </object>
+
+    <!-- Hazards: Obstacles to avoid -->
+    <object id="8" name="Vent1" type="Hazard" x="240" y="256" width="16" height="16">
+      <properties>
+        <property name="type" value="vent"/>
+        <property name="pattern" value="2s_on_1.5s_off"/>
+        <property name="phase_offset" type="float" value="0"/>
+      </properties>
+    </object>
+
+    <!-- Powerups: Collectible abilities -->
+    <object id="9" name="Coffee1" type="Powerup" x="160" y="176" width="16" height="16">
+      <properties>
+        <property name="type" value="coffee"/>
+      </properties>
+    </object>
+
+    <object id="10" name="Balloon1" type="Powerup" x="384" y="224" width="16" height="16">
+      <properties>
+        <property name="type" value="balloon"/>
+      </properties>
+    </object>
+
+  </objectgroup>
+</map>
