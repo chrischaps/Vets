@@ -124,6 +124,48 @@
                 "object",
                 "tile"
             ]
+        },
+        {
+            "color": "#ff808080",
+            "drawFill": true,
+            "id": 6,
+            "members": [
+                {
+                    "name": "prop_type",
+                    "propertytype": "PropType",
+                    "type": "string",
+                    "value": "chimney_tall"
+                }
+            ],
+            "name": "Prop",
+            "type": "class",
+            "useAs": [
+                "object",
+                "tile"
+            ]
+        }
+    ],
+    "propertyTypes": [
+        {
+            "id": 7,
+            "name": "PropType",
+            "storageType": "string",
+            "type": "enum",
+            "values": [
+                "chimney_tall",
+                "chimney_short",
+                "window_lit",
+                "window_dark",
+                "ac_unit",
+                "vent_exhaust",
+                "antenna_tv",
+                "satellite_dish",
+                "plant_potted",
+                "crate_wood",
+                "water_tower",
+                "rooftop_door"
+            ],
+            "valuesAsFlags": false
         }
     ]
 }

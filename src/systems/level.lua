@@ -15,6 +15,9 @@ local LaundryLine = require("src.entities.hazards.laundry_line")
 -- Powerup classes
 local Coffee = require("src.entities.powerups.coffee")
 
+-- Prop class
+local Prop = require("src.entities.prop")
+
 local Level = {}
 
 -- Load a level by night number and instantiate all entities
@@ -64,6 +67,7 @@ function Level.load(night_number, collision_system)
         delivery_zones = {},
         hazards = {},
         powerups = {},
+        props = {},
 
         -- Reference to collision system for cleanup
         collision_system = collision_system
@@ -189,6 +193,21 @@ function Level.load(night_number, collision_system)
         end
     end
 
+    -- Instantiate props
+    if #level_data.props > 0 then
+        print(string.format("Loading %d prop(s)...", #level_data.props))
+        for i, prop_data in ipairs(level_data.props) do
+            local success, prop = pcall(Prop.new, prop_data.x, prop_data.y, prop_data.prop_type, prop_data.properties)
+
+            if success and prop then
+                table.insert(level_instance.props, prop)
+            else
+                print(string.format("Warning: Failed to create prop '%s' at (%d, %d): %s",
+                    prop_data.prop_type, prop_data.x, prop_data.y, tostring(prop)))
+            end
+        end
+    end
+
     print(string.format("Level '%s' (Night %d) loaded successfully!", level_instance.name, level_instance.night))
 
     return level_instance, nil
@@ -238,6 +257,16 @@ function Level.unload(level_instance)
     -- Clean up powerups (when implemented)
     if level_instance.powerups then
         level_instance.powerups = {}
+    end
+
+    -- Clean up props
+    if level_instance.props then
+        for i, prop in ipairs(level_instance.props) do
+            if prop.destroy then
+                prop:destroy()
+            end
+        end
+        level_instance.props = {}
     end
 
     print("Level unloaded successfully")

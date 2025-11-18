@@ -212,6 +212,37 @@ local function convert_powerup(obj)
     return powerup
 end
 
+--- Convert a prop object to JSON format
+-- @param obj table - TMX object with type "Prop"
+-- @return prop table - Prop in JSON schema format
+local function convert_prop(obj)
+    -- Props use top-left position (same as TMX)
+    local prop = {
+        x = obj.x,
+        y = obj.y,
+        prop_type = (obj.properties and obj.properties.prop_type) or "chimney_tall"
+    }
+
+    -- Add optional properties if they exist
+    if obj.properties then
+        prop.properties = {}
+
+        -- Map all properties except prop_type (which is top-level)
+        for key, value in pairs(obj.properties) do
+            if key ~= "prop_type" then
+                prop.properties[key] = value
+            end
+        end
+
+        -- Only include properties object if it has content
+        if next(prop.properties) == nil then
+            prop.properties = nil
+        end
+    end
+
+    return prop
+end
+
 --- Parse a TMX XML file directly (for .tmx files)
 -- @param tmx_path string - Path to the TMX file
 -- @return objects table - Array of objects extracted from TMX
@@ -385,7 +416,8 @@ function tmx_converter.convert(tmx_path)
         platforms = {},
         delivery_zones = {},
         hazards = {},
-        powerups = {}
+        powerups = {},
+        props = {}
     }
 
     -- Process each object
@@ -412,6 +444,10 @@ function tmx_converter.convert(tmx_path)
         elseif obj.type == "Powerup" then
             table.insert(level_data.powerups, convert_powerup(obj))
             print("[TMX Converter]   + Powerup: " .. (obj.name or "unnamed"))
+
+        elseif obj.type == "Prop" then
+            table.insert(level_data.props, convert_prop(obj))
+            print("[TMX Converter]   + Prop: " .. (obj.name or "unnamed") .. " [" .. (obj.properties and obj.properties.prop_type or "unknown") .. "]")
 
         else
             print("[TMX Converter]   ? Unknown object type: " .. (obj.type or "nil") .. " (" .. (obj.name or "unnamed") .. ")")
@@ -445,6 +481,7 @@ function tmx_converter.convert(tmx_path)
     print("[TMX Converter]   Delivery zones: " .. #level_data.delivery_zones)
     print("[TMX Converter]   Hazards: " .. #level_data.hazards)
     print("[TMX Converter]   Powerups: " .. #level_data.powerups)
+    print("[TMX Converter]   Props: " .. #level_data.props)
 
     return level_data, nil
 end
@@ -666,6 +703,41 @@ function tmx_converter.convert_json_to_tmx(level_data)
 
             if powerup.properties then
                 for key, value in pairs(powerup.properties) do
+                    if type(value) == "boolean" then
+                        table.insert(xml, string.format('        <property name="%s" type="bool" value="%s"/>', key, tostring(value)))
+                    elseif type(value) == "number" then
+                        table.insert(xml, string.format('        <property name="%s" type="float" value="%g"/>', key, value))
+                    else
+                        table.insert(xml, string.format('        <property name="%s" value="%s"/>', key, tostring(value)))
+                    end
+                end
+            end
+
+            table.insert(xml, '      </properties>')
+            table.insert(xml, '    </object>')
+            object_id = object_id + 1
+        end
+        table.insert(xml, '')
+    end
+
+    -- Add props
+    if level_data.props and #level_data.props > 0 then
+        table.insert(xml, '    <!-- Props -->')
+        for i, prop in ipairs(level_data.props) do
+            local name = "Prop" .. i .. "_" .. (prop.prop_type or "unknown")
+            -- Props use top-left position (same in both JSON and TMX)
+            local width = 16  -- Default size for visualization in Tiled
+            local height = 16
+
+            table.insert(xml, string.format('    <object id="%d" name="%s" type="Prop" x="%g" y="%g" width="%g" height="%g">',
+                object_id, name, prop.x, prop.y, width, height))
+
+            -- Add properties
+            table.insert(xml, '      <properties>')
+            table.insert(xml, string.format('        <property name="prop_type" value="%s"/>', prop.prop_type or "chimney_tall"))
+
+            if prop.properties then
+                for key, value in pairs(prop.properties) do
                     if type(value) == "boolean" then
                         table.insert(xml, string.format('        <property name="%s" type="bool" value="%s"/>', key, tostring(value)))
                     elseif type(value) == "number" then
