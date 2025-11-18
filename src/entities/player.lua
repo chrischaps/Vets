@@ -93,6 +93,9 @@ function Player.new(x, y, collision_system, input_system)
     self.combo_count = 0  -- Current combo streak (consecutive deliveries without ground touch)
     self.combo_was_grounded = false  -- Track grounded state for combo reset detection
 
+    -- Footstep audio tracking
+    self.previous_anim_frame = 0  -- Track previous animation frame for footstep detection
+
     -- Visual representation (placeholder rectangle)
     self.color = {0.9, 0.6, 0.3}  -- Orange color for the cat
 
@@ -1231,6 +1234,26 @@ function Player:updateAnimation(dt)
     -- Only switch animations if different from current
     if self.animation:getCurrentAnimation() ~= desired_animation then
         self.animation:play(desired_animation)
+    end
+
+    -- Footstep sound effects for running animation
+    if self.animation:getCurrentAnimation() == "run" then
+        local current_frame = self.animation:getCurrentFrame()
+
+        -- Play footstep sound on frames 1 and 3 (footfall frames in 4-frame run cycle)
+        -- Only trigger when we've just entered these frames (detect frame change)
+        if (current_frame == 1 or current_frame == 3) and current_frame ~= self.previous_anim_frame then
+            -- Randomly select between foot1 and foot2
+            local footstep_sound = math.random(1, 2) == 1 and "foot1" or "foot2"
+            -- Play at reduced volume (0.3 = 30% volume)
+            Audio:play_sfx(footstep_sound, 1.0, 0.15)
+        end
+
+        -- Update previous frame tracker
+        self.previous_anim_frame = current_frame
+    else
+        -- Reset frame tracker when not running
+        self.previous_anim_frame = 0
     end
 end
 

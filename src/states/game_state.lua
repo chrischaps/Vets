@@ -123,7 +123,7 @@ function GameState:initializeSystems()
         anchor = HUD.ANCHOR.TOP_CENTER,
         max_radius = 60,       -- Smaller moon (2x original)
         min_radius = 8,        -- 4 * 2
-        horizon_offset = 120,  -- 60 * 2
+        horizon_offset = 180,  -- Distance from top to horizon (moved down)
         top_offset = 70,       -- Ensure moon isn't cut off (>= max_radius)
         show_digital = false,
         show_horizon = true
@@ -362,9 +362,8 @@ end
 
 -- Draw game rendering
 function GameState:draw()
-    -- Draw background
-    love.graphics.setColor(0.2, 0.2, 0.3)  -- Dark blue-purple background
-    love.graphics.rectangle("fill", 0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT)
+    -- No background fill here - it's drawn in drawBackgroundUI() at native resolution
+    -- This allows the moon/skyline to show through behind the game elements
 
     -- Apply camera transform
     if self.camera then
@@ -378,6 +377,11 @@ function GameState:draw()
         end
     end
 
+    -- Draw delivery zones (behind platforms)
+    for _, zone in ipairs(self.delivery_zones) do
+        zone:draw()
+    end
+
     -- Draw platforms
     for _, platform in ipairs(self.platforms) do
         platform:draw()
@@ -386,11 +390,6 @@ function GameState:draw()
     -- Draw walls
     for _, wall in ipairs(self.walls) do
         wall:draw()
-    end
-
-    -- Draw delivery zones
-    for _, zone in ipairs(self.delivery_zones) do
-        zone:draw()
     end
 
     -- Draw hazards
@@ -578,10 +577,32 @@ function GameState:transitionToResults(success, failure_reason)
     end
 end
 
+-- Draw background UI elements (moon + skyline) at native resolution
+-- Called before the game canvas is drawn to the screen
+function GameState:drawBackgroundUI()
+    -- Get window dimensions
+    local window_width = love.graphics.getWidth()
+    local window_height = love.graphics.getHeight()
+
+    -- Draw background color (dark blue-purple)
+    love.graphics.setColor(0.047, 0.09, 0.18)
+    love.graphics.rectangle("fill", 0, 250, window_width, window_height)
+
+    -- Draw moon timer background (moon + skyline) on top of background color
+    if self.moon_timer and self.camera then
+        local camera_x, camera_y = self.camera:getPosition()
+        self.moon_timer:setCameraPosition(camera_x)
+        self.moon_timer:drawBackground()
+    end
+
+    -- Reset color
+    love.graphics.setColor(1, 1, 1)
+end
+
 -- Draw UI at native window resolution (high resolution, sharp)
 -- Called separately from draw() to render UI outside the low-res canvas
 function GameState:drawUI()
-    -- Draw HUD (includes moon timer) at native resolution
+    -- Draw HUD (includes moon timer foreground elements) at native resolution
     if self.hud then
         self.hud:draw()
     end

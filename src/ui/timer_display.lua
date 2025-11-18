@@ -47,6 +47,14 @@ function TimerDisplay:new(options)
     display.horizon_offset = options.horizon_offset or 60  -- Distance to horizon
     display.top_offset = options.top_offset or 20  -- Distance from top
 
+    -- Load moon sprite texture
+    display.moon_sprite = love.graphics.newImage("assets/graphics/ui/moon_timer.png")
+    display.moon_sprite:setFilter("nearest", "nearest")  -- Pixel-perfect scaling
+
+    -- Load horizon skyline sprite
+    display.horizon_sprite = love.graphics.newImage("assets/graphics/ui/horizon_skyline.png")
+    display.horizon_sprite:setFilter("nearest", "nearest")  -- Pixel-perfect scaling
+
     -- Pulse effect properties
     display.pulse_timer = 0
     display.pulse_duration = 0.3  -- Seconds
@@ -62,6 +70,9 @@ function TimerDisplay:new(options)
     -- UI options
     display.show_digital = options.show_digital or false
     display.show_horizon = options.show_horizon ~= false  -- Default true
+
+    -- Parallax tracking
+    display.camera_x = 0  -- Track camera X position for parallax effect
 
     return display
 end
@@ -157,6 +168,11 @@ function TimerDisplay:triggerSparkle()
     print("[TimerDisplay] Sparkle effect triggered!")
 end
 
+-- Update camera position for parallax effect
+function TimerDisplay:setCameraPosition(camera_x)
+    self.camera_x = camera_x or 0
+end
+
 -- Add time to timer
 function TimerDisplay:addTime(seconds)
     self.current_time = math.min(self.max_time, self.current_time + seconds)
@@ -201,8 +217,8 @@ function TimerDisplay:getMoonY(base_y)
     return lerp(start_y, end_y, 1.0 - time_percent)
 end
 
--- Draw the moon timer
-function TimerDisplay:draw()
+-- Draw background elements (moon + skyline) - called from game world rendering
+function TimerDisplay:drawBackground()
     if not self.visible then return end
 
     local base_x, base_y = self:getScreenPosition()
@@ -213,23 +229,86 @@ function TimerDisplay:draw()
     -- Save graphics state
     local r, g, b, a = love.graphics.getColor()
 
-    -- Draw horizon line reference
+    -- Draw moon sprite with color tinting and scaling (behind skyline)
+    love.graphics.setColor(color)
+
+    -- Calculate scale to match the desired radius
+    -- Moon sprite is 40x40, so radius 20. Scale to match current radius
+    local sprite_radius = self.moon_sprite:getWidth() / 2
+    local scale = (radius * 2) / self.moon_sprite:getWidth()
+
+    -- Draw moon sprite centered at position
+    love.graphics.draw(
+        self.moon_sprite,
+        base_x,
+        moon_y,
+        0,  -- rotation
+        scale,  -- scale X
+        scale,  -- scale Y
+        sprite_radius,  -- origin X (center)
+        sprite_radius   -- origin Y (center)
+    )
+
+    -- Draw horizon cityscape silhouette (AFTER moon, so moon sets behind it)
     if self.show_horizon then
-        love.graphics.setColor(0.3, 0.3, 0.4, 0.5)
         local horizon_y = base_y + self.top_offset + self.horizon_offset
-        love.graphics.line(base_x - 50, horizon_y, base_x + 50, horizon_y)
+
+        -- Get the screen width and height in the current coordinate space
+        local screen_width = love.graphics.getWidth()
+        local screen_height = love.graphics.getHeight()
+        local sprite_width = self.horizon_sprite:getWidth()
+        local sprite_height = self.horizon_sprite:getHeight()
+
+        -- Use a fixed scale for tiling (instead of stretching to fit)
+        local scale = 3.0  -- 3x scale for pixel art
+        local scaled_width = sprite_width * scale
+        local scaled_height = sprite_height * scale
+        local skyline_bottom = horizon_y - scaled_height
+
+        -- Calculate parallax offset (skyline moves slower than player = depth effect)
+        local parallax_factor = 0.2  -- 20% of camera movement (distant background)
+        local parallax_offset = -self.camera_x * parallax_factor
+
+        -- Wrap the parallax offset to create seamless tiling
+        local wrapped_offset = parallax_offset % scaled_width
+
+        -- Draw cityscape with horizontal tiling and parallax scrolling
+        love.graphics.setColor(1, 1, 1, 0.95)  -- Nearly opaque
+
+        -- Calculate how many tiles we need to cover the screen (plus extra for scrolling)
+        local num_tiles = math.ceil(screen_width / scaled_width) + 2
+
+        -- Draw tiled cityscape
+        for i = 0, num_tiles do
+            local x = wrapped_offset + (i * scaled_width) - scaled_width
+            love.graphics.draw(
+                self.horizon_sprite,
+                x,  -- Tiled position with parallax
+                skyline_bottom,  -- Top edge position
+                0,  -- No rotation
+                scale,  -- Fixed scale
+                scale   -- Proportional scaling
+            )
+        end
     end
 
-    -- Draw moon circle
-    love.graphics.setColor(color)
-    love.graphics.circle("fill", base_x, moon_y, radius)
-
-    -- Draw subtle rim for depth
-    love.graphics.setColor(color[1] * 0.8, color[2] * 0.8, color[3] * 0.8, color[4] * 0.7)
+    -- Restore graphics state
+    love.graphics.setColor(r, g, b, a)
     love.graphics.setLineWidth(1)
-    love.graphics.circle("line", base_x, moon_y, radius)
+end
 
-    -- Draw sparkle particles (VETS-61)
+-- Draw foreground UI elements (sparkles, digital timer)
+function TimerDisplay:draw()
+    if not self.visible then return end
+
+    local base_x, base_y = self:getScreenPosition()
+    local moon_y = self:getMoonY(base_y)
+    local radius = self:getMoonRadius()
+
+    -- Save graphics state
+    local r, g, b, a = love.graphics.getColor()
+
+    -- Draw sparkle particles (VETS-61) - foreground UI effect
     if self.sparkling and #self.sparkle_particles > 0 then
         for _, p in ipairs(self.sparkle_particles) do
             love.graphics.setColor(1, 1, 1, p.alpha)
