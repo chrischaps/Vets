@@ -32,7 +32,7 @@ return {
         size = {width = 32, height = 32},
         description = "Glowing window with warm yellow light (delivery zone marker)",
         collision = false,
-        z_index = 5, -- Foreground, in front of player for visibility
+        z_index = 15, -- Foreground, renders after delivery zone glow
         solid = false,
         hazard = false,
         animated = true, -- Can pulse/glow for delivery zones
