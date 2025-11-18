@@ -127,66 +127,66 @@
     <object id="18" name="delivery_1" type="DeliveryZone" x="48" y="148" width="16" height="24">
       <properties>
         <property name="type" value="standard"/>
-        <property name="glow_color" value="table: 0x0222498397a0"/>
         <property name="recipient_name" value="Dawn Watcher's Perch"/>
+        <property name="glow_color" value="table: 0x022463fde478"/>
       </properties>
     </object>
     <object id="19" name="delivery_2" type="DeliveryZone" x="184" y="116" width="16" height="24">
       <properties>
         <property name="type" value="standard"/>
-        <property name="glow_color" value="table: 0x022249839a78"/>
         <property name="recipient_name" value="Stargazer's Balcony"/>
+        <property name="glow_color" value="table: 0x022463fde7f0"/>
       </properties>
     </object>
     <object id="20" name="delivery_3" type="DeliveryZone" x="296" y="140" width="16" height="24">
       <properties>
         <property name="type" value="standard"/>
-        <property name="glow_color" value="table: 0x022249839d80"/>
         <property name="recipient_name" value="Corner Newsstand"/>
+        <property name="glow_color" value="table: 0x022463fdeea8"/>
       </properties>
     </object>
     <object id="21" name="delivery_4" type="DeliveryZone" x="448" y="84" width="16" height="24">
       <properties>
         <property name="type" value="standard"/>
-        <property name="glow_color" value="table: 0x02224983a0b8"/>
         <property name="recipient_name" value="Skyline Observatory"/>
+        <property name="glow_color" value="table: 0x022463ff8910"/>
       </properties>
     </object>
     <object id="22" name="delivery_5" type="DeliveryZone" x="576" y="36" width="16" height="24">
       <properties>
         <property name="type" value="standard"/>
-        <property name="glow_color" value="table: 0x02224983a3c0"/>
         <property name="recipient_name" value="Tower Summit"/>
+        <property name="glow_color" value="table: 0x022463ff8b78"/>
       </properties>
     </object>
     <object id="23" name="delivery_6" type="DeliveryZone" x="704" y="52" width="16" height="24">
       <properties>
         <property name="type" value="standard"/>
-        <property name="glow_color" value="table: 0x02224983a6e8"/>
         <property name="recipient_name" value="Clocktower Penthouse"/>
+        <property name="glow_color" value="table: 0x022463ff8e00"/>
       </properties>
     </object>
     <object id="24" name="delivery_7" type="DeliveryZone" x="880" y="124" width="16" height="24">
       <properties>
         <property name="type" value="standard"/>
-        <property name="glow_color" value="table: 0x02224983a9f0"/>
         <property name="recipient_name" value="Midtown Residence"/>
+        <property name="glow_color" value="table: 0x022463ff9068"/>
       </properties>
     </object>
     <object id="25" name="delivery_8" type="DeliveryZone" x="1040" y="100" width="16" height="24">
       <properties>
         <property name="type" value="standard"/>
-        <property name="glow_color" value="table: 0x02224984e9b0"/>
         <property name="recipient_name" value="Aerial Garden"/>
+        <property name="glow_color" value="table: 0x022463ff9300"/>
       </properties>
     </object>
     <object id="26" name="delivery_9" type="DeliveryZone" x="1368" y="148" width="16" height="24">
       <properties>
         <property name="type" value="standard"/>
         <property name="letter_fragment_id" type="int" value="fragment_003"/>
-        <property name="special" type="bool" value="true"/>
-        <property name="glow_color" value="table: 0x02224984ec70"/>
         <property name="recipient_name" value="Journey's End"/>
+        <property name="glow_color" value="table: 0x022463ff95c0"/>
+        <property name="special" type="bool" value="true"/>
       </properties>
     </object>
 
@@ -194,44 +194,44 @@
     <object id="27" name="Hazard1" type="Hazard" x="344" y="144" width="16" height="16">
       <properties>
         <property name="type" value="steam_vent"/>
-        <property name="push_force" type="float" value="-180"/>
-        <property name="warning_time" type="float" value="0.5"/>
         <property name="active_time" type="float" value="1"/>
         <property name="cycle_time" type="float" value="3"/>
+        <property name="push_force" type="float" value="-180"/>
+        <property name="warning_time" type="float" value="0.5"/>
       </properties>
     </object>
     <object id="28" name="Hazard2" type="Hazard" x="448" y="118" width="64" height="4">
       <properties>
         <property name="type" value="laundry_line"/>
+        <property name="height_above_ground" type="float" value="24"/>
         <property name="slow_multiplier" type="float" value="0.4"/>
         <property name="stun_duration" type="float" value="0.5"/>
-        <property name="height_above_ground" type="float" value="24"/>
       </properties>
     </object>
     <object id="29" name="Hazard3" type="Hazard" x="600" y="120" width="16" height="16">
       <properties>
         <property name="type" value="steam_vent"/>
-        <property name="push_force" type="float" value="-180"/>
-        <property name="warning_time" type="float" value="0.5"/>
         <property name="active_time" type="float" value="1"/>
         <property name="cycle_time" type="float" value="3"/>
+        <property name="push_force" type="float" value="-180"/>
+        <property name="warning_time" type="float" value="0.5"/>
       </properties>
     </object>
     <object id="30" name="Hazard4" type="Hazard" x="728" y="110" width="80" height="4">
       <properties>
         <property name="type" value="laundry_line"/>
+        <property name="height_above_ground" type="float" value="24"/>
         <property name="slow_multiplier" type="float" value="0.4"/>
         <property name="stun_duration" type="float" value="0.5"/>
-        <property name="height_above_ground" type="float" value="24"/>
       </properties>
     </object>
     <object id="31" name="Hazard5" type="Hazard" x="1240" y="88" width="16" height="16">
       <properties>
         <property name="type" value="steam_vent"/>
-        <property name="push_force" type="float" value="-180"/>
-        <property name="warning_time" type="float" value="0.5"/>
         <property name="active_time" type="float" value="1"/>
         <property name="cycle_time" type="float" value="3"/>
+        <property name="push_force" type="float" value="-180"/>
+        <property name="warning_time" type="float" value="0.5"/>
       </properties>
     </object>
 

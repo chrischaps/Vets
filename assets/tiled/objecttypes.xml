@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Courier Cat - Custom Object Types for Tiled Map Editor -->
+<!-- This file defines all entity types used in level creation -->
+<objecttypes>
+  <!-- Platform: Solid ground that the player can stand on, jump from, or wall-slide against -->
+  <objecttype name="Platform" color="#00aa00">
+    <property name="type" type="string" default="rooftop"/>
+    <property name="climbable" type="bool" default="false"/>
+    <property name="semi_solid" type="bool" default="false"/>
+  </objecttype>
+
+  <!-- DeliveryZone: Glowing windows where the player delivers letters -->
+  <objecttype name="DeliveryZone" color="#ffff00">
+    <property name="type" type="string" default="standard"/>
+    <property name="letter_fragment_id" type="int" default="0"/>
+    <property name="chain_next" type="string" default=""/>
+  </objecttype>
+
+  <!-- Hazard: Obstacles that damage or hinder the player -->
+  <objecttype name="Hazard" color="#ff0000">
+    <property name="type" type="string" default="vent"/>
+    <property name="pattern" type="string" default="2s_on_1.5s_off"/>
+    <property name="phase_offset" type="float" default="0"/>
+  </objecttype>
+
+  <!-- Powerup: Collectibles that give the player temporary abilities -->
+  <objecttype name="Powerup" color="#00ffff">
+    <property name="type" type="string" default="coffee"/>
+  </objecttype>
+
+  <!-- SpawnPoint: The starting position for the player (only one per level) -->
+  <objecttype name="SpawnPoint" color="#ff00ff">
+    <!-- No additional properties needed -->
+  </objecttype>
+</objecttypes>
