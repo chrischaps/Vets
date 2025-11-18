@@ -2,9 +2,25 @@
 -- Entry point for Courier Cat
 -- Refactored to use StateManager for proper game flow
 
--- Test mode flags (VETS-72 - set to true to run converter tests)
-local TEST_TMX_TO_JSON = false
-local TEST_JSON_TO_TMX = false
+-- Build tools (can be triggered via command-line args or by setting these flags)
+-- Usage: lovec . --tmx-to-json    (converts TMX to JSON for runtime)
+--        lovec . --json-to-tmx    (converts JSON to TMX for editing)
+-- Or manually set these to true and run normally:
+local TMX_TO_JSON = false
+local JSON_TO_TMX = false
+
+-- Parse command-line arguments
+if arg then
+    for i = 1, #arg do
+        if arg[i] == "--tmx-to-json" or arg[i] == "--convert" then
+            TMX_TO_JSON = true
+            print("[CMD] Running TMX → JSON converter from command line")
+        elseif arg[i] == "--json-to-tmx" or arg[i] == "--migrate" then
+            JSON_TO_TMX = true
+            print("[CMD] Running JSON → TMX converter from command line")
+        end
+    end
+end
 
 -- Load external libraries
 local libs = require("libraries.init")
@@ -40,24 +56,25 @@ local offset_x = 0
 local offset_y = 0
 
 function love.load()
-    -- Check if running in converter test mode (VETS-72)
-    if TEST_TMX_TO_JSON then
-        require("test_tmx_converter")
-        love.timer.sleep(1)  -- Brief pause to see all output
-        love.event.quit(0)
-        return
-    end
-
-    if TEST_JSON_TO_TMX then
-        require("test_json_to_tmx")
-        love.timer.sleep(1)  -- Brief pause to see all output
-        love.event.quit(0)
-        return
-    end
-
     -- Set up pixel-perfect rendering
     love.graphics.setDefaultFilter("nearest", "nearest")
 
+    -- Run batch build tools if enabled (must be after libraries loaded in main scope)
+    if TMX_TO_JSON then
+        require("batch_convert_to_json")
+        love.timer.sleep(2)  -- Pause to read output
+        love.event.quit(0)
+        return
+    end
+
+    if JSON_TO_TMX then
+        require("batch_convert_to_tmx")
+        love.timer.sleep(2)  -- Pause to read output
+        love.event.quit(0)
+        return
+    end
+
+    -- Continue with normal game initialization
     -- Create game canvas at virtual resolution
     game_canvas = love.graphics.newCanvas(VIRTUAL_WIDTH, VIRTUAL_HEIGHT)
     game_canvas:setFilter("nearest", "nearest")
