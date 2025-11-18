@@ -1,0 +1,129 @@
+{
+    "automappingRulesFile": "",
+    "commands": [
+    ],
+    "compatibilityVersion": 1100,
+    "extensionsPath": "extensions",
+    "folders": [
+        "."
+    ],
+    "properties": [
+    ],
+    "propertyTypes": [
+        {
+            "color": "#ff00aa00",
+            "drawFill": true,
+            "id": 1,
+            "members": [
+                {
+                    "name": "climbable",
+                    "type": "bool",
+                    "value": false
+                },
+                {
+                    "name": "semi_solid",
+                    "type": "bool",
+                    "value": false
+                },
+                {
+                    "name": "type",
+                    "type": "string",
+                    "value": "rooftop"
+                }
+            ],
+            "name": "Platform",
+            "type": "class",
+            "useAs": [
+                "object",
+                "tile"
+            ]
+        },
+        {
+            "color": "#ffffff00",
+            "drawFill": true,
+            "id": 2,
+            "members": [
+                {
+                    "name": "chain_next",
+                    "type": "string",
+                    "value": ""
+                },
+                {
+                    "name": "letter_fragment_id",
+                    "type": "int",
+                    "value": 0
+                },
+                {
+                    "name": "type",
+                    "type": "string",
+                    "value": "standard"
+                }
+            ],
+            "name": "DeliveryZone",
+            "type": "class",
+            "useAs": [
+                "object",
+                "tile"
+            ]
+        },
+        {
+            "color": "#ffff0000",
+            "drawFill": true,
+            "id": 3,
+            "members": [
+                {
+                    "name": "pattern",
+                    "type": "string",
+                    "value": "2s_on_1.5s_off"
+                },
+                {
+                    "name": "phase_offset",
+                    "type": "float",
+                    "value": 0
+                },
+                {
+                    "name": "type",
+                    "type": "string",
+                    "value": "vent"
+                }
+            ],
+            "name": "Hazard",
+            "type": "class",
+            "useAs": [
+                "object",
+                "tile"
+            ]
+        },
+        {
+            "color": "#ff00ffff",
+            "drawFill": true,
+            "id": 4,
+            "members": [
+                {
+                    "name": "type",
+                    "type": "string",
+                    "value": "coffee"
+                }
+            ],
+            "name": "Powerup",
+            "type": "class",
+            "useAs": [
+                "object",
+                "tile"
+            ]
+        },
+        {
+            "color": "#ffff00ff",
+            "drawFill": true,
+            "id": 5,
+            "members": [
+            ],
+            "name": "SpawnPoint",
+            "type": "class",
+            "useAs": [
+                "object",
+                "tile"
+            ]
+        }
+    ]
+}
