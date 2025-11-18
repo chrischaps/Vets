@@ -8,6 +8,22 @@ local Collision = require("src.components.collision")
 local Platform = {}
 Platform.__index = Platform
 
+-- Class-level window sprites (shared by all platforms)
+Platform.window_sprites = nil
+
+-- Load window sprites (called once)
+function Platform.loadWindowSprites()
+    if not Platform.window_sprites then
+        Platform.window_sprites = {
+            dark = love.graphics.newImage("assets/graphics/props/window_dark.png"),
+            lit = love.graphics.newImage("assets/graphics/props/window_lit.png")
+        }
+        Platform.window_sprites.dark:setFilter("nearest", "nearest")
+        Platform.window_sprites.lit:setFilter("nearest", "nearest")
+        print("[Platform] Loaded window sprites")
+    end
+end
+
 -- Create a new platform entity
 -- @param x, y: Position
 -- @param width, height: Dimensions
@@ -42,6 +58,12 @@ function Platform.new(x, y, width, height, tileset)
     if self.tileset and self.tileset.is_wang then
         self:generateTerrainGrid()
     end
+
+    -- Load window sprites if not already loaded
+    Platform.loadWindowSprites()
+
+    -- Generate procedural windows
+    self:generateWindows()
 
     return self
 end
@@ -88,6 +110,51 @@ function Platform:generateTerrainGrid()
     self.grid_height = grid_height
 end
 
+-- Generate procedural windows on platform facade
+function Platform:generateWindows()
+    self.windows = {}
+
+    -- Only generate windows if platform is wide and tall enough
+    local min_width = 32
+    local min_height = 16
+    if self.width < min_width or self.height < min_height then
+        return
+    end
+
+    -- Use platform position as seed for consistent random generation
+    local seed = math.floor(self.transform.x) + math.floor(self.transform.y) * 1000
+    math.randomseed(seed)
+
+    -- Window spacing and size
+    local window_spacing_x = 20  -- Horizontal spacing between windows
+    local window_spacing_y = 36  -- Vertical spacing between window rows
+    local first_row_offset = 24  -- First row offset from platform top
+
+    -- Generate multiple rows of windows going down the facade
+    local y_pos = first_row_offset
+    while y_pos < self.height - 8 do
+        -- Generate windows across the platform width for this row
+        local x_pos = 8 --window_spacing_x / 2
+        while x_pos < self.width - 20 do
+            -- Randomly choose lit or dark window (30% chance of lit)
+            local is_lit = math.random() < 0.3
+
+            table.insert(self.windows, {
+                x = x_pos,
+                y = y_pos,
+                lit = is_lit
+            })
+
+            x_pos = x_pos + window_spacing_x
+        end
+
+        y_pos = y_pos + window_spacing_y
+    end
+
+    -- Restore random seed
+    math.randomseed(os.time())
+end
+
 -- Draw platform
 function Platform:draw()
     local x = self.transform.x
@@ -120,7 +187,15 @@ function Platform:draw()
         love.graphics.rectangle("line", x, y, w, h)
     end
 
-    
+    -- Draw windows if available
+    if Platform.window_sprites and self.windows then
+        love.graphics.setColor(1, 1, 1, 1)
+        for _, window in ipairs(self.windows) do
+            local sprite = window.lit and Platform.window_sprites.lit or Platform.window_sprites.dark
+            love.graphics.draw(sprite, x + window.x, y + window.y)
+        end
+    end
+
 end
 
 -- Get entity

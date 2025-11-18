@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="60" height="30" tilewidth="16" tileheight="16" infinite="0" nextlayerid="3" nextobjectid="5">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="60" height="30" tilewidth="16" tileheight="16" infinite="0" nextlayerid="3" nextobjectid="9">
  <objectgroup id="2" name="Entities">
   <object id="1" name="PlayerSpawn" type="SpawnPoint" x="32" y="128" width="16" height="16"/>
   <object id="2" name="Platform1" type="Platform" x="0" y="144" width="96" height="356">
@@ -44,7 +44,7 @@
     <property name="type" value="rooftop"/>
    </properties>
   </object>
-  <object id="8" name="Platform7" type="Platform" x="784" y="112" width="96" height="388">
+  <object id="8" name="Platform7" type="Platform" x="1160" y="104" width="96" height="388">
    <properties>
     <property name="friction" type="float" value="1"/>
     <property name="grippable" type="bool" value="true"/>
@@ -72,7 +72,7 @@
     <property name="type" value="standard"/>
    </properties>
   </object>
-  <object id="13" name="delivery_5" type="DeliveryZone" x="816" y="80" width="32" height="32">
+  <object id="13" name="delivery_5" type="DeliveryZone" x="1192" y="72" width="32" height="32">
    <properties>
     <property name="glow_color" value="table: 0x022249853290"/>
     <property name="letter_fragment_id" type="int" value="0"/>
@@ -118,7 +118,7 @@
     <property name="prop_type" value="water_tower"/>
    </properties>
   </object>
-  <object id="28" name="Prop14_window_lit" type="Prop" x="816" y="80" width="32" height="32">
+  <object id="28" name="Prop14_window_lit" type="Prop" x="1192" y="72" width="32" height="32">
    <properties>
     <property name="prop_type" value="greenhouse"/>
    </properties>
@@ -133,14 +133,42 @@
     <property name="prop_type" value="plant_potted"/>
    </properties>
   </object>
-  <object id="3" name="Prop7_plant_potted" type="Prop" x="800" y="104" width="8" height="8">
+  <object id="3" name="Prop7_plant_potted" type="Prop" x="1176" y="96" width="8" height="8">
    <properties>
     <property name="prop_type" value="plant_potted"/>
    </properties>
   </object>
-  <object id="4" name="Prop7_plant_potted" type="Prop" x="856" y="104" width="8" height="8">
+  <object id="4" name="Prop7_plant_potted" type="Prop" x="1232" y="96" width="8" height="8">
    <properties>
     <property name="prop_type" value="plant_potted"/>
+   </properties>
+  </object>
+  <object id="5" name="Platform7" type="Platform" x="1112" y="164" width="96" height="388">
+   <properties>
+    <property name="friction" type="float" value="1"/>
+    <property name="grippable" type="bool" value="true"/>
+    <property name="type" value="rooftop"/>
+   </properties>
+  </object>
+  <object id="6" name="Platform7" type="Platform" x="816" y="-24" width="96" height="388">
+   <properties>
+    <property name="friction" type="float" value="1"/>
+    <property name="grippable" type="bool" value="true"/>
+    <property name="type" value="rooftop"/>
+   </properties>
+  </object>
+  <object id="7" name="Platform7" type="Platform" x="848" y="32" width="96" height="388">
+   <properties>
+    <property name="friction" type="float" value="1"/>
+    <property name="grippable" type="bool" value="true"/>
+    <property name="type" value="rooftop"/>
+   </properties>
+  </object>
+  <object id="8" name="Platform7" type="Platform" x="968" y="220" width="96" height="388">
+   <properties>
+    <property name="friction" type="float" value="1"/>
+    <property name="grippable" type="bool" value="true"/>
+    <property name="type" value="rooftop"/>
    </properties>
   </object>
  </objectgroup>

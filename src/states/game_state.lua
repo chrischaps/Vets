@@ -18,6 +18,7 @@ local Constants = require("src.core.constants")
 local Level = require("src.systems.level")
 local Audio = require("src.systems.audio")  -- VETS-49
 local ScreenEffects = require("src.systems.screen_effects")  -- VETS-61
+local BackgroundBuildings = require("src.background.buildings")  -- Parallax background buildings
 
 local GameState = {}
 
@@ -193,6 +194,18 @@ function GameState:loadLevel(night_number)
     self.camera = CameraSystem.new(self.player.transform.x, self.player.transform.y)
     self.camera:setTarget(self.player)
     self.camera:setSmoothing(0.1)
+
+    -- Initialize background buildings with parallax
+    self.background_buildings = BackgroundBuildings:new({
+        level_width = 1500,  -- Estimated level width (could calculate from rightmost platform)
+        ground_y = 750,  -- Y position for building bottoms (well below gameplay)
+        parallax_factor = 0.6,  -- 40% parallax (between skyline 0.2 and game 1.0)
+        opacity = 0.65,  -- 50% opacity to appear distant
+        scale = 4.0,  -- 3x scale to match pixel art style
+        spacing_min = 20,
+        spacing_max = 50
+    })
+    self.background_buildings:init()
 
     print("[GameState] Level loaded:")
     print("  - Level: " .. level.name)
@@ -593,6 +606,13 @@ function GameState:drawBackgroundUI()
         local camera_x, camera_y = self.camera:getPosition()
         self.moon_timer:setCameraPosition(camera_x)
         self.moon_timer:drawBackground()
+    end
+
+    -- Draw parallax background buildings (between skyline and game)
+    if self.background_buildings and self.camera then
+        local camera_x, camera_y = self.camera:getPosition()
+        self.background_buildings:setCameraPosition(camera_x, camera_y)
+        self.background_buildings:draw()
     end
 
     -- Reset color
