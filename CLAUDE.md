@@ -91,19 +91,34 @@ This project uses JIRA for task management and follows a structured git workflow
    - This signals that work has started on this ticket
 
 2. **Create Feature Branch**
-   - Create a new git feature branch from the develop branch
+   - Create a new git feature branch from the appropriate base branch
    - Branch naming convention: `feature/VETS-{ticket-number}-{brief-description}`
    - Example: `feature/VETS-2-project-setup` or `feature/VETS-7-player-running`
-   - **Note:** If this is the first ticket, create the `develop` branch first:
+
+   **For Regular Tickets:**
    ```bash
    # First ticket only - create develop branch
    git checkout -b develop
    git push -u origin develop
 
-   # For all tickets - create feature branch from develop
+   # For all regular tickets - create feature branch from develop
    git checkout develop
    git pull origin develop
    git checkout -b feature/VETS-2-project-setup
+   ```
+
+   **For Epic Tickets (e.g., Level Editor VETS-70-92):**
+   ```bash
+   # First ticket of epic - create epic branch from develop
+   git checkout develop
+   git pull origin develop
+   git checkout -b epic/VETS-68-level-editor-core
+   git push -u origin epic/VETS-68-level-editor-core
+
+   # For subsequent tickets in epic - create feature branch from epic branch
+   git checkout epic/VETS-68-level-editor-core
+   git pull origin epic/VETS-68-level-editor-core
+   git checkout -b feature/VETS-70-tiled-template
    ```
 
 3. **Implement the Feature**
@@ -136,7 +151,9 @@ This project uses JIRA for task management and follows a structured git workflow
 
 5. **Open Pull Request**
    - Push the feature branch to GitHub
-   - Open a pull request to merge the feature branch back into the `develop` branch
+   - Open a pull request to merge the feature branch back into the appropriate base branch
+   - **Regular tickets**: PR to `develop`
+   - **Epic tickets**: PR to the epic branch (e.g., `epic/VETS-68-level-editor-core`)
    - PR title should reference the ticket: "VETS-2: Set up LÖVE project structure and configuration"
    - PR description should include:
      - Link to the JIRA ticket (e.g., `https://chrischappelear.atlassian.net/browse/VETS-2`)
@@ -144,9 +161,17 @@ This project uses JIRA for task management and follows a structured git workflow
      - **Manual testing performed** (Phase 1: document all test steps and results)
      - Any notes or considerations
    - **IMPORTANT:** Do NOT merge the PR - wait for code review and approval
+
+   **Regular Ticket:**
    ```bash
    git push origin feature/VETS-2-project-setup
-   # Then create PR via GitHub UI and wait for review
+   # Create PR to 'develop' branch
+   ```
+
+   **Epic Ticket:**
+   ```bash
+   git push origin feature/VETS-70-tiled-template
+   # Create PR to 'epic/VETS-68-level-editor-core' branch
    ```
 
 6. **Update JIRA Ticket**
@@ -158,12 +183,29 @@ This project uses JIRA for task management and follows a structured git workflow
 ### Git Branch Strategy
 
 - **main**: Production-ready code (reserved for releases) - **DO NOT interact with this branch during Phase 1**
-- **develop**: Integration branch for features (primary development branch) - **all work branches from here**
-- **feature/**: Individual feature branches created from develop
+- **develop**: Integration branch for features (primary development branch)
+- **epic/**: Long-lived branches for large features spanning multiple tickets
+- **feature/**: Individual feature branches created from develop or epic branches
+
+**Standard Workflow (Regular Features):**
+- Feature branches are created from and merge back to `develop`
+- Example: `feature/VETS-7-player-running` → PR to `develop`
+
+**Epic Workflow (Large Multi-Ticket Features):**
+For major features spanning multiple tickets (e.g., Level Editor System - VETS-68, VETS-69):
+1. Create an epic branch from `develop`: `epic/VETS-68-level-editor-core`
+2. Create feature branches from the epic branch: `feature/VETS-70-tiled-template`
+3. Submit PRs from feature branches back to the epic branch
+4. When the epic is complete, merge the epic branch to `develop`
+
+**Epic Branch Examples:**
+- `epic/VETS-68-level-editor-core` - For Level Editor Core System (VETS-70 through VETS-81)
+- `epic/VETS-69-ingame-editor` - For In-Game Editor (VETS-82 through VETS-92)
 
 **Important Notes:**
 - The `develop` branch will be created when starting the first ticket (VETS-2)
-- All feature branches are created from and merge back to `develop`
+- Regular features: branch from `develop`, PR to `develop`
+- Epic features: branch from epic branch, PR to epic branch
 - Never merge PRs yourself - wait for code review and approval
 - The `main` branch is reserved for releases and should not be touched during Phase 1 development
 
@@ -176,6 +218,7 @@ This project uses JIRA for task management and follows a structured git workflow
 
 ### Example Complete Workflow
 
+**Example 1: Regular Feature (Standard Workflow)**
 ```bash
 # 1. Check JIRA, select VETS-2 (highest priority, lowest number)
 # 2. Move VETS-2 to "In Progress" in JIRA
@@ -185,7 +228,7 @@ git checkout -b develop
 git push -u origin develop
 git checkout -b feature/VETS-2-project-setup
 
-# For subsequent tickets:
+# For subsequent regular tickets:
 # git checkout develop
 # git pull origin develop
 # git checkout -b feature/VETS-X-description
@@ -218,6 +261,44 @@ git push origin feature/VETS-2-project-setup
 
 # 7. Update JIRA with PR link and move to "In Review"
 # Ticket moves to "Done" after PR is reviewed and merged
+```
+
+**Example 2: Epic Feature (Level Editor Workflow)**
+```bash
+# 1. Check JIRA, select VETS-70 (first ticket of VETS-68 epic)
+# 2. Move VETS-70 to "In Progress" in JIRA
+
+# 3. Create epic branch (first ticket of epic only)
+git checkout develop
+git pull origin develop
+git checkout -b epic/VETS-68-level-editor-core
+git push -u origin epic/VETS-68-level-editor-core
+
+# 4. Create feature branch from epic branch
+git checkout -b feature/VETS-70-tiled-template
+
+# For subsequent tickets in same epic (VETS-71, 72, etc.):
+# git checkout epic/VETS-68-level-editor-core
+# git pull origin epic/VETS-68-level-editor-core
+# git checkout -b feature/VETS-71-sti-integration
+
+# 5. Implement, commit, and test (same as regular workflow)
+git add .
+git commit -m "VETS-70: Create Tiled project template"
+lovec .  # Test thoroughly
+
+# 6. Open pull request to EPIC BRANCH (not develop)
+git push origin feature/VETS-70-tiled-template
+# Create PR on GitHub with:
+# - Title: "VETS-70: Set Up Tiled Template and Custom Object Types"
+# - Description: JIRA link, changes summary, manual testing results
+# - Target branch: epic/VETS-68-level-editor-core  ← IMPORTANT!
+# - DO NOT MERGE - wait for review
+
+# 7. Update JIRA with PR link and move to "In Review"
+# When all epic tickets (VETS-70-81) are complete:
+# - Create final PR from epic/VETS-68-level-editor-core to develop
+# - Merge epic into develop after approval
 ```
 
 ## Project Architecture

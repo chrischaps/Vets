@@ -2,9 +2,51 @@
 
 ## Epic Overview
 
-**Epic ID**: VETS-EPIC-2
+**Epic ID**: VETS-68 (Core System), VETS-69 (In-Game Editor)
 **Epic Name**: Level Editor System
 **Epic Goal**: Create a comprehensive level creation pipeline to support rapid iteration and community content creation for Courier Cat
+
+**Note**: Ticket numbers were updated from the original plan (VETS-22-44) to actual assigned numbers (VETS-70-92) to avoid conflicts with existing tickets.
+
+### Git Workflow for This Epic
+
+This epic uses a dedicated **epic branch** workflow to keep the large level editor feature isolated until complete:
+
+1. **Epic Branch**: `epic/VETS-68-level-editor-core`
+   - Created from `develop` at the start of the first ticket (VETS-70)
+   - Long-lived branch for the duration of Phase 1 & 2 (Weeks 9-12)
+   - All feature branches for VETS-70 through VETS-81 branch from and PR back to this epic branch
+
+2. **Feature Branches**: `feature/VETS-XX-description`
+   - Created from `epic/VETS-68-level-editor-core`
+   - PRs target `epic/VETS-68-level-editor-core` (NOT `develop`)
+   - Example: `feature/VETS-70-tiled-template` → PR to `epic/VETS-68-level-editor-core`
+
+3. **Epic Completion**:
+   - When all tickets (VETS-70-81) are complete and merged to the epic branch
+   - Create a final PR from `epic/VETS-68-level-editor-core` to `develop`
+   - After merge and approval, the epic is complete
+
+**Workflow Commands:**
+```bash
+# First ticket (VETS-70) - Create epic branch
+git checkout develop
+git pull origin develop
+git checkout -b epic/VETS-68-level-editor-core
+git push -u origin epic/VETS-68-level-editor-core
+
+# Create feature branch for ticket
+git checkout -b feature/VETS-70-tiled-template
+
+# For subsequent tickets (VETS-71, 72, etc.)
+git checkout epic/VETS-68-level-editor-core
+git pull origin epic/VETS-68-level-editor-core
+git checkout -b feature/VETS-71-sti-integration
+```
+
+**Note for Phase 3 (VETS-82-92):**
+- Use a separate epic branch: `epic/VETS-69-ingame-editor`
+- Same workflow pattern as above
 
 ### Epic Description
 
@@ -33,7 +75,7 @@ Implement a two-phase level editor system:
 **Timeline**: Weeks 9-10
 **Goal**: Functional level creation workflow with Tiled Map Editor
 
-### Ticket 1: VETS-22 - Set Up Tiled Template and Custom Object Types
+### Ticket 1: VETS-70 - Set Up Tiled Template and Custom Object Types
 
 **Priority**: Highest
 **Story Points**: 3
@@ -71,13 +113,13 @@ Tiled is a free, mature map editor with support for custom object types and prop
 - [ ] Save as TMX and verify XML structure
 - [ ] Grid snapping works at 16×16
 
-**Branch**: `feature/VETS-22-tiled-template-setup`
+**Branch**: `feature/VETS-70-tiled-template-setup`
 
 **Dependencies**: None
 
 ---
 
-### Ticket 2: VETS-23 - Integrate STI (Simple Tiled Implementation) Library
+### Ticket 2: VETS-71 - Integrate STI (Simple Tiled Implementation) Library
 
 **Priority**: Highest
 **Story Points**: 2
@@ -109,13 +151,13 @@ STI is the standard library for loading Tiled maps in LÖVE. It handles TMX pars
 - [ ] No Lua errors or warnings
 - [ ] Library version documented in comments
 
-**Branch**: `feature/VETS-23-sti-library-integration`
+**Branch**: `feature/VETS-71-sti-library-integration`
 
-**Dependencies**: VETS-22
+**Dependencies**: VETS-70
 
 ---
 
-### Ticket 3: VETS-24 - Create TMX to Game JSON Converter
+### Ticket 3: VETS-72 - Create TMX to Game JSON Converter
 
 **Priority**: Highest
 **Story Points**: 5
@@ -160,13 +202,13 @@ Our game uses a specific JSON schema for level data. We need to convert Tiled's 
 - [ ] Test with multiple spawn points (should error)
 - [ ] Test with zero spawn points (should error)
 
-**Branch**: `feature/VETS-24-tmx-json-converter`
+**Branch**: `feature/VETS-72-tmx-json-converter`
 
-**Dependencies**: VETS-22, VETS-23
+**Dependencies**: VETS-70, VETS-71
 
 ---
 
-### Ticket 4: VETS-25 - Implement Level Loader System
+### Ticket 4: VETS-73 - Implement Level Loader System
 
 **Priority**: Highest
 **Story Points**: 5
@@ -179,7 +221,7 @@ Create the level loading system that reads JSON (from converter or direct file) 
 This is the core system that transforms level data into playable game entities. It must create all entity types and register them with the collision system.
 
 **Technical Requirements**:
-- Create `src/systems/level_loader.lua` (or extend existing from VETS-23)
+- Create `src/systems/level_loader.lua` (or extend existing from VETS-71)
 - Add functions:
   - `loadLevelFromJSON(json_data)` - main loader
   - `loadLevelFromFile(filepath)` - loads JSON file directly
@@ -212,13 +254,13 @@ This is the core system that transforms level data into playable game entities. 
 - [ ] No Lua errors during load or gameplay
 - [ ] Test loading multiple levels in sequence (no leftovers)
 
-**Branch**: `feature/VETS-25-level-loader-system`
+**Branch**: `feature/VETS-73-level-loader-system`
 
-**Dependencies**: VETS-24
+**Dependencies**: VETS-72
 
 ---
 
-### Ticket 5: VETS-26 - Create Delivery Zone Entity
+### Ticket 5: VETS-74 - Create Delivery Zone Entity
 
 **Priority**: High
 **Story Points**: 3
@@ -263,13 +305,13 @@ Delivery zones are the core gameplay mechanic. Players enter zones and press a b
 - [ ] No collision blocking (player passes through)
 - [ ] Print debug message when player enters zone
 
-**Branch**: `feature/VETS-26-delivery-zone-entity`
+**Branch**: `feature/VETS-74-delivery-zone-entity`
 
-**Dependencies**: VETS-25
+**Dependencies**: VETS-73
 
 ---
 
-### Ticket 6: VETS-27 - Create Hazard and Powerup Entities
+### Ticket 6: VETS-75 - Create Hazard and Powerup Entities
 
 **Priority**: Medium
 **Story Points**: 5
@@ -323,13 +365,13 @@ Hazards damage/hinder the player, while powerups provide temporary abilities. Bo
 - [ ] Powerups disappear after collection
 - [ ] No errors in console
 
-**Branch**: `feature/VETS-27-hazard-powerup-entities`
+**Branch**: `feature/VETS-75-hazard-powerup-entities`
 
-**Dependencies**: VETS-25
+**Dependencies**: VETS-73
 
 ---
 
-### Ticket 7: VETS-28 - Implement Hot-Reload System for Fast Iteration
+### Ticket 7: VETS-76 - Implement Hot-Reload System for Fast Iteration
 
 **Priority**: High
 **Story Points**: 3
@@ -368,13 +410,13 @@ Fast iteration is critical for level design. Designers need to test changes quic
 - [ ] Reload multiple times in succession, no memory leaks
 - [ ] Notification appears and disappears correctly
 
-**Branch**: `feature/VETS-28-hot-reload-system`
+**Branch**: `feature/VETS-76-hot-reload-system`
 
-**Dependencies**: VETS-25
+**Dependencies**: VETS-73
 
 ---
 
-### Ticket 8: VETS-29 - Create Level Validation Framework
+### Ticket 8: VETS-77 - Create Level Validation Framework
 
 **Priority**: High
 **Story Points**: 3
@@ -417,9 +459,9 @@ Invalid levels cause crashes or poor player experience. Validation catches error
 - [ ] Run `lovec .` and verify error messages are clear and actionable
 - [ ] Fix errors, reload with F5, verify load succeeds
 
-**Branch**: `feature/VETS-29-level-validation-framework`
+**Branch**: `feature/VETS-77-level-validation-framework`
 
-**Dependencies**: VETS-25
+**Dependencies**: VETS-73
 
 ---
 
@@ -428,7 +470,7 @@ Invalid levels cause crashes or poor player experience. Validation catches error
 **Timeline**: Weeks 11-12
 **Goal**: Advanced quality assurance tools for level design
 
-### Ticket 9: VETS-30 - Implement Reachability Analysis
+### Ticket 9: VETS-78 - Implement Reachability Analysis
 
 **Priority**: Medium
 **Story Points**: 8
@@ -473,13 +515,13 @@ The most critical level design error is creating unreachable deliveries. This va
 - [ ] Verify console output shows analysis results
 - [ ] Test with 15 deliveries, verify performance < 1s
 
-**Branch**: `feature/VETS-30-reachability-analysis`
+**Branch**: `feature/VETS-78-reachability-analysis`
 
-**Dependencies**: VETS-29
+**Dependencies**: VETS-77
 
 ---
 
-### Ticket 10: VETS-31 - Add Gap Distance Validation
+### Ticket 10: VETS-79 - Add Gap Distance Validation
 
 **Priority**: Medium
 **Story Points**: 2
@@ -521,13 +563,13 @@ Per GDD spatial metrics, maximum traversable gap is 80px (5 tiles) with coffee p
 - [ ] Run `lovec .` and verify validation messages
 - [ ] No false positives on vertical gaps
 
-**Branch**: `feature/VETS-31-gap-distance-validation`
+**Branch**: `feature/VETS-79-gap-distance-validation`
 
-**Dependencies**: VETS-29
+**Dependencies**: VETS-77
 
 ---
 
-### Ticket 11: VETS-32 - Create Visual Debug Overlay System
+### Ticket 11: VETS-80 - Create Visual Debug Overlay System
 
 **Priority**: High
 **Story Points**: 5
@@ -577,13 +619,13 @@ Visual aids help level designers understand movement constraints and verify plac
 - [ ] Toggle F3 multiple times, verify persistence
 - [ ] Test with 15 deliveries, verify performance remains 60fps
 
-**Branch**: `feature/VETS-32-visual-debug-overlay`
+**Branch**: `feature/VETS-80-visual-debug-overlay`
 
-**Dependencies**: VETS-25, VETS-30 (optional integration)
+**Dependencies**: VETS-73, VETS-78 (optional integration)
 
 ---
 
-### Ticket 12: VETS-33 - Documentation and Example Levels
+### Ticket 12: VETS-81 - Documentation and Example Levels
 
 **Priority**: Medium
 **Story Points**: 3
@@ -626,9 +668,9 @@ Good documentation ensures smooth onboarding for level designers and serves as r
 - [ ] Check documentation for broken links/formatting
 - [ ] Have another person follow guide (if possible)
 
-**Branch**: `feature/VETS-33-documentation-examples`
+**Branch**: `feature/VETS-81-documentation-examples`
 
-**Dependencies**: VETS-29, VETS-32
+**Dependencies**: VETS-77, VETS-80
 
 ---
 
@@ -641,73 +683,73 @@ Good documentation ensures smooth onboarding for level designers and serves as r
 
 This phase consists of 10+ tickets covering:
 
-1. **VETS-34**: UI Framework for Editor Mode (6 SP)
+1. **VETS-82**: UI Framework for Editor Mode (6 SP)
    - Custom button, panel, dropdown, text input widgets
    - Mouse input handling
    - Keyboard shortcuts
    - Layout system
 
-2. **VETS-35**: Entity Placement Tool System (5 SP)
+2. **VETS-83**: Entity Placement Tool System (5 SP)
    - Tool selector (select, platform, delivery, hazard, powerup, spawn)
    - Drag-to-create platforms
    - Click-to-place entities
    - Grid snapping
    - Undo/redo stack
 
-3. **VETS-36**: Property Panel System (4 SP)
+3. **VETS-84**: Property Panel System (4 SP)
    - Entity selection
    - Property editing (type, position, size, custom)
    - Type dropdowns
    - Value validation
    - Apply/cancel buttons
 
-4. **VETS-37**: Entity Visual Representation (3 SP)
+4. **VETS-85**: Entity Visual Representation (3 SP)
    - Render all entity types in editor
    - Selection highlights
    - Handles for resizing platforms
    - Grid overlay
    - Camera pan/zoom
 
-5. **VETS-38**: File Operations (Save/Load/New) (4 SP)
+5. **VETS-86**: File Operations (Save/Load/New) (4 SP)
    - New level dialog
    - Open JSON browser
    - Save to JSON
    - Save As dialog
    - Auto-save system
 
-6. **VETS-39**: Integrated Playtesting (5 SP)
+6. **VETS-87**: Integrated Playtesting (5 SP)
    - "Test Level" button
    - Switch from editor mode to play mode
    - Return to editor (preserves state)
    - Test from spawn vs. test from current position
    - Temporary level save
 
-7. **VETS-40**: Advanced Visual Aids in Editor (5 SP)
+7. **VETS-88**: Advanced Visual Aids in Editor (5 SP)
    - Real-time jump arc preview
    - Dash range circles
    - Movement capability overlay
    - Reachability heatmap
    - Toggle layers
 
-8. **VETS-41**: Template and Prefab System (3 SP)
+8. **VETS-89**: Template and Prefab System (3 SP)
    - Save entity groups as templates
    - Template library browser
    - Drag-drop prefabs
    - Common patterns (gauntlet, split, climb, gap, run)
 
-9. **VETS-42**: Multi-Layer Support (4 SP)
+9. **VETS-90**: Multi-Layer Support (4 SP)
    - Background layer management
    - Parallax preview
    - Z-index visualization
    - Layer visibility toggles
 
-10. **VETS-43**: Advanced Validation in Editor (3 SP)
+10. **VETS-91**: Advanced Validation in Editor (3 SP)
     - Real-time validation feedback
     - Visual error indicators (red highlights)
     - Validation panel with error list
     - Click to jump to error
 
-11. **VETS-44**: Community Features (8 SP)
+11. **VETS-92**: Community Features (8 SP)
     - Export to shareable .love file
     - Level metadata (author, description, tags)
     - Screenshot system
@@ -717,21 +759,24 @@ This phase consists of 10+ tickets covering:
 
 ## Development Workflow Summary
 
-### For Each Ticket
+### For Each Ticket in This Epic
 
 1. **Select Ticket**: Choose highest priority ticket from "To Do" in JIRA
 2. **Move to In Progress**: Update JIRA status
-3. **Create Branch**: `feature/VETS-X-brief-description` from `develop`
+3. **Create Branch**:
+   - **First ticket (VETS-70)**: Create `epic/VETS-68-level-editor-core` from `develop`
+   - **Subsequent tickets**: Create `feature/VETS-X-brief-description` from `epic/VETS-68-level-editor-core`
 4. **Implement**: Follow technical requirements and acceptance criteria
 5. **Test with lovec**: Run `lovec .` and verify all testing checklist items
 6. **Commit**: Use message format `VETS-X: Description`
 7. **Create PR**:
    - Title: "VETS-X: Ticket title"
    - Description: JIRA link, changes summary, testing results
-   - Target: `develop` branch
+   - **Target: `epic/VETS-68-level-editor-core` branch** (NOT `develop`)
    - **DO NOT MERGE** - wait for review
 8. **Update JIRA**: Add PR link, move to "In Review"
-9. **After Approval**: Ticket moves to "Done"
+9. **After Approval**: Ticket moves to "Done", feature merged to epic branch
+10. **Epic Complete**: When all tickets done, create final PR from epic branch to `develop`
 
 ### Testing Requirements
 
@@ -746,7 +791,7 @@ This phase consists of 10+ tickets covering:
 ### Dependencies
 
 Tickets must be completed in order within each phase due to dependencies:
-- Phase 1: Sequential (22→23→24→25, then 26/27/28/29 can parallel)
+- Phase 1: Sequential (70→71→72→73, then 74/75/76/77 can parallel)
 - Phase 2: Requires Phase 1 complete
 - Phase 3: Requires Phase 2 complete
 
@@ -814,21 +859,21 @@ assets/
 
 src/
 ├── systems/
-│   ├── level_loader.lua            # VETS-25
-│   ├── tmx_converter.lua           # VETS-24
-│   ├── level_validator.lua         # VETS-29
-│   ├── reachability_analyzer.lua   # VETS-30
-│   └── debug_overlay.lua           # VETS-32
+│   ├── level_loader.lua            # VETS-73
+│   ├── tmx_converter.lua           # VETS-72
+│   ├── level_validator.lua         # VETS-77
+│   ├── reachability_analyzer.lua   # VETS-78
+│   └── debug_overlay.lua           # VETS-80
 ├── entities/
-│   ├── delivery_zone.lua           # VETS-26
-│   ├── hazard.lua                  # VETS-27
-│   └── powerup.lua                 # VETS-27
+│   ├── delivery_zone.lua           # VETS-74
+│   ├── hazard.lua                  # VETS-75
+│   └── powerup.lua                 # VETS-75
 
 docs/
-├── TILED_WORKFLOW.md               # VETS-33
-├── LEVEL_DESIGN_GUIDE.md           # VETS-33
-├── JSON_SCHEMA.md                  # VETS-33
-└── VALIDATION_GUIDE.md             # VETS-33
+├── TILED_WORKFLOW.md               # VETS-81
+├── LEVEL_DESIGN_GUIDE.md           # VETS-81
+├── JSON_SCHEMA.md                  # VETS-81
+└── VALIDATION_GUIDE.md             # VETS-81
 ```
 
 ---
@@ -836,24 +881,24 @@ docs/
 ## Estimated Timeline
 
 ### Week 9
-- VETS-22: Tiled Template (2 days)
-- VETS-23: STI Integration (1 day)
-- VETS-24: TMX Converter (2 days)
+- VETS-70: Tiled Template (2 days)
+- VETS-71: STI Integration (1 day)
+- VETS-72: TMX Converter (2 days)
 
 ### Week 10
-- VETS-25: Level Loader (2 days)
-- VETS-26: Delivery Zones (1.5 days)
-- VETS-27: Hazards/Powerups (2.5 days)
+- VETS-73: Level Loader (2 days)
+- VETS-74: Delivery Zones (1.5 days)
+- VETS-75: Hazards/Powerups (2.5 days)
 
 ### Week 11
-- VETS-28: Hot-Reload (1 day)
-- VETS-29: Validation Framework (1.5 days)
-- VETS-30: Reachability Analysis (3 days)
+- VETS-76: Hot-Reload (1 day)
+- VETS-77: Validation Framework (1.5 days)
+- VETS-78: Reachability Analysis (3 days)
 
 ### Week 12
-- VETS-31: Gap Validation (1 day)
-- VETS-32: Debug Overlay (2 days)
-- VETS-33: Documentation (1.5 days)
+- VETS-79: Gap Validation (1 day)
+- VETS-80: Debug Overlay (2 days)
+- VETS-81: Documentation (1.5 days)
 
 **Total**: 4 weeks for Phase 1-2 (12 tickets)
 
@@ -868,13 +913,13 @@ docs/
 **Mitigation**: Start with simple grid-based flood-fill, optimize later if needed. Can be optional validation (warning vs. error).
 
 ### Risk: Tiled learning curve too steep
-**Mitigation**: Comprehensive documentation (VETS-33), example levels, video walkthrough if needed.
+**Mitigation**: Comprehensive documentation (VETS-81), example levels, video walkthrough if needed.
 
 ### Risk: STI library limitations
 **Mitigation**: Fallback to manual TMX parsing with xml2lua if STI doesn't support needed features.
 
 ### Risk: In-game UI too complex to build
-**Mitigation**: Phase 3 is stretch goal. Tiled + validation tools (Phase 1-2) are sufficient for development.
+**Mitigation**: Phase 3 is stretch goal (Epic VETS-69). Tiled + validation tools (Epic VETS-68) are sufficient for development.
 
 ### Risk: Performance issues with validation
 **Mitigation**: Make validation optional (toggle), run asynchronously, cache results.
