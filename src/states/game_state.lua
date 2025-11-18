@@ -162,6 +162,7 @@ function GameState:loadLevel(night_number)
     self.delivery_zones = level.delivery_zones
     self.hazards = level.hazards
     self.powerups = level.powerups
+    self.props = level.props or {}
 
     -- Get spawn point from level data
     local spawn = Level.get_spawn_point(level)
@@ -309,6 +310,13 @@ function GameState:update(dt)
         end
     end
 
+    -- Update props (for animations, glows, etc.)
+    for _, prop in ipairs(self.props or {}) do
+        if prop.update then
+            prop:update(dt)
+        end
+    end
+
     -- Update camera (smooth following)
     if self.camera then
         self.camera:update(dt)
@@ -363,6 +371,13 @@ function GameState:draw()
         self.camera:attach(0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT)
     end
 
+    -- Draw background props (z-index < 10)
+    for _, prop in ipairs(self.props or {}) do
+        if prop.z_index < 10 then
+            prop:draw(self.camera)
+        end
+    end
+
     -- Draw platforms
     for _, platform in ipairs(self.platforms) do
         platform:draw()
@@ -383,6 +398,13 @@ function GameState:draw()
         hazard:draw()
     end
 
+    -- Draw mid-ground props (z-index 10)
+    for _, prop in ipairs(self.props or {}) do
+        if prop.z_index == 10 then
+            prop:draw(self.camera)
+        end
+    end
+
     -- Draw powerups
     for _, powerup in ipairs(self.powerups) do
         powerup:draw()
@@ -391,6 +413,13 @@ function GameState:draw()
     -- Draw player
     if self.player then
         self.player:draw()
+    end
+
+    -- Draw foreground props (z-index > 10)
+    for _, prop in ipairs(self.props or {}) do
+        if prop.z_index > 10 then
+            prop:draw(self.camera)
+        end
     end
 
     -- Debug: Draw collision boundaries (F1 key)

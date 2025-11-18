@@ -145,6 +145,30 @@ local function validatePowerup(powerup, index)
     return true
 end
 
+-- Validate prop data
+local function validateProp(prop, index)
+    if not isTable(prop) then
+        return false, string.format("Prop %d must be a table", index)
+    end
+
+    local required = {"x", "y", "prop_type"}
+    for _, field in ipairs(required) do
+        if prop[field] == nil then
+            return false, string.format("Prop %d missing '%s'", index, field)
+        end
+    end
+
+    if not isNumber(prop.x) or not isNumber(prop.y) then
+        return false, string.format("Prop %d has invalid coordinates", index)
+    end
+
+    if not isString(prop.prop_type) then
+        return false, string.format("Prop %d has invalid prop_type", index)
+    end
+
+    return true
+end
+
 -- Validate background layer
 local function validateBackgroundLayer(layer, index)
     if not isTable(layer) then
@@ -268,6 +292,19 @@ function LevelLoader.validate(levelData)
         end
     end
 
+    -- Validate props (optional)
+    if levelData.props then
+        if not isTable(levelData.props) then
+            return false, "props must be a table"
+        end
+        for i, prop in ipairs(levelData.props) do
+            valid, err = validateProp(prop, i)
+            if not valid then
+                return false, err
+            end
+        end
+    end
+
     return true, "Validation successful"
 end
 
@@ -301,6 +338,7 @@ function LevelLoader.load(filepath)
     levelData.walls = levelData.walls or {}
     levelData.hazards = levelData.hazards or {}
     levelData.powerups = levelData.powerups or {}
+    levelData.props = levelData.props or {}
     levelData.background_layers = levelData.background_layers or {}
     levelData.camera = levelData.camera or {}
     levelData.environment = levelData.environment or {}
