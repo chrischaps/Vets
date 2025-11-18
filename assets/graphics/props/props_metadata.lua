@@ -51,6 +51,19 @@ return {
         animated = false
     },
 
+    greenhouse = {
+        filename = "greenhouse1.png",
+        size = {width = 32, height = 32},
+        description = "Rooftop greenhouse",
+        collision = false,
+        z_index = 10, -- Mid-ground, behind player
+        solid = false, -- Can walk over
+        hazard = false,
+        animated = true, -- Can pulse/glow for delivery zones
+        glow = true,
+        delivery_target = true
+    },
+
     -- HVAC Props
     ac_unit = {
         filename = "ac_unit.png",
@@ -102,7 +115,7 @@ return {
     -- Decorative Props
     plant_potted = {
         filename = "plant_potted.png",
-        size = {width = 32, height = 32},
+        size = {width = 8, height = 8},
         description = "Potted plant with green leaves",
         collision = true,
         z_index = 12, -- Foreground decoration

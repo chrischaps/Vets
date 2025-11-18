@@ -6,7 +6,51 @@
     "activeFile": "",
     "expandedProjectPaths": [
     ],
+    "file.lastUsedOpenFilter": "All Files (*)",
     "fileStates": {
+        "night1.tmx": {
+            "expandedObjectLayers": [
+                2
+            ],
+            "scale": 5.5,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 180.1818181818182,
+                "y": 41.90909090909092
+            }
+        },
+        "night1_from_json.tmx": {
+            "scale": 3.0746354166666663,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 416.30952179289557,
+                "y": 239.86583775176598
+            }
+        },
+        "night2.tmx": {
+            "scale": 1.5,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 622,
+                "y": 236.33333333333331
+            }
+        },
+        "night3.tmx": {
+            "scale": 1.5,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 745.3333333333334,
+                "y": 171
+            }
+        },
+        "night_01.tmx": {
+            "scale": 4,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 333.25,
+                "y": 271.625
+            }
+        }
     },
     "last.objectTypesPath": "C:/Users/chris/dev/Vets/assets/tiled/objecttypes.xml",
     "map.height": 30,
@@ -17,5 +61,10 @@
     ],
     "project": "Vets.tiled-project",
     "recentFiles": [
+        "night1.tmx",
+        "night2.tmx",
+        "night3.tmx",
+        "night1_from_json.tmx",
+        "night_01.tmx"
     ]
 }

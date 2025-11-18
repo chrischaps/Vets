@@ -127,10 +127,9 @@
     <object id="18" name="delivery_7" type="DeliveryZone" x="1128" y="148" width="16" height="24">
       <properties>
         <property name="type" value="standard"/>
-        <property name="letter_fragment_id" type="int" value="fragment_002"/>
-        <property name="recipient_name" value="Lonely Lighthouse"/>
         <property name="glow_color" value="table: 0x022463fe2480"/>
         <property name="special" type="bool" value="true"/>
+        <property name="recipient_name" value="Lonely Lighthouse"/>
       </properties>
     </object>
 
@@ -138,8 +137,8 @@
     <object id="19" name="Hazard1" type="Hazard" x="360" y="144" width="16" height="16">
       <properties>
         <property name="type" value="steam_vent"/>
-        <property name="active_time" type="float" value="1"/>
         <property name="cycle_time" type="float" value="3.5"/>
+        <property name="active_time" type="float" value="1"/>
         <property name="push_force" type="float" value="-180"/>
         <property name="warning_time" type="float" value="0.5"/>
       </properties>
@@ -147,16 +146,16 @@
     <object id="20" name="Hazard2" type="Hazard" x="512" y="98" width="64" height="4">
       <properties>
         <property name="type" value="laundry_line"/>
-        <property name="height_above_ground" type="float" value="24"/>
-        <property name="slow_multiplier" type="float" value="0.4"/>
         <property name="stun_duration" type="float" value="0.5"/>
+        <property name="slow_multiplier" type="float" value="0.4"/>
+        <property name="height_above_ground" type="float" value="24"/>
       </properties>
     </object>
     <object id="21" name="Hazard3" type="Hazard" x="1016" y="104" width="16" height="16">
       <properties>
         <property name="type" value="steam_vent"/>
-        <property name="active_time" type="float" value="1"/>
         <property name="cycle_time" type="float" value="3.5"/>
+        <property name="active_time" type="float" value="1"/>
         <property name="push_force" type="float" value="-180"/>
         <property name="warning_time" type="float" value="0.5"/>
       </properties>

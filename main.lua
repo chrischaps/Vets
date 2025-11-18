@@ -123,13 +123,15 @@ function love.load()
     Audio:load_music("gameplay_music2", "assets/audio/music/music2.ogg")
 
     -- Load SFX (placeholder for future use)
-    Audio:load_sfx("jump", "assets/audio/sfx/jump1.ogg")
+    Audio:load_sfx("jump", "assets/audio/sfx/jump2.ogg")
     Audio:load_sfx("dash1", "assets/audio/sfx/dash1.ogg")
-    Audio:load_sfx("dash2", "assets/audio/sfx/dash2.wav")
-    Audio:load_sfx("delivery1", "assets/audio/sfx/delivery1.wav")
-    Audio:load_sfx("delivery2", "assets/audio/sfx/delivery2.wav")
-    Audio:load_sfx("failure_sting", "assets/audio/sfx/failure_sting.wav")  -- VETS-62
-    Audio:load_sfx("success_jingle", "assets/audio/sfx/success_jingle.wav")  -- VETS-61
+    Audio:load_sfx("dash2", "assets/audio/sfx/dash2.ogg")
+    Audio:load_sfx("delivery1", "assets/audio/sfx/delivery1.ogg")
+    Audio:load_sfx("delivery2", "assets/audio/sfx/delivery2.ogg")
+    Audio:load_sfx("failure_sting", "assets/audio/sfx/failure_sting.ogg")  -- VETS-62
+    Audio:load_sfx("success_jingle", "assets/audio/sfx/success_jingle.ogg")  -- VETS-61
+    Audio:load_sfx("foot1", "assets/audio/sfx/foot1.ogg")  -- Footstep sound 1
+    Audio:load_sfx("foot2", "assets/audio/sfx/foot2.ogg")  -- Footstep sound 2
     print("Audio loaded successfully")
 
     -- Start with MenuState (VETS-58)
@@ -186,6 +188,17 @@ function love.draw()
 
     -- Draw to screen with letterboxing
     love.graphics.setCanvas()
+
+    -- Draw background UI elements (moon + skyline) at native resolution BEFORE game canvas
+    -- This makes them appear behind the game world
+    if state_manager then
+        local current_state = state_manager:current()
+        if current_state and current_state.drawBackgroundUI then
+            current_state:drawBackgroundUI()
+        end
+    end
+
+    -- Draw game canvas on top of background UI
     love.graphics.setColor(1, 1, 1)
     love.graphics.draw(
         game_canvas,
@@ -194,7 +207,7 @@ function love.draw()
         game_scale, game_scale
     )
 
-    -- Draw UI at native window resolution (high resolution, sharp text)
+    -- Draw foreground UI at native window resolution (high resolution, sharp text)
     if state_manager then
         local current_state = state_manager:current()
         if current_state and current_state.drawUI then

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="60" height="30" tilewidth="16" tileheight="16" infinite="0" nextlayerid="3" nextobjectid="1">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="60" height="30" tilewidth="16" tileheight="16" infinite="0" nextlayerid="3" nextobjectid="5">
  <objectgroup id="2" name="Entities">
-  <object id="1" name="PlayerSpawn" type="SpawnPoint" x="32" y="120" width="16" height="16"/>
+  <object id="1" name="PlayerSpawn" type="SpawnPoint" x="32" y="128" width="16" height="16"/>
   <object id="2" name="Platform1" type="Platform" x="0" y="144" width="96" height="356">
    <properties>
     <property name="friction" type="float" value="1"/>
@@ -51,35 +51,28 @@
     <property name="type" value="rooftop"/>
    </properties>
   </object>
-  <object id="9" name="delivery_1" type="DeliveryZone" x="56" y="132" width="16" height="24">
-   <properties>
-    <property name="glow_color" value="table: 0x022249832430"/>
-    <property name="recipient_name" value="Mrs. Henderson"/>
-    <property name="type" value="standard"/>
-   </properties>
-  </object>
-  <object id="10" name="delivery_2" type="DeliveryZone" x="160" y="132" width="16" height="24">
+  <object id="10" name="delivery_2" type="DeliveryZone" x="160" y="112" width="32" height="32">
    <properties>
     <property name="glow_color" value="table: 0x022249852040"/>
     <property name="recipient_name" value="Tom's Bakery"/>
     <property name="type" value="standard"/>
    </properties>
   </object>
-  <object id="11" name="delivery_3" type="DeliveryZone" x="288" y="96" width="16" height="24">
+  <object id="11" name="delivery_3" type="DeliveryZone" x="288" y="96" width="32" height="32">
    <properties>
     <property name="glow_color" value="table: 0x022249852798"/>
     <property name="recipient_name" value="City Library"/>
     <property name="type" value="standard"/>
    </properties>
   </object>
-  <object id="12" name="delivery_4" type="DeliveryZone" x="528" y="84" width="16" height="24">
+  <object id="12" name="delivery_4" type="DeliveryZone" x="512" y="64" width="32" height="32">
    <properties>
     <property name="glow_color" value="table: 0x022249852ce8"/>
     <property name="recipient_name" value="Jazz Club"/>
     <property name="type" value="standard"/>
    </properties>
   </object>
-  <object id="13" name="delivery_5" type="DeliveryZone" x="816" y="100" width="16" height="24">
+  <object id="13" name="delivery_5" type="DeliveryZone" x="816" y="80" width="32" height="32">
    <properties>
     <property name="glow_color" value="table: 0x022249853290"/>
     <property name="letter_fragment_id" type="int" value="0"/>
@@ -88,11 +81,66 @@
     <property name="type" value="standard"/>
    </properties>
   </object>
-  <object id="14" name="Powerup1" type="Powerup" x="674" y="102" width="12" height="12">
+  <object id="14" name="Powerup1" type="Powerup" x="720" y="112" width="12" height="12">
    <properties>
     <property name="duration" type="float" value="5"/>
     <property name="speed_multiplier" type="float" value="1.5"/>
     <property name="type" value="coffee"/>
+   </properties>
+  </object>
+  <object id="18" name="Prop4_window_lit" type="Prop" x="160" y="112" width="32" height="32">
+   <properties>
+    <property name="prop_type" value="greenhouse"/>
+   </properties>
+  </object>
+  <object id="20" name="Prop6_window_lit" type="Prop" x="288" y="96" width="32" height="32">
+   <properties>
+    <property name="prop_type" value="greenhouse"/>
+   </properties>
+  </object>
+  <object id="21" name="Prop7_plant_potted" type="Prop" x="260" y="120" width="8" height="8">
+   <properties>
+    <property name="prop_type" value="plant_potted"/>
+   </properties>
+  </object>
+  <object id="23" name="Prop9_antenna_tv" type="Prop" x="416" y="80" width="16" height="32">
+   <properties>
+    <property name="prop_type" value="antenna_tv"/>
+   </properties>
+  </object>
+  <object id="24" name="Prop10_window_lit" type="Prop" x="512" y="64" width="32" height="32">
+   <properties>
+    <property name="prop_type" value="greenhouse"/>
+   </properties>
+  </object>
+  <object id="26" name="Prop12_water_tower" type="Prop" x="656" y="64" width="48" height="64">
+   <properties>
+    <property name="prop_type" value="water_tower"/>
+   </properties>
+  </object>
+  <object id="28" name="Prop14_window_lit" type="Prop" x="816" y="80" width="32" height="32">
+   <properties>
+    <property name="prop_type" value="greenhouse"/>
+   </properties>
+  </object>
+  <object id="1" name="Prop7_plant_potted" type="Prop" x="504" y="88" width="8" height="8">
+   <properties>
+    <property name="prop_type" value="plant_potted"/>
+   </properties>
+  </object>
+  <object id="2" name="Prop7_plant_potted" type="Prop" x="192" y="136" width="8" height="8">
+   <properties>
+    <property name="prop_type" value="plant_potted"/>
+   </properties>
+  </object>
+  <object id="3" name="Prop7_plant_potted" type="Prop" x="800" y="104" width="8" height="8">
+   <properties>
+    <property name="prop_type" value="plant_potted"/>
+   </properties>
+  </object>
+  <object id="4" name="Prop7_plant_potted" type="Prop" x="856" y="104" width="8" height="8">
+   <properties>
+    <property name="prop_type" value="plant_potted"/>
    </properties>
   </object>
  </objectgroup>

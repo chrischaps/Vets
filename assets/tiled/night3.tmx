@@ -183,10 +183,9 @@
     <object id="26" name="delivery_9" type="DeliveryZone" x="1368" y="148" width="16" height="24">
       <properties>
         <property name="type" value="standard"/>
-        <property name="letter_fragment_id" type="int" value="fragment_003"/>
-        <property name="recipient_name" value="Journey's End"/>
         <property name="glow_color" value="table: 0x022463ff95c0"/>
         <property name="special" type="bool" value="true"/>
+        <property name="recipient_name" value="Journey's End"/>
       </properties>
     </object>
 
@@ -194,8 +193,8 @@
     <object id="27" name="Hazard1" type="Hazard" x="344" y="144" width="16" height="16">
       <properties>
         <property name="type" value="steam_vent"/>
-        <property name="active_time" type="float" value="1"/>
         <property name="cycle_time" type="float" value="3"/>
+        <property name="active_time" type="float" value="1"/>
         <property name="push_force" type="float" value="-180"/>
         <property name="warning_time" type="float" value="0.5"/>
       </properties>
@@ -203,16 +202,16 @@
     <object id="28" name="Hazard2" type="Hazard" x="448" y="118" width="64" height="4">
       <properties>
         <property name="type" value="laundry_line"/>
-        <property name="height_above_ground" type="float" value="24"/>
-        <property name="slow_multiplier" type="float" value="0.4"/>
         <property name="stun_duration" type="float" value="0.5"/>
+        <property name="slow_multiplier" type="float" value="0.4"/>
+        <property name="height_above_ground" type="float" value="24"/>
       </properties>
     </object>
     <object id="29" name="Hazard3" type="Hazard" x="600" y="120" width="16" height="16">
       <properties>
         <property name="type" value="steam_vent"/>
-        <property name="active_time" type="float" value="1"/>
         <property name="cycle_time" type="float" value="3"/>
+        <property name="active_time" type="float" value="1"/>
         <property name="push_force" type="float" value="-180"/>
         <property name="warning_time" type="float" value="0.5"/>
       </properties>
@@ -220,16 +219,16 @@
     <object id="30" name="Hazard4" type="Hazard" x="728" y="110" width="80" height="4">
       <properties>
         <property name="type" value="laundry_line"/>
-        <property name="height_above_ground" type="float" value="24"/>
-        <property name="slow_multiplier" type="float" value="0.4"/>
         <property name="stun_duration" type="float" value="0.5"/>
+        <property name="slow_multiplier" type="float" value="0.4"/>
+        <property name="height_above_ground" type="float" value="24"/>
       </properties>
     </object>
     <object id="31" name="Hazard5" type="Hazard" x="1240" y="88" width="16" height="16">
       <properties>
         <property name="type" value="steam_vent"/>
-        <property name="active_time" type="float" value="1"/>
         <property name="cycle_time" type="float" value="3"/>
+        <property name="active_time" type="float" value="1"/>
         <property name="push_force" type="float" value="-180"/>
         <property name="warning_time" type="float" value="0.5"/>
       </properties>
