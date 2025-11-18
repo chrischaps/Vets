@@ -2,6 +2,10 @@
 -- Entry point for Courier Cat
 -- Refactored to use StateManager for proper game flow
 
+-- Test mode flags (VETS-72 - set to true to run converter tests)
+local TEST_TMX_TO_JSON = false
+local TEST_JSON_TO_TMX = false
+
 -- Load external libraries
 local libs = require("libraries.init")
 
@@ -36,6 +40,21 @@ local offset_x = 0
 local offset_y = 0
 
 function love.load()
+    -- Check if running in converter test mode (VETS-72)
+    if TEST_TMX_TO_JSON then
+        require("test_tmx_converter")
+        love.timer.sleep(1)  -- Brief pause to see all output
+        love.event.quit(0)
+        return
+    end
+
+    if TEST_JSON_TO_TMX then
+        require("test_json_to_tmx")
+        love.timer.sleep(1)  -- Brief pause to see all output
+        love.event.quit(0)
+        return
+    end
+
     -- Set up pixel-perfect rendering
     love.graphics.setDefaultFilter("nearest", "nearest")
 
@@ -179,6 +198,14 @@ function love.keypressed(key)
         -- Toggle Wang tileset debug labels
         Tilemap.debug_wang_tiles = not Tilemap.debug_wang_tiles
         print("[DEBUG] Wang tileset labels: " .. (Tilemap.debug_wang_tiles and "ON" or "OFF"))
+    elseif key == "f11" then
+        -- Run JSON to TMX converter test (VETS-72)
+        print("\n[F11] Running JSON to TMX converter test...")
+        require("test_json_to_tmx")
+    elseif key == "f12" then
+        -- Run TMX to JSON converter test (VETS-72)
+        print("\n[F12] Running TMX to JSON converter test...")
+        require("test_tmx_converter")
     end
 
     -- State-specific input is now handled internally by each state using the Input system
