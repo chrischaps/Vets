@@ -2,6 +2,8 @@
 
 A cozy action-platformer game where you play as a cat delivering letters across rooftops before sunrise.
 
+**Project page:** [chaps.dev/projects/courier-cat](https://chaps.dev/projects/courier-cat/)
+
 ## Overview
 
 **Courier Cat** combines precision platforming with time-attack urgency, wrapped in an atmospheric pixel-art package. Navigate a dreamy cityscape, deliver letters to glowing windows, and race against the dawn.
